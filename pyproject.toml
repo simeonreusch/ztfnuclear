@@ -6,10 +6,12 @@ authors = ["simeonreusch <simeon.reusch@desy.de>"]
 license = "BSD-3-Clause"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.9,<3.11"
 pandas = "^1.4.3"
 numpy = "^1.23.2"
 tqdm = "^4.64.0"
+astropy = "^5.1"
+planobs = "^0.5.1"
 
 [tool.poetry.dev-dependencies]
 coveralls = "^3.3.1"
