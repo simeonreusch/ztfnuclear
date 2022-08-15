@@ -1,13 +1,13 @@
 import logging, os, gc
 
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt  # type: ignore
 
-from typing import Optional
+from typing import Optional, Any
 
-from astropy.time import Time
-from scipy.stats import median_abs_deviation
+from astropy.time import Time  # type: ignore
+from scipy.stats import median_abs_deviation  # type: ignore
 import numpy as np
-import pandas as pd
+import pandas as pd  # type: ignore
 
 pd.options.mode.chained_assignment = None  # default='warn'
 

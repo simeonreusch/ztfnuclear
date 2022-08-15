@@ -4,9 +4,9 @@
 
 import os, logging
 
-from tqdm import tqdm
+from tqdm import tqdm  # type: ignore
 import numpy as np
-import pandas as pd
+import pandas as pd  # type: ignore
 
 from ztfnuclear import io, baseline
 
@@ -76,3 +76,39 @@ class Transient(object):
 
         metadata_all = io.get_metadata()
         self.meta = metadata_all.loc[self.ztfid].to_dict()
+
+    def query_z(self):
+        """
+        Query NEDz via Ampel API
+        """
+        from ztfnuclear.crossmatch import query_ned_for_z
+
+        ned_res = query_ned_for_z(
+            ra_deg=self.ra, dec_deg=self.dec, searchradius_arcsec=10
+        )
+        if ned_res:
+            self.z = ned_res["NEDz"]
+            self.z_dist = ned_res["NEDz_dist"]
+
+    def crossmatch(self):
+        """
+        Do all kinds of crossmatches for the transient
+        """
+        from ztfnuclear.crossmatch import (
+            query_crts,
+            query_milliquas,
+            query_sdss,
+            query_gaia,
+        )
+
+        results = {}
+
+        crts_res = query_crts(ra_deg=self.ra, dec_deg=self.dec)
+        millliquas_res = query_milliquas(ra_deg=self.ra, dec_deg=self.dec)
+        sdss_res = query_sdss(ra_deg=self.ra, dec_deg=self.dec)
+        gaia_res = query_gaia(ra_deg=self.ra, dec_deg=self.dec)
+
+        for res in [crts_res, millliquas_res, sdss_res, gaia_res]:
+            results.update(res)
+
+        self.crossmatch = results

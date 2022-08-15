@@ -5,16 +5,23 @@
 import os, logging, re, subprocess
 from typing import Optional, List, Dict
 
-import pandas as pd
+import pandas as pd  # type: ignore
 
-_SOURCEDIR = os.path.dirname(os.path.realpath(__file__))
-LOCALSOURCE = os.path.join(os.getenv("ZTFDATA"), "nuclear_sample")
-LOCALSOURCE_dfs = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "data")
-LOCALSOURCE_metadata = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "metadata.csv")
-LOCALSOURCE_plots = os.path.join(LOCALSOURCE, "plots")
-LOCALSOURCE_baseline = os.path.join(LOCALSOURCE, "baseline")
+if os.getenv("ZTFDATA"):
 
-DOWNLOAD_URL = "https://syncandshare.desy.de/index.php/s/GHeGQYxgk5FeToY/download"
+    _SOURCEDIR = os.path.dirname(os.path.realpath(__file__))
+    LOCALSOURCE = os.path.join(str(os.getenv("ZTFDATA")), "nuclear_sample")
+    LOCALSOURCE_dfs = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "data")
+    LOCALSOURCE_metadata = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "metadata.csv")
+    LOCALSOURCE_plots = os.path.join(LOCALSOURCE, "plots")
+    LOCALSOURCE_baseline = os.path.join(LOCALSOURCE, "baseline")
+
+    DOWNLOAD_URL = "https://syncandshare.desy.de/index.php/s/GHeGQYxgk5FeToY/download"
+
+else:
+    raise ValueError(
+        "You have to set the ZTFDATA environment variable in your .bashrc or .zshrc. See github.com/mickaelrigault/ztfquery"
+    )
 
 logger = logging.getLogger(__name__)
 
