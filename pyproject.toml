@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "ztfnuclear"
+version = "0.1.0"
+description = "Analyzing the Zwicky Transient Facility forced photometry nuclear transient sample"
+authors = ["simeonreusch <simeon.reusch@desy.de>"]
+license = "BSD-3-Clause"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pandas = "^1.4.3"
+numpy = "^1.23.2"
+tqdm = "^4.64.0"
+
+[tool.poetry.dev-dependencies]
+coveralls = "^3.3.1"
+pytest = "^7.1.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
