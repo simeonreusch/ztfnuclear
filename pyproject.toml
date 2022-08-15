@@ -12,6 +12,7 @@ numpy = "^1.23.2"
 tqdm = "^4.64.0"
 astropy = "^5.1"
 planobs = "^0.5.1"
+scipy = "^1.9.0"
 
 [tool.poetry.dev-dependencies]
 coveralls = "^3.3.1"

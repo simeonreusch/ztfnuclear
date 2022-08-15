@@ -11,12 +11,17 @@ _SOURCEDIR = os.path.dirname(os.path.realpath(__file__))
 LOCALSOURCE = os.path.join(os.getenv("ZTFDATA"), "nuclear_sample")
 LOCALSOURCE_dfs = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "data")
 LOCALSOURCE_metadata = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "metadata.csv")
+LOCALSOURCE_plots = os.path.join(LOCALSOURCE, "plots")
+LOCALSOURCE_baseline = os.path.join(LOCALSOURCE, "baseline")
+
 DOWNLOAD_URL = "https://syncandshare.desy.de/index.php/s/GHeGQYxgk5FeToY/download"
 
 logger = logging.getLogger(__name__)
 
-if not os.path.exists(LOCALSOURCE):
-    os.makedirs(LOCALSOURCE)
+
+for p in [LOCALSOURCE, LOCALSOURCE_plots, LOCALSOURCE_baseline]:
+    if not os.path.exists(p):
+        os.makedirs(p)
 
 
 def download_if_neccessary():

@@ -1,20 +1,91 @@
-import logging
+import logging, os, gc
+
+from matplotlib import pyplot as plt
+
+from typing import Optional
 
 from astropy.time import Time
+from scipy.stats import median_abs_deviation
 import numpy as np
 import pandas as pd
 
+pd.options.mode.chained_assignment = None  # default='warn'
 
-def get_fpbot_baseline(
-    df: pd.DataFrame,
+from ztfnuclear import io
+
+logger = logging.getLogger(__name__)
+
+dcast = {
+    "sigma": float,
+    "sigma.err": float,
+    "ampl": float,
+    "ampl.err": float,
+    "fval": float,
+    "chi2": float,
+    "chi2dof": float,
+    "humidity": float,
+    "obsmjd": float,
+    "ccdid": int,
+    "amp_id": int,
+    "gain": float,
+    "readnoi": float,
+    "darkcur": float,
+    "magzp": float,
+    "magzpunc": float,
+    "magzprms": float,
+    "clrcoeff": float,
+    "clrcounc": float,
+    "zpclrcov": float,
+    "zpmed": float,
+    "zpavg": float,
+    "zprmsall": float,
+    "clrmed": float,
+    "clravg": float,
+    "clrrms": float,
+    "qid": int,
+    "rcid": int,
+    "seeing": float,
+    "airmass": float,
+    "nmatches": int,
+    "maglim": float,
+    "status": int,
+    "infobits": int,
+    "filterid": int,
+    "fieldid": int,
+    "moonalt": float,
+    "moonillf": float,
+    "target_x": float,
+    "target_y": float,
+    "data_hasnan": bool,
+    "pass": int,
+    "flag": int,
+    "cloudy": int,
+    "fcqfid": int,
+    "baseline": float,
+    "baseline_err_mult": float,
+    "n_baseline": int,
+    "pre_or_post": int,
+    "not_baseline": int,
+    "ampl_corr": float,
+    "ampel_err_corr": float,
+}
+
+ZTF_FILTER_MAP = {"ZTF_g": 1, "ZTF_r": 2, "ZTF_i": 3}
+
+
+def baseline(
+    transient,
     window: str = "10D",
     min_peak_snr: float = 3,
-    risetime: float = 100,
-    falltime=365,
+    risetime: float = 80,
+    falltime: float = 100,
+    excl_poor_conditions: bool = True,
     primary_grid_only: bool = False,
-    min_det_per_field_band: int = 1,
-    zp_max_deviation_from_median: float = 99.0,
-    reference_days_before_peak: Optional[float] = None,
+    min_det_per_field_band: int = 10,
+    zp_max_deviation_from_median: float = 0.5,
+    reference_days_before_peak: Optional[float] = 100,
+    pivot_zeropoint: float = 25,
+    plot_suffix: str = "pdf",
 ) -> pd.DataFrame:
     """
     For each unique baseline combination, estimate and store baseline.
@@ -37,6 +108,16 @@ def get_fpbot_baseline(
     reference_days_before_peak (Opt[float]): number of days the reference images used for a filter/ccd/band-combination have to been made before the estimated peak date (to avoid contamination of the reference images with transient light)
 
     """
+    df = transient.df
+
+    if excl_poor_conditions:
+        df = df[(df["pass"] == 1)]
+
+    df["ampl_zp_scale"] = 10 ** ((pivot_zeropoint - df["magzp"]) / 2.5)
+    df["ampl"] *= df["ampl_zp_scale"]
+    df["ampl.err"] *= df["ampl_zp_scale"]
+
+    logger.info(f"{transient.ztfid}: Transient df has {len(df)} entries.")
     df["fcqfid"] = np.array(
         df.fieldid.values * 10000
         + df.ccdid.values * 100
@@ -257,8 +338,85 @@ def get_fpbot_baseline(
     # (These could in principle have been kept in some form)
     df = df[(df["n_baseline"] > 0)]
 
+    if df.shape[0] == 0:
+        logger.warn(f"{transient.ztfid}: No datapoints survived baseline correction.")
+        return df, fcqfid_dict
+
     df["ampl_corr"] = df["ampl"] - df["baseline"]
     df["ampl_err_corr"] = df["ampl.err"] * df["baseline_err_mult"]
+
+    logger.info(
+        f"{transient.ztfid}: Baseline correction done, {len(df)} entries remain."
+    )
+
+    logger.info(f"{transient.ztfid}: Plotting baseline")
+
+    color_dict = {"1": "green", "2": "red", "3": "orange"}
+
+    plot_dir = io.LOCALSOURCE_plots
+
+    fig, ax = plt.subplots()
+    y_max = -99
+    for key, binfo in fcqfid_dict.items():
+        if key == "t_peak":
+            continue
+        # if not 'which_baseline' in binfo or not binfo['which_baseline']:
+        #    continue
+        df_sub = df[((df.fcqfid == int(key)) & (df.n_baseline > 0))]
+        if df_sub.shape[0] == 0:
+            continue
+
+        if "flux_max" in binfo.keys() and binfo["flux_max"] > y_max:
+            y_max = binfo["flux_max"]
+
+        ax.errorbar(
+            df_sub.obsmjd,
+            df_sub.ampl_corr,
+            df_sub["ampl_err_corr"],
+            fmt="o",
+            mec=color_dict[key[-1]],
+            ecolor=color_dict[key[-1]],
+            mfc="None",
+            alpha=0.7,
+            ms=2,
+            elinewidth=0.8,
+        )
+
+    if y_max == -99:
+        y_max = df.ampl_corr.max()
+
+    peak_times = df[(df["not_baseline"] == 1)].obsmjd
+
+    ax.axhline(y=0, color="0.7", ls="--")
+    ax.axvline(x=peak_times.min(), color="0.5", ls="--")
+    ax.axvline(x=peak_times.max(), color="0.5", ls="--")
+    ax.set_xlabel("Date (MJD)")
+    ax.set_ylabel(f"Flux (ZP = {pivot_zeropoint} mag)")
+
+    y_min = 10 ** ((pivot_zeropoint - 20) / 2.5)
+
+    ax.set_ylim([-y_min, y_max * 1.4])  # Bottom limit set based on sample runs
+
+    plt.tight_layout()
+    plt.savefig(
+        os.path.join(
+            plot_dir,
+            "fpbase_%s.%s" % (transient.ztfid, plot_suffix),
+        )
+    )
+    plt.close("fig")
+    plt.close("all")
+    del (fig, ax)
+    gc.collect()
+
+    # Add back zp correction (assumed to be used later)
+    df["ampl"] /= df["ampl_zp_scale"]
+    df["ampl.err"] /= df["ampl_zp_scale"]
+    df["ampl_corr"] /= df["ampl_zp_scale"]
+    df["ampl_err_corr"] /= df["ampl_zp_scale"]
+
+    outpath = os.path.join(io.LOCALSOURCE_baseline, transient.ztfid + "_bl.csv")
+    df.to_csv(outpath)
 
     return df, fcqfid_dict
 
