@@ -7,11 +7,14 @@ import os, logging
 import numpy as np
 import pandas as pd
 
+from ztfnuclear import io
 
-class ZTFNuclear(object):
+
+class NuclearSample(object):
     """
     This is the parent class for the ZTF nuclear transient sample"""
 
-    def __init__(self, arg):
-        super(ZTFNuclear, self).__init__()
-        # self.arg = arg
+    def __init__(self):
+        super(NuclearSample, self).__init__()
+        self.logger = logging.getLogger(__name__)
+        self.logger.info("LALALA")
