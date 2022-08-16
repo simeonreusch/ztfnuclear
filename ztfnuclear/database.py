@@ -3,9 +3,12 @@
 # License: BSD-3-Clause
 import os, logging, collections
 from tqdm import tqdm
-from typing import Union, Any, Sequence, Tuple, List
-from pymongo import MongoClient, UpdateOne
+from typing import Union, Any, Sequence, Tuple, List, Optional
+from pymongo import MongoClient, UpdateOne, GEOSPHERE
 from pymongo.database import Database
+import pandas as pd
+from healpy import ang2pix  # type: ignore
+from extcats import CatalogPusher, CatalogQuery  # type: ignore
 
 from ztfnuclear import io
 
@@ -94,5 +97,117 @@ class MetadataDB(object):
             "has_peak_dates": has_peak_dates,
         }
 
-    def read_all(self, property):
-        """Search database for given property"""
+
+class WISE(object):
+    """Interface with WISE MongoDB"""
+
+    def __init__(self):
+        super(WISE, self).__init__()
+
+        self.logger = logging.getLogger(__name__)
+        items_in_coll = self.test_db()
+        if items_in_coll == 0:
+            self.logger.warn("WISE catalogue needs to be ingested. Proceeding to do so")
+            self.ingest_wise()
+
+    def test_db(self):
+        """
+        Test the connection to the database
+        """
+        mongo_client: MongoClient = MongoClient("localhost", 27017)
+        client = mongo_client
+        db = client.allwise
+        items_in_coll = db.command("collstats", "allwise")["count"]
+        return items_in_coll
+
+    def ingest_wise(self):
+        """Ingest the WISE catalogue from the parquet file"""
+        self.logger.info(
+            "Reading WISE.parquet and creating Mongo database from it for querying by location. This will take a considerable amount of time, CPU and RAM!"
+        )
+
+        df = pd.read_parquet(os.path.join(io.LOCALSOURCE_WISE, "WISE.parquet"))
+        df_test = df.head(100)
+        df_test.to_parquet(os.path.join(io.LOCALSOURCE_WISE, "WISE_test.parquet"))
+
+        # build the pusher object and point it to the raw files.
+        mqp = CatalogPusher.CatalogPusher(
+            catalog_name="allwise",
+            data_source=io.LOCALSOURCE_WISE,
+            file_type="WISE_test.parquet",
+        )
+
+        catcols = ["RA", "Dec", "AllWISE_id"]
+
+        mqp.assign_file_reader(
+            reader_func=pd.read_parquet,
+            read_chunks=False,
+            columns=catcols,
+            engine="fastparquet",
+        )
+
+        def _mqc_modifier(srcdict: dict):
+            """
+            format coordinates into geoJSON type:
+            # unfortunately mongo needs the RA to be folded into -180, +180
+            """
+            ra = srcdict["RA"] if srcdict["RA"] < 180.0 else srcdict["RA"] - 360.0
+            srcdict["pos"] = {
+                "type": "Point",
+                "coordinates": [ra, srcdict["Dec"]],
+            }
+
+            # add healpix index
+            srcdict["hpxid_16"] = int(
+                ang2pix(2**16, srcdict["RA"], srcdict["Dec"], lonlat=True, nest=True)
+            )
+
+            return srcdict
+
+        # Modify the the source dictionary with the above defined function
+        mqp.assign_dict_modifier(_mqc_modifier)
+
+        # And now we push to Mongo
+        mqp.push_to_db(
+            coll_name="allwise",
+            index_on=["hpxid_16", [("pos", GEOSPHERE)]],
+            index_args=[{}, {}],
+            overwrite_coll=True,
+            append_to_coll=False,
+        )
+
+        mqp.healpix_meta(
+            healpix_id_key="hpxid_16", order=16, is_indexed=True, nest=True
+        )
+        mqp.science_meta(
+            contact="Jannis Necker, Eleni Graikou",
+            email="jannis.necker@desy.de, eleni.graikou@desy.de",
+            description="A great WISE sample",
+            reference="http://github.com/jannisne/timewise",
+        )
+
+    def query(
+        self, ra_deg: float, dec_deg: float, searchradius_arcsec: float
+    ) -> Optional[dict]:
+        mqc_query = CatalogQuery.CatalogQuery(
+            cat_name="allwise",
+            coll_name="allwise",
+            ra_key="RA",
+            dec_key="Dec",
+            dbclient=None,
+        )
+
+        hpcp, hpcp_dist = mqc_query.findclosest(
+            ra=ra_deg, dec=dec_deg, rs_arcsec=searchradius_arcsec, method="healpix"
+        )
+        if hpcp:
+            ra = hpcp[0]
+            dec = hpcp[1]
+            allwise_id = hpcp[2]
+
+            res = {"body": {"allwise_id": allwise_id, "dist": hpcp_dist}}
+
+            return res
+
+        else:
+            return None

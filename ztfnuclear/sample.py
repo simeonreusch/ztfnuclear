@@ -90,8 +90,8 @@ class Transient(object):
         self.df = io.get_ztfid_dataframe(ztfid=self.ztfid)
         self.header = io.get_ztfid_header(ztfid=self.ztfid)
 
-        self.ra = self.header["ra"]
-        self.dec = self.header["dec"]
+        self.ra = float(self.header["ra"])
+        self.dec = float(self.header["dec"])
 
         if recreate_baseline:
             bl, bl_info = baseline.baseline(transient=self)
@@ -132,6 +132,7 @@ class Transient(object):
             query_milliquas,
             query_sdss,
             query_gaia,
+            query_wise,
         )
 
         results = {}
@@ -140,8 +141,9 @@ class Transient(object):
         millliquas_res = query_milliquas(ra_deg=self.ra, dec_deg=self.dec)
         sdss_res = query_sdss(ra_deg=self.ra, dec_deg=self.dec)
         gaia_res = query_gaia(ra_deg=self.ra, dec_deg=self.dec)
+        wise_res = query_wise(ra_deg=self.ra, dec_deg=self.dec)
 
-        for res in [crts_res, millliquas_res, sdss_res, gaia_res]:
+        for res in [crts_res, millliquas_res, sdss_res, gaia_res, wise_res]:
             results.update(res)
 
         self.crossmatch = {"crossmatch": results}

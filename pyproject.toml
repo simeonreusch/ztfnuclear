@@ -17,6 +17,9 @@ backoff = "^2.1.2"
 requests = "^2.28.1"
 pymongo = "^4.2.0"
 matplotlib = "^3.5.3"
+pyarrow = "^9.0.0"
+fastparquet = "^0.8.1"
+extcats = "^2.4.3"
 
 [tool.poetry.dev-dependencies]
 coveralls = "^3.3.1"

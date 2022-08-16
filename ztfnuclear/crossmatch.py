@@ -4,8 +4,12 @@
 
 import os, logging
 
+import pandas as pd
+
 from typing import Optional, Tuple
 from ztfnuclear.ampel_api import ampel_api_catalog
+from ztfnuclear import io
+from ztfnuclear.database import WISE
 
 logger = logging.getLogger(__name__)
 
@@ -163,3 +167,22 @@ def query_sdss(
 
     else:
         return {"SDSS": {}}
+
+
+def query_wise(
+    ra_deg: float, dec_deg: float, searchradius_arcsec: float = 20
+) -> Optional[dict]:
+    """
+    Obtains WISE object RA and Dec from parquet file
+    """
+    wise = WISE()
+
+    res = wise.query(
+        ra_deg=ra_deg, dec_deg=dec_deg, searchradius_arcsec=searchradius_arcsec
+    )
+
+    if res:
+        logger.debug("WISE: Match found")
+        return {"WISE": res}
+    else:
+        return {"WISE": {}}

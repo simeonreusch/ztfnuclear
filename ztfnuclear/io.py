@@ -14,10 +14,16 @@ if os.getenv("ZTFDATA"):
     LOCALSOURCE_dfs = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "data")
     LOCALSOURCE_location = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "location.csv")
     LOCALSOURCE_peak_dates = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "peak_dates.csv")
+    LOCALSOURCE_WISE = os.path.join(LOCALSOURCE, "WISE")
     LOCALSOURCE_plots = os.path.join(LOCALSOURCE, "plots")
     LOCALSOURCE_baseline = os.path.join(LOCALSOURCE, "baseline")
 
-    DOWNLOAD_URL = "https://syncandshare.desy.de/index.php/s/GHeGQYxgk5FeToY/download"
+    DOWNLOAD_URL_SAMPLE = (
+        "https://syncandshare.desy.de/index.php/s/GHeGQYxgk5FeToY/download"
+    )
+    DOWNLOAD_URL_WISE = (
+        "https://syncandshare.desy.de/index.php/s/iweHsggyCaecSKE/download"
+    )
 
 else:
     raise ValueError(
@@ -27,7 +33,7 @@ else:
 logger = logging.getLogger(__name__)
 
 
-for p in [LOCALSOURCE, LOCALSOURCE_plots, LOCALSOURCE_baseline]:
+for p in [LOCALSOURCE, LOCALSOURCE_plots, LOCALSOURCE_baseline, LOCALSOURCE_WISE]:
     if not os.path.exists(p):
         os.makedirs(p)
 
@@ -46,17 +52,31 @@ def download_if_neccessary():
 
     else:
         logger.info("Dataframe directory is not present, proceed to download files.")
-        download()
+        download_sample()
+
+    if not os.path.isfile(os.path.join(LOCALSOURCE_WISE, "WISE.parquet")):
+        logger.info("WISE dataframe does not exist, proceed to download.")
+        download_wise()
 
 
-def download():
+def download_sample():
     """
-    Downloads the dataframe from DESY Syncandshare
+    Downloads the sample from DESY Syncandshare
     """
-    cmd = f"wget {DOWNLOAD_URL} -P {LOCALSOURCE}; mv {LOCALSOURCE}/download {LOCALSOURCE}/download.tar; tar -xvf {LOCALSOURCE}/download.tar -C {LOCALSOURCE}; rm {LOCALSOURCE}/download.tar"
+    cmd = f"wget {DOWNLOAD_URL_SAMPLE} -P {LOCALSOURCE}; mv {LOCALSOURCE}/download {LOCALSOURCE}/download.tar; tar -xvf {LOCALSOURCE}/download.tar -C {LOCALSOURCE}; rm {LOCALSOURCE}/download.tar"
 
     subprocess.run(cmd, shell=True)
-    logger.info("Download complete")
+    logger.info("Sample download complete")
+
+
+def download_wise():
+    """
+    Downloads the WISE location parquet file from DESY Syncandshare
+    """
+    cmd = f"wget {DOWNLOAD_URL_WISE} -P {LOCALSOURCE}; mv {LOCALSOURCE}/download {LOCALSOURCE_WISE}/WISE.parquet"
+
+    subprocess.run(cmd, shell=True)
+    logger.info("WISE location file download complete")
 
 
 def get_all_ztfids() -> List[str]:
