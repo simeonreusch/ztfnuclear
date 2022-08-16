@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd  # type: ignore
 
 from ztfnuclear import io, baseline
+from ztfnuclear.database import MetadataDB
 
 
 class NuclearSample(object):
@@ -42,6 +43,19 @@ class NuclearSample(object):
         self.logger.info("Creating baseline corrections for the full sample")
         for ztfid in tqdm(self.ztfids):
             t = Transient(ztfid, recreate_baseline=True)
+
+    def populate_db_from_csv(self, filepath, name):
+        self.logger.info("Populating the database from a csv file")
+        if os.path.isfile(filepath):
+            df = pd.read_csv(filepath, comment="#", index_col=0)
+            for s in tqdm(df.iterrows()):
+                ztfid = s[0]
+                if ztfid in self.ztfids:
+                    write_dict = {name: s[1].to_dict()}
+                    meta = MetadataDB()
+                    meta.update(ztfid=ztfid, data=write_dict)
+        else:
+            raise ValueError("File does not exist")
 
 
 class Transient(object):
@@ -111,4 +125,4 @@ class Transient(object):
         for res in [crts_res, millliquas_res, sdss_res, gaia_res]:
             results.update(res)
 
-        self.crossmatch = results
+        self.crossmatch = {"crossmatch": results}

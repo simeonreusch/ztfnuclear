@@ -637,7 +637,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "cec7cef7833df40ff0ec9971cfeb4007cc81c331de0e6d1d0a15d1b4ed2219c9"
+content-hash = "0e2835b1154408f08f2f65b3eb96c1c480578eb1e20f0e8088a494c736705506"
 
 [metadata.files]
 astroplan = [

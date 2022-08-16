@@ -80,6 +80,18 @@ def is_valid_ztfid(ztfid: str) -> bool:
         return False
 
 
+def is_valid_wiseid(wiseid: str) -> bool:
+    """
+    Checks if a string adheres to the (internal) WISE naming scheme
+    """
+    is_match = re.match(r"^WISE\d[0-9]{0,}$", wiseid)
+
+    if is_match:
+        return True
+    else:
+        return False
+
+
 def get_metadata() -> pd.DataFrame:
     """
     Gets the metadata dataframe for the full sample
