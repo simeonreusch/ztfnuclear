@@ -12,7 +12,7 @@ if os.getenv("ZTFDATA"):
     _SOURCEDIR = os.path.dirname(os.path.realpath(__file__))
     LOCALSOURCE = os.path.join(str(os.getenv("ZTFDATA")), "nuclear_sample")
     LOCALSOURCE_dfs = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "data")
-    LOCALSOURCE_metadata = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "metadata.csv")
+    LOCALSOURCE_location = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "location.csv")
     LOCALSOURCE_plots = os.path.join(LOCALSOURCE, "plots")
     LOCALSOURCE_baseline = os.path.join(LOCALSOURCE, "baseline")
 
@@ -92,11 +92,11 @@ def is_valid_wiseid(wiseid: str) -> bool:
         return False
 
 
-def get_metadata() -> pd.DataFrame:
+def get_locations() -> pd.DataFrame:
     """
     Gets the metadata dataframe for the full sample
     """
-    df = pd.read_csv(LOCALSOURCE_metadata, index_col=0)
+    df = pd.read_csv(LOCALSOURCE_location, index_col=0)
     return df
 
 
