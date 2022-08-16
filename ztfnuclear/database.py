@@ -126,15 +126,11 @@ class WISE(object):
             "Reading WISE.parquet and creating Mongo database from it for querying by location. This will take a considerable amount of time, CPU and RAM!"
         )
 
-        df = pd.read_parquet(os.path.join(io.LOCALSOURCE_WISE, "WISE.parquet"))
-        df_test = df.head(100)
-        df_test.to_parquet(os.path.join(io.LOCALSOURCE_WISE, "WISE_test.parquet"))
-
         # build the pusher object and point it to the raw files.
         mqp = CatalogPusher.CatalogPusher(
             catalog_name="allwise",
             data_source=io.LOCALSOURCE_WISE,
-            file_type="WISE_test.parquet",
+            file_type="WISE.parquet",
         )
 
         catcols = ["RA", "Dec", "AllWISE_id"]
