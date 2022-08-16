@@ -25,6 +25,19 @@ class NuclearSample(object):
 
         self.get_all_ztfids()
         self.location()
+        self.metadb = MetadataDB()
+        db_check = self.metadb.get_statistics()
+
+        if not db_check["has_ra"]:
+            self.populate_db_from_csv(filepath=io.LOCALSOURCE_location)
+
+        if not db_check["has_peak_dates"]:
+            self.populate_db_from_csv(
+                filepath=io.LOCALSOURCE_peak_dates, name="peak_dates"
+            )
+
+        db_check = self.metadb.get_statistics()
+        assert db_check["count"] == 11687
 
     def get_transient(self, ztfid: str):
         df = io.get_ztfid_dataframe(ztfid=ztfid)
@@ -48,15 +61,18 @@ class NuclearSample(object):
         self.logger.info("Populating the database from a csv file")
         if os.path.isfile(filepath):
             df = pd.read_csv(filepath, comment="#", index_col=0)
-            for s in tqdm(df.iterrows()):
+            ztfids = []
+            data = []
+            for s in df.iterrows():
                 ztfid = s[0]
-                if ztfid in self.ztfids:
-                    if name:
-                        write_dict = {name: s[1].to_dict()}
-                    else:
-                        write_dict = s[1].to_dict()
-                    meta = MetadataDB()
-                    meta.update(ztfid=ztfid, data=write_dict)
+                ztfids.append(ztfid)
+                if name:
+                    write_dict = {name: s[1].to_dict()}
+                else:
+                    write_dict = s[1].to_dict()
+                data.append(write_dict)
+
+            self.metadb.update_many(ztfids=ztfids, data=data)
         else:
             raise ValueError("File does not exist")
 

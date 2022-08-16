@@ -13,6 +13,7 @@ if os.getenv("ZTFDATA"):
     LOCALSOURCE = os.path.join(str(os.getenv("ZTFDATA")), "nuclear_sample")
     LOCALSOURCE_dfs = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "data")
     LOCALSOURCE_location = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "location.csv")
+    LOCALSOURCE_peak_dates = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "peak_dates.csv")
     LOCALSOURCE_plots = os.path.join(LOCALSOURCE, "plots")
     LOCALSOURCE_baseline = os.path.join(LOCALSOURCE, "baseline")
 
