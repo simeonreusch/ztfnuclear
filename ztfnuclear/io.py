@@ -63,7 +63,7 @@ def download_sample():
     """
     Downloads the sample from DESY Syncandshare
     """
-    cmd = f"wget {DOWNLOAD_URL_SAMPLE} -P {LOCALSOURCE}; mv {LOCALSOURCE}/download {LOCALSOURCE}/download.tar; tar -xvf {LOCALSOURCE}/download.tar -C {LOCALSOURCE}; rm {LOCALSOURCE}/download.tar"
+    cmd = f"curl --create-dirs -J -O --output-dir {LOCALSOURCE} {DOWNLOAD_URL_SAMPLE}; unzip {LOCALSOURCE}/FINAL_SAMPLE.zip"
 
     subprocess.run(cmd, shell=True)
     logger.info("Sample download complete")
@@ -73,7 +73,7 @@ def download_wise():
     """
     Downloads the WISE location parquet file from DESY Syncandshare
     """
-    cmd = f"wget {DOWNLOAD_URL_WISE} -P {LOCALSOURCE}; mv {LOCALSOURCE}/download {LOCALSOURCE_WISE}/WISE.parquet"
+    cmd = f"curl --create-dirs -J -O --output-dir {LOCALSOURCE} {DOWNLOAD_URL_WISE}"
 
     subprocess.run(cmd, shell=True)
     logger.info("WISE location file download complete")
