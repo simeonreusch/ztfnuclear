@@ -142,21 +142,27 @@ class WISE(object):
         self.logger.info(
             "Reading WISE.parquet and creating Mongo database from it for querying by location. This will take a considerable amount of time, CPU and RAM!"
         )
+        if not os.path.isfile():
+            df = pd.read_parquet(os.path.join(io.LOCALSOURCE_WISE, "WISE.parquet"))
+            df.to_csv(os.path.join(io.LOCALSOURCE_WISE, "WISE.csv"))
 
         # build the pusher object and point it to the raw files.
         mqp = CatalogPusher.CatalogPusher(
             catalog_name="allwise",
             data_source=io.LOCALSOURCE_WISE,
-            file_type="WISE.parquet",
+            file_type="WISE.csv",
         )
 
         catcols = ["RA", "Dec", "AllWISE_id"]
 
         mqp.assign_file_reader(
-            reader_func=pd.read_parquet,
-            read_chunks=False,
-            columns=catcols,
-            engine="fastparquet",
+            reader_func=pd.read_table,
+            read_chunks=True,
+            names=catcols,
+            engine="c",
+            chunksize=100000,
+            sep=",",
+            skiprows=1,
         )
 
         def _mqc_modifier(srcdict: dict):
@@ -198,6 +204,7 @@ class WISE(object):
             description="A great WISE sample",
             reference="http://github.com/jannisne/timewise",
         )
+        os.remove(os.path.join(io.LOCALSOURCE_WISE, "WISE.csv"))
 
     def query(
         self, ra_deg: float, dec_deg: float, searchradius_arcsec: float
