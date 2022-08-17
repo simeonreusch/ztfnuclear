@@ -2,8 +2,10 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, re, subprocess
+import os, logging, re, subprocess, json
 from typing import Optional, List, Dict
+
+from ztfnuclear import utils
 
 import pandas as pd  # type: ignore
 
@@ -171,3 +173,51 @@ def get_ztfid_header(ztfid: str) -> Optional[dict]:
 
     else:
         raise ValueError(f"{ztfid} is not a valid ZTF ID")
+
+
+def parse_ampel_json(filepath, parameter_name) -> Optional[dict]:
+    """Reads the mongodb export from Ampel"""
+    if not os.path.isfile(filepath):
+        raise ValueError("No file at given filepath")
+
+    resultdict = {}
+    # i = 0
+    # k = 0
+    # j = 0
+
+    with open(filepath) as json_file:
+        data = json.load(json_file)
+        for entry in data:
+            stockid = entry["stock"]
+            ztfid = utils.stockid_to_ztfid(stockid)
+
+            if "body" in entry.keys():
+                body = entry["body"][0]
+
+                if parameter_name == "salt":
+                    if "sncosmo_result" in body.keys():
+                        sncosmo_result = body["sncosmo_result"]
+                        chisq = sncosmo_result["chisq"]
+                        ndof = sncosmo_result["ndof"]
+                        paramdict = sncosmo_result["paramdict"]
+                        resultdict.update(
+                            {
+                                ztfid: {
+                                    "salt": {
+                                        "chisq": chisq,
+                                        "ndof": ndof,
+                                        "paramdict": paramdict,
+                                    }
+                                }
+                            }
+                        )
+                        k += 1
+                    else:
+                        resultdict.update({ztfid: {"salt": "failure"}})
+                        j += 1
+            else:
+                resultdict.update({ztfid: {"salt": "no_body"}})
+                i += 1
+    # print(k)
+    # print(j)
+    # print(i)
