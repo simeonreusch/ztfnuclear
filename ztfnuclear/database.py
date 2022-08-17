@@ -13,8 +13,26 @@ from extcats import CatalogPusher, CatalogQuery  # type: ignore
 from ztfnuclear import io
 
 
+class SampleInfo(object):
+    """Mongo DB collection storing information about the sample"""
+
+    def __init__(self):
+        super(SampleInfo, self).__init__()
+        mongo_client: MongoClient = MongoClient("localhost", 27017)
+        self.logger = logging.getLogger(__name__)
+        self.logger.debug("Established connection to Mongo DB")
+        self.client = mongo_client
+        self.db = self.client.ztfnuclear
+        self.coll = self.db.info
+
+    def update(self, data):
+        """Update DB for catalog"""
+        self.coll.update_one({"_id": "sample"}, {"$set": data}, upsert=True)
+        self.logger.debug(f"Updated info database")
+
+
 class MetadataDB(object):
-    """docstring for MetadataDB"""
+    """Mongo DB collection storing all transient metadata"""
 
     def __init__(self):
         super(MetadataDB, self).__init__()
@@ -105,12 +123,12 @@ class WISE(object):
         super(WISE, self).__init__()
 
         self.logger = logging.getLogger(__name__)
-        items_in_coll = self.test_db()
+        items_in_coll = self.get_statistics()
         if items_in_coll == 0:
             self.logger.warn("WISE catalogue needs to be ingested. Proceeding to do so")
             self.ingest_wise()
 
-    def test_db(self):
+    def get_statistics(self):
         """
         Test the connection to the database
         """
@@ -118,6 +136,7 @@ class WISE(object):
         client = mongo_client
         db = client.allwise
         items_in_coll = db.command("collstats", "allwise")["count"]
+        self.logger.info(f"Database contains {items_in_coll} entries")
         return items_in_coll
 
     def ingest_wise(self):
@@ -197,9 +216,9 @@ class WISE(object):
             ra=ra_deg, dec=dec_deg, rs_arcsec=searchradius_arcsec, method="healpix"
         )
         if hpcp:
-            ra = hpcp[0]
-            dec = hpcp[1]
-            allwise_id = hpcp[2]
+            ra = float(hpcp[0])
+            dec = float(hpcp[1])
+            allwise_id = float(hpcp[2])
 
             res = {"body": {"allwise_id": allwise_id, "dist": hpcp_dist}}
 

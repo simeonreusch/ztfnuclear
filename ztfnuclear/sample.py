@@ -2,14 +2,14 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging
+import os, logging, datetime
 
 from tqdm import tqdm  # type: ignore
 import numpy as np
 import pandas as pd  # type: ignore
 
 from ztfnuclear import io, baseline
-from ztfnuclear.database import MetadataDB
+from ztfnuclear.database import MetadataDB, SampleInfo
 
 
 class NuclearSample(object):
@@ -76,13 +76,25 @@ class NuclearSample(object):
         else:
             raise ValueError("File does not exist")
 
+    def crossmatch(self):
+        """Crossmatch the full sample"""
+        self.logger.info("Crossmatching the full sample")
+        for ztfid in tqdm(self.ztfids):
+            t = Transient(ztfid, recreate_baseline=False)
+            t.crossmatch()
+        info = SampleInfo()
+        date_now = datetime.datetime.now().replace(microsecond=0)
+        info.update(data={"crossmatch_info": {"crossmatch": True, "date": date_now}})
+
 
 class Transient(object):
     """
     This class contains all info for a given transient
     """
 
-    def __init__(self, ztfid: str, recreate_baseline: bool = False):
+    def __init__(
+        self, ztfid: str, recreate_baseline: bool = False, read_baseline=False
+    ):
         super(Transient, self).__init__()
         self.logger = logging.getLogger(__name__)
         self.ztfid = ztfid
@@ -97,15 +109,16 @@ class Transient(object):
             bl, bl_info = baseline.baseline(transient=self)
             self.baseline = bl
         else:
-            bl_file = os.path.join(io.LOCALSOURCE_baseline, ztfid + "_bl.csv")
-            if os.path.isfile(bl_file):
-                self.baseline = pd.read_csv(bl_file)
-            else:
-                self.logger.info(
-                    f"{ztfid}: No baseline correction file, trying to apply baseline correction"
-                )
-                bl, bl_info = baseline.baseline(transient=self)
-                self.baseline = bl
+            if read_baseline:
+                bl_file = os.path.join(io.LOCALSOURCE_baseline, ztfid + "_bl.csv")
+                if os.path.isfile(bl_file):
+                    self.baseline = pd.read_csv(bl_file)
+                else:
+                    self.logger.info(
+                        f"{ztfid}: No baseline correction file, trying to apply baseline correction"
+                    )
+                    bl, bl_info = baseline.baseline(transient=self)
+                    self.baseline = bl
 
         location_all = io.get_locations()
         self.location = location_all.loc[self.ztfid].to_dict()
@@ -147,3 +160,5 @@ class Transient(object):
             results.update(res)
 
         self.crossmatch = {"crossmatch": results}
+        meta = MetadataDB()
+        meta.update_transient(ztfid=self.ztfid, data=self.crossmatch)
