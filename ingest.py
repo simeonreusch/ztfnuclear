@@ -17,4 +17,5 @@ logger = logging.getLogger(__name__)
 
 
 sample = NuclearSample()
+wise = WISE()
 sample.crossmatch()
