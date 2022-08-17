@@ -35,6 +35,12 @@ class NuclearSample(object):
             self.populate_db_from_csv(
                 filepath=io.LOCALSOURCE_peak_dates, name="peak_dates"
             )
+        if not db_check["has_salt"]:
+            saltres = io.parse_ampel_json(
+                filepath=os.path.join(io.LOCALSOURCE_fitres, "saltfit.json"),
+                parameter_name="salt",
+            )
+            self.populate_db_from_dict(data=saltres)
 
         db_check = self.metadb.get_statistics()
         assert db_check["count"] == 11687
@@ -75,6 +81,17 @@ class NuclearSample(object):
             self.metadb.update_many(ztfids=ztfids, data=data)
         else:
             raise ValueError("File does not exist")
+
+    def populate_db_from_dict(self, data: dict):
+        """Use a dict of the form {ztfid: data} to update the Mongo DB"""
+        self.logger.info("Populating the database from a dictionary")
+
+        ztfids = data.keys()
+        data_list = []
+        for ztfid in ztfids:
+            data_list.append(data[ztfid])
+
+        self.metadb.update_many(ztfids=ztfids, data=data_list)
 
     def crossmatch(self):
         """Crossmatch the full sample"""

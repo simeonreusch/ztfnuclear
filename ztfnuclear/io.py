@@ -14,6 +14,7 @@ if os.getenv("ZTFDATA"):
     _SOURCEDIR = os.path.dirname(os.path.realpath(__file__))
     LOCALSOURCE = os.path.join(str(os.getenv("ZTFDATA")), "nuclear_sample")
     LOCALSOURCE_dfs = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "data")
+    LOCALSOURCE_fitres = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "fitres")
     LOCALSOURCE_location = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "location.csv")
     LOCALSOURCE_peak_dates = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "peak_dates.csv")
     LOCALSOURCE_WISE = os.path.join(LOCALSOURCE, "WISE")
@@ -65,7 +66,7 @@ def download_sample():
     """
     Downloads the sample from DESY Syncandshare
     """
-    cmd = f"curl --create-dirs -J -O --output-dir {LOCALSOURCE} {DOWNLOAD_URL_SAMPLE}; unzip {LOCALSOURCE}/FINAL_SAMPLE.zip"
+    cmd = f"curl --create-dirs -J -O --output-dir {LOCALSOURCE} {DOWNLOAD_URL_SAMPLE}; unzip {LOCALSOURCE}/FINAL_SAMPLE.zip -d {LOCALSOURCE}; rm {LOCALSOURCE}/FINAL_SAMPLE.zip"
 
     subprocess.run(cmd, shell=True)
     logger.info("Sample download complete")
@@ -181,9 +182,6 @@ def parse_ampel_json(filepath, parameter_name) -> Optional[dict]:
         raise ValueError("No file at given filepath")
 
     resultdict = {}
-    # i = 0
-    # k = 0
-    # j = 0
 
     with open(filepath) as json_file:
         data = json.load(json_file)
@@ -211,13 +209,11 @@ def parse_ampel_json(filepath, parameter_name) -> Optional[dict]:
                                 }
                             }
                         )
-                        k += 1
                     else:
                         resultdict.update({ztfid: {"salt": "failure"}})
-                        j += 1
             else:
                 resultdict.update({ztfid: {"salt": "no_body"}})
-                i += 1
-    # print(k)
-    # print(j)
-    # print(i)
+
+    logger.info(f"Imported {len(resultdict)} entries from {filepath}")
+
+    return resultdict

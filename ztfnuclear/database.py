@@ -97,21 +97,19 @@ class MetadataDB(object):
         testobj = self.read_transient(ztfid="ZTF19aatubsj")
 
         if testobj:
-            if "RA" in testobj.keys():
-                has_ra = True
-            else:
-                has_ra = False
-            if "peak_dates" in testobj.keys():
-                has_peak_dates = True
-            else:
-                has_peak_dates = False
+            has_ra = True if "RA" in testobj.keys() else False
+            has_salt = True if "salt" in testobj.keys() else False
+            has_peak_dates = True if "peak_dates" in testobj.keys() else False
+
         else:
             has_ra = False
+            has_salt = False
             has_peak_dates = False
 
         return {
             "count": items_in_coll,
             "has_ra": has_ra,
+            "has_salt": has_salt,
             "has_peak_dates": has_peak_dates,
         }
 
