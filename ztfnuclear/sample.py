@@ -42,6 +42,13 @@ class NuclearSample(object):
             )
             self.populate_db_from_dict(data=saltres)
 
+        if not db_check["has_ampel_z"]:
+            ampelz = io.parse_ampel_json(
+                filepath=os.path.join(io.LOCALSOURCE_ampelz),
+                parameter_name="ampel_z",
+            )
+            self.populate_db_from_dict(data=ampelz)
+
         db_check = self.metadb.get_statistics()
         assert db_check["count"] == 11687
 

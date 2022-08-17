@@ -100,17 +100,20 @@ class MetadataDB(object):
             has_ra = True if "RA" in testobj.keys() else False
             has_salt = True if "salt" in testobj.keys() else False
             has_peak_dates = True if "peak_dates" in testobj.keys() else False
+            has_ampel_z = True if "ampel_z" in testobj.keys() else False
 
         else:
             has_ra = False
             has_salt = False
             has_peak_dates = False
+            has_ampel_z = False
 
         return {
             "count": items_in_coll,
             "has_ra": has_ra,
             "has_salt": has_salt,
             "has_peak_dates": has_peak_dates,
+            "has_ampel_z": has_ampel_z,
         }
 
 
@@ -223,7 +226,7 @@ class WISE(object):
         if hpcp:
             ra = float(hpcp[0])
             dec = float(hpcp[1])
-            allwise_id = float(hpcp[2])
+            allwise_id = str(hpcp[2])
 
             res = {"body": {"allwise_id": allwise_id, "dist": hpcp_dist}}
 

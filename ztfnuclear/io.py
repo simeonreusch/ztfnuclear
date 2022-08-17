@@ -15,6 +15,7 @@ if os.getenv("ZTFDATA"):
     LOCALSOURCE = os.path.join(str(os.getenv("ZTFDATA")), "nuclear_sample")
     LOCALSOURCE_dfs = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "data")
     LOCALSOURCE_fitres = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "fitres")
+    LOCALSOURCE_ampelz = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "ampel_z.json")
     LOCALSOURCE_location = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "location.csv")
     LOCALSOURCE_peak_dates = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "peak_dates.csv")
     LOCALSOURCE_WISE = os.path.join(LOCALSOURCE, "WISE")
@@ -178,7 +179,7 @@ def get_ztfid_header(ztfid: str) -> Optional[dict]:
         raise ValueError(f"{ztfid} is not a valid ZTF ID")
 
 
-def parse_ampel_json(filepath, parameter_name) -> Optional[dict]:
+def parse_ampel_json(filepath: str, parameter_name: str) -> dict:
     """Reads the mongodb export from Ampel"""
     if not os.path.isfile(filepath):
         raise ValueError("No file at given filepath")
@@ -213,8 +214,29 @@ def parse_ampel_json(filepath, parameter_name) -> Optional[dict]:
                         )
                     else:
                         resultdict.update({ztfid: {"salt": "failure"}})
-            else:
-                resultdict.update({ztfid: {"salt": "no_body"}})
+
+                elif parameter_name == "ampel_z":
+                    if "ampel_z" in body.keys():
+                        z = body["ampel_z"]
+                        z_dist = body["ampel_dist"]
+                        z_group = body["group_z_nbr"]
+                        z_precision = body["group_z_precision"]
+                        resultdict.update(
+                            {
+                                ztfid: {
+                                    "ampel_z": {
+                                        "z": z,
+                                        "z_dist": z_dist,
+                                        "z_group": z_group,
+                                        "z_precision": z_precision,
+                                    }
+                                }
+                            }
+                        )
+                    else:
+                        resultdict.update({ztfid: {"ampel_z": {}}})
+                else:
+                    raise ValueError("Parameter_name is not know")
 
     logger.info(f"Imported {len(resultdict)} entries from {filepath}")
 
