@@ -76,7 +76,9 @@ def download_wise():
     """
     Downloads the WISE location parquet file from DESY Syncandshare
     """
-    cmd = f"curl --create-dirs -J -O --output-dir {LOCALSOURCE} {DOWNLOAD_URL_WISE}"
+    cmd = (
+        f"curl --create-dirs -J -O --output-dir {LOCALSOURCE_WISE} {DOWNLOAD_URL_WISE}"
+    )
 
     subprocess.run(cmd, shell=True)
     logger.info("WISE location file download complete")
