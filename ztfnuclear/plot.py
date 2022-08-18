@@ -104,24 +104,29 @@ def plot_lightcurve(
 
     color_dict = {1: "green", 2: "red", 3: "orange"}
 
-    plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves")
+    if magplot:
+        plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "mag")
+    else:
+        plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "flux")
 
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
 
     fig, ax = plt.subplots(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
 
-    fig.suptitle(f"{ztfid}", fontsize=14)
+    bl_correction = True if "ampl_corr" in df.keys() else False
 
     for filterid in df["filterid"].unique():
         _df = df.query("filterid == @filterid")
 
-        if "ampl_corr" in df.keys():
+        if bl_correction:
             ampl_column = "ampl_corr"
             ampl_err_column = "ampl_err_corr"
+            fig.suptitle(f"{ztfid} (baseline correction)", fontsize=14)
         else:
             ampl_column = "ampl"
             ampl_err_column = "ampl.err"
+            fig.suptitle(f"{ztfid} (no baseline correction)", fontsize=14)
 
         obsmjd = _df.obsmjd.values
 
@@ -174,7 +179,10 @@ def plot_lightcurve(
         ax.set_xlabel("Date (MJD)")
         ax.grid(b=True, alpha=0.8)  # (, axis="y")
 
-    outfile = os.path.join(plot_dir, ztfid + ".pdf")
+    if bl_correction:
+        outfile = os.path.join(plot_dir, ztfid + "_bl.pdf")
+    else:
+        outfile = os.path.join(plot_dir, ztfid + ".pdf")
     plt.tight_layout()
     plt.savefig(outfile)
     plt.close()

@@ -204,11 +204,11 @@ class Transient(object):
         meta = MetadataDB()
         meta.update_transient(ztfid=self.ztfid, data=self.crossmatch)
 
-    def plot(self, baseline_correction: bool = True):
+    def plot(self, baseline_correction: bool = True, magplot: bool = True):
         """
         Plot the transient lightcurve
         """
         if baseline_correction:
-            plot_lightcurve(df=self.baseline, ztfid=self.ztfid)
+            plot_lightcurve(df=self.baseline, ztfid=self.ztfid, magplot=magplot)
         else:
-            plot_lightcurve(df=self.raw_lc, ztfid=self.ztfid)
+            plot_lightcurve(df=self.raw_lc, ztfid=self.ztfid, magplot=magplot)
