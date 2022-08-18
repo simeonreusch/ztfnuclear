@@ -71,7 +71,8 @@ class NuclearSample(object):
     def create_baseline(self):
         self.logger.info("Creating baseline corrections for the full sample")
         for ztfid in tqdm(self.ztfids):
-            t = Transient(ztfid, recreate_baseline=True)
+            t = Transient(ztfid)
+            t.create_baseline()
 
     def populate_db_from_csv(self, filepath, name=None):
         self.logger.info("Populating the database from a csv file")
@@ -107,7 +108,7 @@ class NuclearSample(object):
         """Crossmatch the full sample"""
         self.logger.info("Crossmatching the full sample")
         for ztfid in tqdm(self.ztfids):
-            t = Transient(ztfid, recreate_baseline=False)
+            t = Transient(ztfid)
             t.crossmatch()
         info = SampleInfo()
         date_now = datetime.datetime.now().replace(microsecond=0)
@@ -150,7 +151,7 @@ class Transient(object):
 
     def recreate_baseline(self):
         """Recalculate the baseline"""
-        bl, bl_info = baseline.baseline(transient=self)
+        bl, bl_info = baseline.baseline(transient=self, primary_grid_only=True)
         self.baseline = bl
 
     def query_z(self):

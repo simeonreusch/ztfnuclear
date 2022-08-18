@@ -93,7 +93,9 @@ def plot_ampelz():
     plt.close()
 
 
-def plot_lightcurve(df: pd.DataFrame, ztfid: str, magplot: bool = True):
+def plot_lightcurve(
+    df: pd.DataFrame, ztfid: str, magplot: bool = True, snt_threshold=3
+):
     """Plot a lightcurve"""
     if magplot:
         logger.debug("Plotting lightcurve (in magnitude space)")
@@ -109,6 +111,8 @@ def plot_lightcurve(df: pd.DataFrame, ztfid: str, magplot: bool = True):
 
     fig, ax = plt.subplots(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
 
+    fig.suptitle(f"{ztfid}", fontsize=14)
+
     for filterid in df["filterid"].unique():
         _df = df.query("filterid == @filterid")
 
@@ -119,18 +123,56 @@ def plot_lightcurve(df: pd.DataFrame, ztfid: str, magplot: bool = True):
             ampl_column = "ampl"
             ampl_err_column = "ampl.err"
 
-        ax.errorbar(
-            _df.obsmjd,
-            _df[ampl_column],
-            _df[ampl_err_column],
-            fmt="o",
-            mec=color_dict[filterid],
-            ecolor=color_dict[filterid],
-            mfc="None",
-            alpha=0.7,
-            ms=2,
-            elinewidth=0.8,
-        )
+        obsmjd = _df.obsmjd.values
+
+        if magplot:
+            F0 = 10 ** (_df.magzp / 2.5)
+            F0_err = F0 / 2.5 * np.log(10) * _df.magzpunc
+            Fratio = _df[ampl_column] / F0
+            Fratio_err = np.sqrt(
+                (_df[ampl_err_column] / F0) ** 2
+                + (_df[ampl_column] * F0_err / F0**2) ** 2
+            )
+            abmag = -2.5 * np.log10(Fratio)
+            abmag_err = 2.5 / np.log(10) * Fratio_err / Fratio
+
+            if snt_threshold:
+                snt_limit = Fratio_err * snt_threshold
+                abmag = np.where(Fratio > snt_limit, abmag, 99)
+                abmag_err = np.where(Fratio > snt_limit, abmag_err, 0.0000000001)
+                placeholder_obsmjd = obsmjd[np.argmin(abmag)]
+                obsmjd = np.where(abmag < 99, obsmjd, placeholder_obsmjd)
+
+            ax.errorbar(
+                obsmjd,
+                abmag,
+                abmag_err,
+                fmt="o",
+                mec=color_dict[filterid],
+                ecolor=color_dict[filterid],
+                mfc="None",
+                alpha=0.7,
+                ms=2,
+                elinewidth=0.8,
+            )
+            ax.set_ylim([23, 15])
+            ax.set_ylabel("Mag (AB)")
+
+        else:
+            ax.errorbar(
+                _df.obsmjd,
+                _df[ampl_column],
+                _df[ampl_err_column],
+                fmt="o",
+                mec=color_dict[filterid],
+                ecolor=color_dict[filterid],
+                mfc="None",
+                alpha=0.7,
+                ms=2,
+                elinewidth=0.5,
+            )
+        ax.set_xlabel("Date (MJD)")
+        ax.grid(b=True, alpha=0.8)  # (, axis="y")
 
     outfile = os.path.join(plot_dir, ztfid + ".pdf")
     plt.tight_layout()
