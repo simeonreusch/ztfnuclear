@@ -12,6 +12,7 @@ import pandas as pd  # type: ignore
 
 from ztfnuclear import io, baseline
 from ztfnuclear.database import MetadataDB, SampleInfo
+from ztfnuclear.plot import plot_lightcurve
 
 
 class NuclearSample(object):
@@ -165,6 +166,16 @@ class Transient(object):
             self.z = ned_res["NEDz"]
             self.z_dist = ned_res["NEDz_dist"]
 
+    @cached_property
+    def raw_lc(self):
+        """
+        Read the lightcurve_dataframe
+        """
+        lc_path = os.path.join(io.LOCALSOURCE_dfs, self.ztfid + ".csv")
+        lc = pd.read_csv(lc_path, comment="#")
+
+        return lc
+
     def crossmatch(self):
         """
         Do all kinds of crossmatches for the transient
@@ -191,3 +202,12 @@ class Transient(object):
         self.crossmatch = {"crossmatch": results}
         meta = MetadataDB()
         meta.update_transient(ztfid=self.ztfid, data=self.crossmatch)
+
+    def plot(self, baseline_correction: bool = True):
+        """
+        Plot the transient lightcurve
+        """
+        if baseline_correction:
+            plot_lightcurve(df=self.baseline, ztfid=self.ztfid)
+        else:
+            plot_lightcurve(df=self.raw_lc, ztfid=self.ztfid)
