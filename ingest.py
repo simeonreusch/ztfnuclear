@@ -12,7 +12,7 @@ from ztfnuclear.baseline import baseline
 from ztfnuclear.plot import plot_location
 from ztfnuclear.database import WISE, MetadataDB
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 

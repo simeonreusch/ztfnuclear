@@ -52,12 +52,16 @@ def query_crts(
 
     if res:
         logger.debug("CRTS: Match")
-        return {
-            "CRTS": {
-                "name": str(res[0]["body"]["name"]),
-                "dist": float(res[0]["dist_arcsec"]),
+        if "name" in res[0]["body"].keys():
+            return {
+                "CRTS": {
+                    "name": str(res[0]["body"]["name"]),
+                    "dist": float(res[0]["dist_arcsec"]),
+                }
             }
-        }
+        else:
+            logger.debug("CRTS: No match")
+            return {"CRTS": {}}
 
     else:
         logger.debug("CRTS: No match")
