@@ -85,26 +85,30 @@ def query_milliquas(
 
     if res:
         if len(res) == 1:
-            if "q" in res[0]["body"]["broad_type"]:
-                logger.debug("Milliquas: QSO match found")
-                return {
-                    "Milliquas": {
-                        "name": str(res[0]["body"]["name"]),
-                        "type": "QSO",
-                        "qso_prob": float(res[0]["body"]["qso_prob"]),
-                        "dist": float(res[0]["dist_arcsec"]),
+            if "body" in res[0]:
+                if "q" in res[0]["body"]["broad_type"]:
+                    logger.debug("Milliquas: QSO match found")
+                    return {
+                        "Milliquas": {
+                            "name": str(res[0]["body"]["name"]),
+                            "type": "QSO",
+                            "qso_prob": float(res[0]["body"]["qso_prob"]),
+                            "dist": float(res[0]["dist_arcsec"]),
+                        }
                     }
-                }
 
-            else:
-                logger.debug("Milliquas: Non-QSO match found")
-                return {
-                    "Milliquas": {
-                        "name": str(res[0]["body"]["name"]),
-                        "type": str(res[0]["body"]["broad_type"]),
-                        "dist": float(res[0]["dist_arcsec"]),
+                else:
+                    logger.debug("Milliquas: Non-QSO match found")
+                    return {
+                        "Milliquas": {
+                            "name": str(res[0]["body"]["name"]),
+                            "type": str(res[0]["body"]["broad_type"]),
+                            "dist": float(res[0]["dist_arcsec"]),
+                        }
                     }
-                }
+            else:
+                logger.debug("Milliquas: No match")
+                return {"Milliquas": {}}
         else:
             logger.debug("Milliquas: Multiple matches found")
             return {"Milliquas": "multiple_matches"}
