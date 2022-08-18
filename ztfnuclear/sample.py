@@ -4,6 +4,8 @@
 
 import os, logging, datetime
 
+from functools import cached_property
+
 from tqdm import tqdm  # type: ignore
 import numpy as np
 import pandas as pd  # type: ignore
@@ -116,9 +118,7 @@ class Transient(object):
     This class contains all info for a given transient
     """
 
-    def __init__(
-        self, ztfid: str, recreate_baseline: bool = False, read_baseline=False
-    ):
+    def __init__(self, ztfid: str):
         super(Transient, self).__init__()
         self.logger = logging.getLogger(__name__)
         self.ztfid = ztfid
@@ -129,23 +129,28 @@ class Transient(object):
         self.ra = float(self.header["ra"])
         self.dec = float(self.header["dec"])
 
-        if recreate_baseline:
-            bl, bl_info = baseline.baseline(transient=self)
-            self.baseline = bl
-        else:
-            if read_baseline:
-                bl_file = os.path.join(io.LOCALSOURCE_baseline, ztfid + "_bl.csv")
-                if os.path.isfile(bl_file):
-                    self.baseline = pd.read_csv(bl_file)
-                else:
-                    self.logger.info(
-                        f"{ztfid}: No baseline correction file, trying to apply baseline correction"
-                    )
-                    bl, bl_info = baseline.baseline(transient=self)
-                    self.baseline = bl
-
         location_all = io.get_locations()
         self.location = location_all.loc[self.ztfid].to_dict()
+
+    @cached_property
+    def baseline(self):
+        """Obtain the baseline correction, recalculate if not present"""
+
+        bl_file = os.path.join(io.LOCALSOURCE_baseline, self.ztfid + "_bl.csv")
+        if os.path.isfile(bl_file):
+            bl = pd.read_csv(bl_file)
+            return bl
+        else:
+            self.logger.info(
+                f"{self.ztfid}: No baseline correction file, trying to apply baseline correction"
+            )
+            bl, bl_info = baseline.baseline(transient=self)
+            return bl
+
+    def recreate_baseline(self):
+        """Recalculate the baseline"""
+        bl, bl_info = baseline.baseline(transient=self)
+        self.baseline = bl
 
     def query_z(self):
         """

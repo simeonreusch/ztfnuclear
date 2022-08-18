@@ -89,3 +89,7 @@ def plot_ampelz():
     plt.tight_layout()
     plt.savefig(outfile)
     plt.close()
+
+
+def plot_lightcurve():
+    """Plot a lightcurve"""

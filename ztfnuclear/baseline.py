@@ -353,7 +353,7 @@ def baseline(
 
     color_dict = {"1": "green", "2": "red", "3": "orange"}
 
-    plot_dir = os.paht.join(io.LOCALSOURCE_plots, "baseline")
+    plot_dir = os.path.join(io.LOCALSOURCE_plots, "baseline")
 
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
