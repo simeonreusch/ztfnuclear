@@ -12,6 +12,8 @@ from extcats import CatalogPusher, CatalogQuery  # type: ignore
 
 from ztfnuclear import io
 
+logging.getLogger("extcats.CatalogQuery").setLevel(logging.WARN)
+
 
 class SampleInfo(object):
     """Mongo DB collection storing information about the sample"""
