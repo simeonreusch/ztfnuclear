@@ -15,6 +15,8 @@ from ztfnuclear import io, baseline
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.plot import plot_lightcurve
 
+logger = logging.getLogger(__name__)
+
 
 class NuclearSample(object):
     """
@@ -110,8 +112,7 @@ class NuclearSample(object):
         self.logger.info("Crossmatching the full sample")
         for i, ztfid in tqdm(enumerate(self.ztfids[startindex:])):
             self.logger.debug(f"Crossmatching {ztfid}")
-            print(f"Crossmatching {ztfid}")
-            print(f"Transient {i+startindex} of {len(self.ztfids)}")
+            self.logger.debug(f"Transient {i+startindex} of {len(self.ztfids)}")
             t = Transient(ztfid)
             t.crossmatch()
         info = SampleInfo()
