@@ -14,6 +14,7 @@ import pandas as pd  # type: ignore
 from ztfnuclear import io, baseline
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.plot import plot_lightcurve
+from ztfnuclear.fritz import FritzAPI
 
 logger = logging.getLogger(__name__)
 
@@ -174,12 +175,8 @@ class Transient(object):
         """
         Get the AMPEL redshift from the database
         """
-        from ztfnuclear.crossmatch import query_ned_for_z
-
-        meta = MetadataDB()
-        transient_metadata = meta.read_transient(ztfid=self.ztfid)
-        if "z" in transient_metadata["ampel_z"].keys():
-            ampel_z = transient_metadata["ampel_z"]["z"]
+        if "z" in self.meta["ampel_z"].keys():
+            ampel_z = self.meta["ampel_z"]["z"]
             return ampel_z
         else:
             return None
@@ -189,13 +186,21 @@ class Transient(object):
         """
         Get the AMPEL redshift distance from the database
         """
-        from ztfnuclear.crossmatch import query_ned_for_z
+        if "z_dist" in self.meta["ampel_z"].keys():
+            ampel_z_dist = self.meta["ampel_z"]["z_dist"]
+            return ampel_z_dist
+        else:
+            return None
 
+    @cached_property
+    def meta(self) -> Optional[dict]:
+        """
+        Read all metadata  for transient from the database
+        """
         meta = MetadataDB()
         transient_metadata = meta.read_transient(ztfid=self.ztfid)
-        if "z_dist" in transient_metadata["ampel_z"].keys():
-            ampel_z_dist = transient_metadata["ampel_z"]["z_dist"]
-            return ampel_z_dist
+        if transient_metadata:
+            return transient_metadata
         else:
             return None
 
@@ -225,6 +230,16 @@ class Transient(object):
         self.crossmatch = {"crossmatch": results}
         meta = MetadataDB()
         meta.update_transient(ztfid=self.ztfid, data=self.crossmatch)
+
+    def fritz(self):
+        """
+        Query Fritz for transient info and update the database
+        """
+        fritz = FritzAPI()
+        fritzinfo = fritz.get_transient(self.ztfid)
+        data = fritzinfo[self.ztfid]
+        meta = MetadataDB()
+        meta.update_transient(ztfid=self.ztfid, data=data)
 
     def plot(self, baseline_correction: bool = True, magplot: bool = True):
         """
