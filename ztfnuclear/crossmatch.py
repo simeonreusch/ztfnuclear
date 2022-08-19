@@ -85,7 +85,7 @@ def query_milliquas(
 
     if res:
         if len(res) == 1:
-            if "body" in res[0]:
+            if "body" in res[0].keys():
                 if "q" in res[0]["body"]["broad_type"]:
                     logger.debug("Milliquas: QSO match found")
                     return {
