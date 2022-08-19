@@ -105,10 +105,13 @@ class NuclearSample(object):
 
         self.metadb.update_many(ztfids=ztfids, data=data_list)
 
-    def crossmatch(self):
+    def crossmatch(self, startindex: int = 0):
         """Crossmatch the full sample"""
         self.logger.info("Crossmatching the full sample")
-        for ztfid in tqdm(self.ztfids):
+        for i, ztfid in tqdm(enumerate(self.ztfids[startindex:])):
+            self.logger.debug(f"Crossmatching {ztfid}")
+            print(f"Crossmatching {ztfid}")
+            print(f"Transient {i+startindex} of {len(self.ztfids)}")
             t = Transient(ztfid)
             t.crossmatch()
         info = SampleInfo()
