@@ -18,6 +18,7 @@ if os.getenv("ZTFDATA"):
     LOCALSOURCE_ampelz = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "ampel_z.json")
     LOCALSOURCE_location = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "location.csv")
     LOCALSOURCE_peak_dates = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "peak_dates.csv")
+    LOCALSOURCE_ZTF_tdes = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "ztf_tdes.csv")
     LOCALSOURCE_WISE = os.path.join(LOCALSOURCE, "WISE")
     LOCALSOURCE_plots = os.path.join(LOCALSOURCE, "plots")
     LOCALSOURCE_baseline = os.path.join(LOCALSOURCE, "baseline")

@@ -5,6 +5,7 @@
 import os, logging, datetime
 
 from functools import cached_property
+from typing import Optional
 
 from tqdm import tqdm  # type: ignore
 import numpy as np
@@ -135,7 +136,7 @@ class Transient(object):
         self.location = location_all.loc[self.ztfid].to_dict()
 
     @cached_property
-    def baseline(self):
+    def baseline(self) -> pd.DataFrame:
         """Obtain the baseline correction, recalculate if not present"""
 
         bl_file = os.path.join(io.LOCALSOURCE_baseline, self.ztfid + "_bl.csv")
@@ -154,21 +155,8 @@ class Transient(object):
         bl, bl_info = baseline.baseline(transient=self, primary_grid_only=True)
         self.baseline = bl
 
-    def query_z(self):
-        """
-        Query NEDz via Ampel API
-        """
-        from ztfnuclear.crossmatch import query_ned_for_z
-
-        ned_res = query_ned_for_z(
-            ra_deg=self.ra, dec_deg=self.dec, searchradius_arcsec=10
-        )
-        if ned_res:
-            self.z = ned_res["NEDz"]
-            self.z_dist = ned_res["NEDz_dist"]
-
     @cached_property
-    def raw_lc(self):
+    def raw_lc(self) -> pd.DataFrame:
         """
         Read the lightcurve_dataframe
         """
@@ -176,6 +164,36 @@ class Transient(object):
         lc = pd.read_csv(lc_path, comment="#")
 
         return lc
+
+    @cached_property
+    def z(self) -> Optional[float]:
+        """
+        Get the AMPEL redshift from the database
+        """
+        from ztfnuclear.crossmatch import query_ned_for_z
+
+        meta = MetadataDB()
+        transient_metadata = meta.read_transient(ztfid=self.ztfid)
+        if "z" in transient_metadata["ampel_z"].keys():
+            ampel_z = transient_metadata["ampel_z"]["z"]
+            return ampel_z
+        else:
+            return None
+
+    @cached_property
+    def z_dist(self) -> Optional[float]:
+        """
+        Get the AMPEL redshift distance from the database
+        """
+        from ztfnuclear.crossmatch import query_ned_for_z
+
+        meta = MetadataDB()
+        transient_metadata = meta.read_transient(ztfid=self.ztfid)
+        if "z_dist" in transient_metadata["ampel_z"].keys():
+            ampel_z_dist = transient_metadata["ampel_z"]["z_dist"]
+            return ampel_z_dist
+        else:
+            return None
 
     def crossmatch(self):
         """
