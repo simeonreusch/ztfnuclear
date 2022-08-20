@@ -112,13 +112,25 @@ class NuclearSample(object):
         """Crossmatch the full sample"""
         self.logger.info("Crossmatching the full sample")
         for i, ztfid in tqdm(enumerate(self.ztfids[startindex:])):
-            self.logger.debug(f"Crossmatching {ztfid}")
+            self.logger.debug(f"{ztfid}: Crossmatching")
             self.logger.debug(f"Transient {i+startindex} of {len(self.ztfids)}")
             t = Transient(ztfid)
             t.crossmatch()
         info = SampleInfo()
         date_now = datetime.datetime.now().replace(microsecond=0)
         info.update(data={"crossmatch_info": {"crossmatch": True, "date": date_now}})
+
+    def fritz(self, startindex: int = 0):
+        """Query Fritz for the full sample"""
+        self.logger.info("Obtaining metadata on full sample from Fritz")
+        for i, ztfid in tqdm(enumerate(self.ztfids[startindex:])):
+            self.logger.debug(f"{ztfid}: Querying Fritz")
+            self.logger.debug(f"Transient {i+startindex} of {len(self.ztfids)}")
+            t = Transient(ztfid)
+            t.fritz()
+        info = SampleInfo()
+        date_now = datetime.datetime.now().replace(microsecond=0)
+        info.update(data={"fritz_info": {"fritz": True, "date": date_now}})
 
 
 class Transient(object):

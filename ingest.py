@@ -19,4 +19,5 @@ logger = logging.getLogger(__name__)
 
 sample = NuclearSample()
 wise = WISE()
-sample.crossmatch(startindex=3600)
+sample.crossmatch(startindex=0)
+sample.fritz(startindex=0)
