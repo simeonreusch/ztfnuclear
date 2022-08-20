@@ -4,9 +4,10 @@
 
 import os, logging, json
 
+import backoff, requests
+
 import numpy as np
 from astropy.time import Time  # type: ignore
-import requests
 
 
 class FritzAPI(object):
@@ -27,6 +28,11 @@ class FritzAPI(object):
         self.logger.debug(f"Using {_token} as token for the Fritz API")
         self.headers = {"Authorization": f"token {_token}"}
 
+    @backoff.on_exception(
+        backoff.expo,
+        requests.exceptions.RequestException,
+        max_time=600,
+    )
     def get_transient(self, ztfid: str) -> dict:
         """
         Query the Fritz API for transient classifications
