@@ -123,6 +123,7 @@ class MetadataDB(object):
         cursor = self.coll.find({})
         df = pd.DataFrame(list(cursor))
         df.rename(columns={"_id": "ztfid"}, inplace=True)
+        df.set_index("ztfid", inplace=True)
         return df
 
 
