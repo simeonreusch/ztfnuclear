@@ -118,6 +118,13 @@ class MetadataDB(object):
             "has_ampel_z": has_ampel_z,
         }
 
+    def to_df(self):
+        """Export the metadata db as Pandas dataframe"""
+        cursor = self.coll.find({})
+        df = pd.DataFrame(list(cursor))
+        df.rename(columns={"_id": "ztfid"}, inplace=True)
+        return df
+
 
 class WISE(object):
     """Interface with WISE MongoDB"""
