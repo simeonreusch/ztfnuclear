@@ -32,8 +32,8 @@ class NuclearSample(object):
 
         self.get_all_ztfids()
         self.location()
-        self.metadb = MetadataDB()
-        db_check = self.metadb.get_statistics()
+        self.meta = MetadataDB()
+        db_check = self.meta.get_statistics()
 
         if not db_check["has_ra"]:
             self.populate_db_from_csv(filepath=io.LOCALSOURCE_location)
@@ -56,7 +56,7 @@ class NuclearSample(object):
             )
             self.populate_db_from_dict(data=ampelz)
 
-        db_check = self.metadb.get_statistics()
+        db_check = self.meta.get_statistics()
         assert db_check["count"] == 11687
 
     def get_transient(self, ztfid: str):
@@ -93,7 +93,7 @@ class NuclearSample(object):
                     write_dict = s[1].to_dict()
                 data.append(write_dict)
 
-            self.metadb.update_many(ztfids=ztfids, data=data)
+            self.meta.update_many(ztfids=ztfids, data=data)
         else:
             raise ValueError("File does not exist")
 
@@ -106,7 +106,7 @@ class NuclearSample(object):
         for ztfid in ztfids:
             data_list.append(data[ztfid])
 
-        self.metadb.update_many(ztfids=ztfids, data=data_list)
+        self.meta.update_many(ztfids=ztfids, data=data_list)
 
     def crossmatch(self, startindex: int = 0):
         """Crossmatch the full sample"""
