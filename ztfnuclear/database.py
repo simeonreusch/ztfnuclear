@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
+
 import os, logging, collections
-from tqdm import tqdm
+from tqdm import tqdm  # type: ignore
 from typing import Union, Any, Sequence, Tuple, List, Optional
 from pymongo import MongoClient, UpdateOne, GEOSPHERE
 from pymongo.database import Database
@@ -103,12 +104,14 @@ class MetadataDB(object):
             has_salt = True if "salt" in testobj.keys() else False
             has_peak_dates = True if "peak_dates" in testobj.keys() else False
             has_ampel_z = True if "ampel_z" in testobj.keys() else False
+            has_wise_lc = True if "wise_lc" in testobj.keys() else False
 
         else:
             has_ra = False
             has_salt = False
             has_peak_dates = False
             has_ampel_z = False
+            has_wise_lc = False
 
         return {
             "count": items_in_coll,
@@ -116,9 +119,10 @@ class MetadataDB(object):
             "has_salt": has_salt,
             "has_peak_dates": has_peak_dates,
             "has_ampel_z": has_ampel_z,
+            "has_wise_lc": has_wise_lc,
         }
 
-    def to_df(self):
+    def to_df(self) -> pd.DataFrame:
         """Export the metadata db as Pandas dataframe"""
         cursor = self.coll.find({})
         df = pd.DataFrame(list(cursor))
