@@ -20,6 +20,9 @@ if os.getenv("ZTFDATA"):
     LOCALSOURCE_peak_dates = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "peak_dates.csv")
     LOCALSOURCE_ZTF_tdes = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "ztf_tdes.csv")
     LOCALSOURCE_WISE = os.path.join(LOCALSOURCE, "WISE")
+    LOCALSOURCE_WISE_lightcurves = os.path.join(
+        LOCALSOURCE, "FINAL_SAMPLE", "wise_lightcurves.json"
+    )
     LOCALSOURCE_plots = os.path.join(LOCALSOURCE, "plots")
     LOCALSOURCE_baseline = os.path.join(LOCALSOURCE, "baseline")
 
@@ -178,6 +181,19 @@ def get_ztfid_header(ztfid: str) -> Optional[dict]:
 
     else:
         raise ValueError(f"{ztfid} is not a valid ZTF ID")
+
+
+def parse_json(filepath: str) -> dict:
+    """
+    Read a json file and extract the dictionary
+    """
+    if not os.path.isfile(filepath):
+        raise ValueError("No file at given filepath")
+
+    with open(filepath) as json_file:
+        data = json.load(json_file)
+
+    return data
 
 
 def parse_ampel_json(filepath: str, parameter_name: str) -> dict:
