@@ -112,7 +112,7 @@ if __name__ == "__main__":
     full_sample = pd.read_csv("full_sample.csv", index_col=0)
 
     wise_lcs = get_wise_photometry(
-        sample_df=full_sample, searchradius_arcsec=5, positional=False
+        sample_df=full_sample, searchradius_arcsec=5, positional=True
     )
 
     with open("wise_full_by_id.json", "w") as fp:
