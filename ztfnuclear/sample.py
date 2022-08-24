@@ -57,8 +57,8 @@ class NuclearSample(object):
             self.populate_db_from_dict(data=ampelz)
 
         if not db_check["has_wise_lc"]:
-            wise_lc = io.parse_json(filepath=io.LOCALSOURCE_WISE_lightcurves)
-            self.populate_db_from_dict(data=wise_lc)
+            wise_lightcurves = io.parse_json(filepath=io.LOCALSOURCE_WISE_lightcurves)
+            self.populate_db_from_dict(data=wise_lightcurves)
 
         db_check = self.meta.get_statistics()
         assert db_check["count"] == 11687
@@ -220,6 +220,18 @@ class Transient(object):
         else:
             return None
 
+    @cached_property
+    def wise_lc(self) -> Optional[pd.DataFrame]:
+        """
+        Get the corresponding WISE lightcurve (if available) as pandas df
+        """
+        wise_dict = self.meta["WISE_lc"]
+        df = pd.DataFrame.from_dict(wise_dict)
+        if len(df) == 0:
+            return None
+        else:
+            return df
+
     def crossmatch(self):
         """
         Do all kinds of crossmatches for the transient
@@ -257,11 +269,25 @@ class Transient(object):
         meta = MetadataDB()
         meta.update_transient(ztfid=self.ztfid, data=data)
 
-    def plot(self, baseline_correction: bool = True, magplot: bool = True):
+    def plot(
+        self,
+        baseline_correction: bool = True,
+        magplot: bool = True,
+        include_wise: bool = False,
+    ):
         """
         Plot the transient lightcurve
         """
-        if baseline_correction:
-            plot_lightcurve(df=self.baseline, ztfid=self.ztfid, magplot=magplot)
+        if include_wise:
+            wise_df = self.wise_lc
         else:
-            plot_lightcurve(df=self.raw_lc, ztfid=self.ztfid, magplot=magplot)
+            wise_df = None
+
+        if baseline_correction:
+            plot_lightcurve(
+                df=self.baseline, ztfid=self.ztfid, magplot=magplot, wise_df=wise_df
+            )
+        else:
+            plot_lightcurve(
+                df=self.raw_lc, ztfid=self.ztfid, magplot=magplot, wise_df=wise_df
+            )

@@ -94,7 +94,11 @@ def plot_ampelz():
 
 
 def plot_lightcurve(
-    df: pd.DataFrame, ztfid: str, magplot: bool = True, snt_threshold=3
+    df: pd.DataFrame,
+    ztfid: str,
+    magplot: bool = True,
+    wise_df: pd.DataFrame = None,
+    snt_threshold=3,
 ):
     """Plot a lightcurve"""
     if magplot:
@@ -162,6 +166,18 @@ def plot_lightcurve(
             )
             ax.set_ylim([23, 15])
             ax.set_ylabel("Mag (AB)")
+
+            if len(wise_df) > 0:
+                ax.errorbar(
+                    wise_df.mean_mjd,
+                    wise_df.W1_mean_mag_ab,
+                    fmt="o",
+                    mec="black",
+                    ecolor="black",
+                    alpha=1,
+                    ms=3,
+                    elinewidth=1,
+                )
 
         else:
             ax.errorbar(
