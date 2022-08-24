@@ -56,9 +56,13 @@ class NuclearSample(object):
             )
             self.populate_db_from_dict(data=ampelz)
 
-        if not db_check["has_wise_lc"]:
-            wise_lightcurves = io.parse_json(filepath=io.LOCALSOURCE_WISE_lightcurves)
-            self.populate_db_from_dict(data=wise_lightcurves)
+        if not db_check["has_wise_lc_by_pos"]:
+            wise_lcs_by_pos = io.parse_json(filepath=io.LOCALSOURCE_WISE_lc_by_pos)
+            self.populate_db_from_dict(data=wise_lcs_by_pos)
+
+        if not db_check["has_wise_lc_by_id"]:
+            wise_lcs_by_id = io.parse_json(filepath=io.LOCALSOURCE_WISE_lc_by_id)
+            self.populate_db_from_dict(data=wise_lcs_by_id)
 
         db_check = self.meta.get_statistics()
         assert db_check["count"] == 11687

@@ -104,14 +104,16 @@ class MetadataDB(object):
             has_salt = True if "salt" in testobj.keys() else False
             has_peak_dates = True if "peak_dates" in testobj.keys() else False
             has_ampel_z = True if "ampel_z" in testobj.keys() else False
-            has_wise_lc = True if "wise_lc" in testobj.keys() else False
+            has_wise_lc_by_pos = True if "WISE_lc_by_pos" in testobj.keys() else False
+            has_wise_lc_by_id = True if "WISE_lc_by_id" in testobj.keys() else False
 
         else:
             has_ra = False
             has_salt = False
             has_peak_dates = False
             has_ampel_z = False
-            has_wise_lc = False
+            has_wise_lc_by_pos = False
+            has_wise_lc_by_id = False
 
         return {
             "count": items_in_coll,
@@ -119,7 +121,8 @@ class MetadataDB(object):
             "has_salt": has_salt,
             "has_peak_dates": has_peak_dates,
             "has_ampel_z": has_ampel_z,
-            "has_wise_lc": has_wise_lc,
+            "has_wise_lc_by_pos": has_wise_lc_by_pos,
+            "has_wise_lc_by_id": has_wise_lc_by_id,
         }
 
     def to_df(self) -> pd.DataFrame:

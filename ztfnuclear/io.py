@@ -20,8 +20,11 @@ if os.getenv("ZTFDATA"):
     LOCALSOURCE_peak_dates = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "peak_dates.csv")
     LOCALSOURCE_ZTF_tdes = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "ztf_tdes.csv")
     LOCALSOURCE_WISE = os.path.join(LOCALSOURCE, "WISE")
-    LOCALSOURCE_WISE_lightcurves = os.path.join(
-        LOCALSOURCE, "FINAL_SAMPLE", "wise_lightcurves.json"
+    LOCALSOURCE_WISE_lc_by_pos = os.path.join(
+        LOCALSOURCE, "FINAL_SAMPLE", "wise_lightcurves_by_pos.json"
+    )
+    LOCALSOURCE_WISE_lc_by_id = os.path.join(
+        LOCALSOURCE, "FINAL_SAMPLE", "wise_lightcurves_by_id.json"
     )
     LOCALSOURCE_plots = os.path.join(LOCALSOURCE, "plots")
     LOCALSOURCE_baseline = os.path.join(LOCALSOURCE, "baseline")

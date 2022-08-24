@@ -2,7 +2,7 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, json
+import os, logging, json, copy
 
 import pandas as pd
 import numpy as np
@@ -90,11 +90,15 @@ def get_wise_photometry(
             wise_lcs[ztfid][vegamag_key + "_ab"] = abmags
 
     returndict = {}
+    if positional:
+        wise_key = "WISE_lc_by_pos"
+    else:
+        wise_key = "WISE_lc_by_id"
     for ztfid in sample_df.ztfid:
         if ztfid in wise_lcs.keys():
-            returndict.update({ztfid: {"WISE_lc": wise_lcs[ztfid]}})
+            returndict.update({ztfid: {wise_key: wise_lcs[ztfid]}})
         else:
-            returndict.update({ztfid: {"WISE_lc": {}}})
+            returndict.update({ztfid: {wise_key: {}}})
     return returndict
 
 
@@ -109,11 +113,21 @@ def vega_to_abmag(vegamag: float, band: str) -> float:
 
 
 if __name__ == "__main__":
+    """
+    Run the WISE query
+    """
+
+    positional_search = False
+
     full_sample = pd.read_csv("full_sample.csv", index_col=0)
 
     wise_lcs = get_wise_photometry(
-        sample_df=full_sample, searchradius_arcsec=5, positional=True
+        sample_df=full_sample, searchradius_arcsec=5, positional=positional_search
     )
 
-    with open("wise_full_by_id.json", "w") as fp:
-        json.dump(wise_lcs, fp)
+    if positional_search:
+        with open("wise_lightcurves_by_pos.json", "w") as fp:
+            json.dump(wise_lcs, fp)
+    else:
+        with open("wise_lightcurves_by_id.json", "w") as fp:
+            json.dump(wise_lcs, fp)
