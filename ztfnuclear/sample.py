@@ -43,11 +43,18 @@ class NuclearSample(object):
                 filepath=io.LOCALSOURCE_peak_dates, name="peak_dates"
             )
         if not db_check["has_salt"]:
-            saltres = io.parse_ampel_json(
+            saltfit_res = io.parse_ampel_json(
                 filepath=os.path.join(io.LOCALSOURCE_fitres, "saltfit.json"),
                 parameter_name="salt",
             )
-            self.populate_db_from_dict(data=saltres)
+            self.populate_db_from_dict(data=saltfit_res)
+
+        if not db_check["has_tdefit"]:
+            tdefit_res = io.parse_ampel_json(
+                filepath=os.path.join(io.LOCALSOURCE_fitres, "tdefit.json"),
+                parameter_name="tde_fit",
+            )
+            self.populate_db_from_dict(data=tdefit_res)
 
         if not db_check["has_ampel_z"]:
             ampelz = io.parse_ampel_json(

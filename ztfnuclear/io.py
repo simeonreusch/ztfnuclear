@@ -215,7 +215,7 @@ def parse_ampel_json(filepath: str, parameter_name: str) -> dict:
             if "body" in entry.keys():
                 body = entry["body"][0]
 
-                if parameter_name == "salt":
+                if parameter_name == "salt" or parameter_name == "tde_fit":
                     if "sncosmo_result" in body.keys():
                         sncosmo_result = body["sncosmo_result"]
                         chisq = sncosmo_result["chisq"]
@@ -224,7 +224,7 @@ def parse_ampel_json(filepath: str, parameter_name: str) -> dict:
                         resultdict.update(
                             {
                                 ztfid: {
-                                    "salt": {
+                                    parameter_name: {
                                         "chisq": chisq,
                                         "ndof": ndof,
                                         "paramdict": paramdict,
@@ -233,7 +233,7 @@ def parse_ampel_json(filepath: str, parameter_name: str) -> dict:
                             }
                         )
                     else:
-                        resultdict.update({ztfid: {"salt": "failure"}})
+                        resultdict.update({ztfid: {parameter_name: "failure"}})
 
                 elif parameter_name == "ampel_z":
                     if "ampel_z" in body.keys():
@@ -255,6 +255,7 @@ def parse_ampel_json(filepath: str, parameter_name: str) -> dict:
                         )
                     else:
                         resultdict.update({ztfid: {"ampel_z": {}}})
+
                 else:
                     raise ValueError("Parameter_name is not know")
 
