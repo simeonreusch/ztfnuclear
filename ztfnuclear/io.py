@@ -26,6 +26,9 @@ if os.getenv("ZTFDATA"):
     LOCALSOURCE_WISE_lc_by_id = os.path.join(
         LOCALSOURCE, "FINAL_SAMPLE", "wise_lightcurves_by_id.json"
     )
+    LOCALSOURCE_WISE_bayesian = os.path.join(
+        LOCALSOURCE, "FINAL_SAMPLE", "wise_bayesian_blocks.json"
+    )
     LOCALSOURCE_plots = os.path.join(LOCALSOURCE, "plots")
     LOCALSOURCE_baseline = os.path.join(LOCALSOURCE, "baseline")
 
@@ -210,7 +213,11 @@ def parse_ampel_json(filepath: str, parameter_name: str) -> dict:
         data = json.load(json_file)
         for entry in data:
             stockid = entry["stock"]
-            ztfid = utils.stockid_to_ztfid(stockid)
+
+            if parameter_name != "wise_bayesian":
+                ztfid = utils.stockid_to_ztfid(stockid)
+            else:
+                ztfid = stockid
 
             if "body" in entry.keys():
                 body = entry["body"][0]
@@ -255,6 +262,32 @@ def parse_ampel_json(filepath: str, parameter_name: str) -> dict:
                         )
                     else:
                         resultdict.update({ztfid: {"ampel_z": {}}})
+
+                elif parameter_name == "wise_bayesian":
+                    unit = entry["unit"]
+
+                    if unit == "T2BayesianBlocks":
+                        if "result" in body.keys():
+                            resultdict.update(
+                                {ztfid: {"WISE_bayesian": {"bayesian": body["result"]}}}
+                            )
+                        else:
+                            resultdict.update(
+                                {ztfid: {"WISE_bayesian": {"bayesian": None}}}
+                            )
+                    elif unit == "T2DustEchoEval":
+                        if "result" in body.keys():
+                            resultdict[ztfid]["WISE_bayesian"].update(
+                                {"dustecho": body["result"]}
+                            )
+                        else:
+                            resultdict[ztfid]["WISE_bayesian"].update(
+                                {"dustecho": None}
+                            )
+                    else:
+                        raise ValueError(
+                            "There is something wrong with your mongo export file."
+                        )
 
                 else:
                     raise ValueError("Parameter_name is not know")

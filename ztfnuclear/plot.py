@@ -71,6 +71,10 @@ def plot_salt():
     plt.close()
 
 
+def plot_salt_tde_chisq():
+    """Plot the salt fit vs. TDE fit chisq"""
+
+
 def plot_ampelz():
     """Plot the ampel z distribution"""
     meta = MetadataDB()

@@ -110,6 +110,7 @@ class MetadataDB(object):
             has_ampel_z = True if "ampel_z" in testobj.keys() else False
             has_wise_lc_by_pos = True if "WISE_lc_by_pos" in testobj.keys() else False
             has_wise_lc_by_id = True if "WISE_lc_by_id" in testobj.keys() else False
+            has_wise_bayesian = True if "WISE_bayesian" in testobj.keys() else False
 
         else:
             has_ra = False
@@ -120,6 +121,7 @@ class MetadataDB(object):
             has_ampel_z = False
             has_wise_lc_by_pos = False
             has_wise_lc_by_id = False
+            has_wise_bayesian = False
 
         return {
             "count": items_in_coll,
@@ -131,6 +133,7 @@ class MetadataDB(object):
             "has_ampel_z": has_ampel_z,
             "has_wise_lc_by_pos": has_wise_lc_by_pos,
             "has_wise_lc_by_id": has_wise_lc_by_id,
+            "has_wise_bayesian": has_wise_bayesian,
         }
 
     def to_df(self) -> pd.DataFrame:

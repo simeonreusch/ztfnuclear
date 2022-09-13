@@ -70,6 +70,13 @@ class NuclearSample(object):
             )
             self.populate_db_from_dict(data=ampelz)
 
+        if not db_check["has_wise_bayesian"]:
+            wise_bayesian = io.parse_ampel_json(
+                filepath=os.path.join(io.LOCALSOURCE_WISE_bayesian),
+                parameter_name="wise_bayesian",
+            )
+            self.populate_db_from_dict(data=wise_bayesian)
+
         if not db_check["has_wise_lc_by_pos"]:
             wise_lcs_by_pos = io.parse_json(filepath=io.LOCALSOURCE_WISE_lc_by_pos)
             self.populate_db_from_dict(data=wise_lcs_by_pos)
