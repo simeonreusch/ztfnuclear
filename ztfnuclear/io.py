@@ -215,7 +215,7 @@ def parse_ampel_json(filepath: str, parameter_name: str) -> dict:
             if "body" in entry.keys():
                 body = entry["body"][0]
 
-                if parameter_name == "salt" or parameter_name == "tde_fit":
+                if parameter_name in ["salt", "tde_fit", "tde_fit_loose_bl"]:
                     if "sncosmo_result" in body.keys():
                         sncosmo_result = body["sncosmo_result"]
                         chisq = sncosmo_result["chisq"]

@@ -167,7 +167,7 @@ def plot_lightcurve(
             ax.set_ylim([23, 15])
             ax.set_ylabel("Mag (AB)")
 
-            if wise_df:
+            if wise_df is not None:
                 if len(wise_df) > 0:
                     ax.errorbar(
                         wise_df.mean_mjd,

@@ -56,6 +56,13 @@ class NuclearSample(object):
             )
             self.populate_db_from_dict(data=tdefit_res)
 
+        if not db_check["has_tdefit_loose_bl"]:
+            tdefit_res = io.parse_ampel_json(
+                filepath=os.path.join(io.LOCALSOURCE_fitres, "tdefit_loose_bl.json"),
+                parameter_name="tde_fit_loose_bl",
+            )
+            self.populate_db_from_dict(data=tdefit_res)
+
         if not db_check["has_ampel_z"]:
             ampelz = io.parse_ampel_json(
                 filepath=os.path.join(io.LOCALSOURCE_ampelz),

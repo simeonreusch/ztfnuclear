@@ -103,6 +103,9 @@ class MetadataDB(object):
             has_ra = True if "RA" in testobj.keys() else False
             has_salt = True if "salt" in testobj.keys() else False
             has_tdefit = True if "tde_fit" in testobj.keys() else False
+            has_tdefit_loose_bl = (
+                True if "tde_fit_loose_bl" in testobj.keys() else False
+            )
             has_peak_dates = True if "peak_dates" in testobj.keys() else False
             has_ampel_z = True if "ampel_z" in testobj.keys() else False
             has_wise_lc_by_pos = True if "WISE_lc_by_pos" in testobj.keys() else False
@@ -112,6 +115,7 @@ class MetadataDB(object):
             has_ra = False
             has_salt = False
             has_tdefit = False
+            has_tdefit_loose_bl = False
             has_peak_dates = False
             has_ampel_z = False
             has_wise_lc_by_pos = False
@@ -122,6 +126,7 @@ class MetadataDB(object):
             "has_ra": has_ra,
             "has_salt": has_salt,
             "has_tdefit": has_tdefit,
+            "has_tdefit_loose_bl": has_tdefit_loose_bl,
             "has_peak_dates": has_peak_dates,
             "has_ampel_z": has_ampel_z,
             "has_wise_lc_by_pos": has_wise_lc_by_pos,
