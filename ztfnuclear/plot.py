@@ -73,6 +73,56 @@ def plot_salt():
 
 def plot_salt_tde_chisq():
     """Plot the salt fit vs. TDE fit chisq"""
+    meta = MetadataDB()
+    metadata = meta.read_parameters(params=["_id", "tde_fit_loose_bl", "salt"])
+
+    ztfids = metadata["_id"]
+    tde_res = metadata["tde_fit_loose_bl"]
+    salt_res = metadata["salt"]
+
+    salt_red_chisq = []
+    tde_red_chisq = []
+
+    for i, entry in enumerate(salt_res):
+        if entry:
+            if entry != "failure":
+                if tde_res[i]:
+                    if tde_res[i] != "failure":
+                        salt_chisq = float(entry["chisq"])
+                        salt_ndof = float(entry["ndof"])
+
+                        tde_chisq = float(tde_res[i]["chisq"])
+                        tde_ndof = float(tde_res[i]["ndof"])
+
+                        salt_red_chisq.append(salt_chisq / salt_ndof)
+                        tde_red_chisq.append(tde_chisq / tde_ndof)
+
+    fig, ax = plt.subplots(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
+    fig.suptitle(f"SALT vs. TDE fit reduced chisquare", fontsize=14)
+
+    ax.scatter(
+        salt_red_chisq,
+        tde_red_chisq,
+        marker=".",
+        s=2,
+    )
+
+    ax.set_xlabel("SALT fit red. chisq.")
+    ax.set_ylabel("TDE fit red. chisq.")
+
+    ax.set_xlim([0, 25])
+    ax.set_ylim([0, 25])
+
+    outfile_zoom = os.path.join(io.LOCALSOURCE_plots, "salt_vs_tde_chisq_zoom.pdf")
+    outfile = os.path.join(io.LOCALSOURCE_plots, "salt_vs_tde_chisq.pdf")
+    plt.tight_layout()
+    plt.savefig(outfile_zoom)
+
+    ax.set_xlim([0, 100])
+    ax.set_ylim([0, 100])
+    plt.savefig(outfile)
+
+    plt.close()
 
 
 def plot_ampelz():
