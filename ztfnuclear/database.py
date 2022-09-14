@@ -102,6 +102,7 @@ class MetadataDB(object):
         if testobj:
             has_ra = True if "RA" in testobj.keys() else False
             has_salt = True if "salt" in testobj.keys() else False
+            has_salt_loose_bl = True if "salt_loose_bl" in testobj.keys() else False
             has_tdefit = True if "tde_fit" in testobj.keys() else False
             has_tdefit_loose_bl = (
                 True if "tde_fit_loose_bl" in testobj.keys() else False
@@ -115,6 +116,7 @@ class MetadataDB(object):
         else:
             has_ra = False
             has_salt = False
+            has_salt_loose_bl = False
             has_tdefit = False
             has_tdefit_loose_bl = False
             has_peak_dates = False
@@ -127,6 +129,7 @@ class MetadataDB(object):
             "count": items_in_coll,
             "has_ra": has_ra,
             "has_salt": has_salt,
+            "has_salt_loose_bl": has_salt_loose_bl,
             "has_tdefit": has_tdefit,
             "has_tdefit_loose_bl": has_tdefit_loose_bl,
             "has_peak_dates": has_peak_dates,

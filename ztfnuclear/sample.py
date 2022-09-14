@@ -49,6 +49,13 @@ class NuclearSample(object):
             )
             self.populate_db_from_dict(data=saltfit_res)
 
+        if not db_check["has_salt_loose_bl"]:
+            saltfit_res = io.parse_ampel_json(
+                filepath=os.path.join(io.LOCALSOURCE_fitres, "saltfit_loose_bl.json"),
+                parameter_name="salt_loose_bl",
+            )
+            self.populate_db_from_dict(data=saltfit_res)
+
         if not db_check["has_tdefit"]:
             tdefit_res = io.parse_ampel_json(
                 filepath=os.path.join(io.LOCALSOURCE_fitres, "tdefit.json"),
@@ -305,6 +312,7 @@ class Transient(object):
         """
         if include_wise:
             wise_df = self.wise_lc
+            print(wise_df)
         else:
             wise_df = None
 
