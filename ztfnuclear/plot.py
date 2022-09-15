@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt  # type: ignore
 
-from ztfnuclear import io
+from ztfnuclear import io, utils
 from ztfnuclear.database import MetadataDB
 
 GOLDEN_RATIO = 1.62
@@ -185,10 +185,12 @@ def plot_lightcurve(
     for filterid in df["filterid"].unique():
         _df = df.query("filterid == @filterid")
 
+        bandname = utils.ztf_filterid_to_band(filterid, short=True)
+
         if bl_correction:
             ampl_column = "ampl_corr"
             ampl_err_column = "ampl_err_corr"
-            fig.suptitle(f"{ztfid} (baseline correction)", fontsize=14)
+            fig.suptitle(f"{ztfid} (baseline corrected)", fontsize=14)
         else:
             ampl_column = "ampl"
             ampl_err_column = "ampl.err"
@@ -196,25 +198,28 @@ def plot_lightcurve(
 
         obsmjd = _df.obsmjd.values
 
-        if magplot:
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=RuntimeWarning)
-                F0 = 10 ** (_df.magzp / 2.5)
-                F0_err = F0 / 2.5 * np.log(10) * _df.magzpunc
-                Fratio = _df[ampl_column] / F0
-                Fratio_err = np.sqrt(
-                    (_df[ampl_err_column] / F0) ** 2
-                    + (_df[ampl_column] * F0_err / F0**2) ** 2
-                )
-                abmag = -2.5 * np.log10(Fratio)
-                abmag_err = 2.5 / np.log(10) * Fratio_err / Fratio
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=RuntimeWarning)
+            F0 = 10 ** (_df.magzp / 2.5)
+            F0_err = F0 / 2.5 * np.log(10) * _df.magzpunc
+            Fratio = _df[ampl_column] / F0
+            Fratio_err = np.sqrt(
+                (_df[ampl_err_column] / F0) ** 2
+                + (_df[ampl_column] * F0_err / F0**2) ** 2
+            )
+            abmag = -2.5 * np.log10(Fratio)
+            abmag_err = 2.5 / np.log(10) * Fratio_err / Fratio
 
-            if snt_threshold:
-                snt_limit = Fratio_err * snt_threshold
-                abmag = np.where(Fratio > snt_limit, abmag, 99)
-                abmag_err = np.where(Fratio > snt_limit, abmag_err, 0.0000000001)
-                placeholder_obsmjd = obsmjd[np.argmin(abmag)]
-                obsmjd = np.where(abmag < 99, obsmjd, placeholder_obsmjd)
+            _df["flux_Jy"] = utils.abmag_to_flux_density(abmag)
+
+        if snt_threshold:
+            snt_limit = Fratio_err * snt_threshold
+            abmag = np.where(Fratio > snt_limit, abmag, 99)
+            abmag_err = np.where(Fratio > snt_limit, abmag_err, 0.0000000001)
+            placeholder_obsmjd = obsmjd[np.argmin(abmag)]
+            obsmjd = np.where(abmag < 99, obsmjd, placeholder_obsmjd)
+
+        if magplot:
 
             ax.errorbar(
                 obsmjd,
@@ -257,8 +262,8 @@ def plot_lightcurve(
         else:
             ax.errorbar(
                 _df.obsmjd,
-                _df[ampl_column],
-                _df[ampl_err_column],
+                utils.band_frequency(bandname) * _df["flux_Jy"],
+                _df[ampl_err_column] / 100000000000000000000,
                 fmt="o",
                 mec=color_dict[filterid],
                 ecolor=color_dict[filterid],
@@ -267,6 +272,36 @@ def plot_lightcurve(
                 ms=2,
                 elinewidth=0.5,
             )
+            if wise_df is not None:
+                if len(wise_df) > 0:
+                    flux_W1 = utils.abmag_to_flux_density(wise_df.W1_mean_mag_ab)
+                    flux_W2 = utils.abmag_to_flux_density(wise_df.W2_mean_mag_ab)
+
+                    ax.errorbar(
+                        wise_df.mean_mjd,
+                        # wise_df.W1_mean_mag_ab,
+                        utils.band_frequency("W1") * flux_W1,
+                        fmt="o",
+                        mec="black",
+                        ecolor="black",
+                        mfc="black",
+                        alpha=1,
+                        ms=5,
+                        elinewidth=1,
+                    )
+                    ax.errorbar(
+                        wise_df.mean_mjd,
+                        # wise_df.W2_mean_mag_ab,
+                        utils.band_frequency("W2") * flux_W2,
+                        fmt="o",
+                        mec="gray",
+                        mfc="gray",
+                        ecolor="gray",
+                        alpha=1,
+                        ms=5,
+                        elinewidth=1,
+                    )
+
         ax.set_xlabel("Date (MJD)")
         ax.grid(b=True, alpha=0.8)  # (, axis="y")
 
