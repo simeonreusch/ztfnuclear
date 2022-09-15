@@ -99,6 +99,7 @@ def get_wise_photometry(
             returndict.update({ztfid: {wise_key: wise_lcs[ztfid]}})
         else:
             returndict.update({ztfid: {wise_key: {}}})
+
     return returndict
 
 

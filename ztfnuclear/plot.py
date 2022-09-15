@@ -2,7 +2,7 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging
+import os, logging, warnings
 
 import astropy  # type: ignore
 from astropy import units as u  # type: ignore
@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 def plot_location():
     """Plot the sky location of all transients"""
+
     meta = MetadataDB()
     location = meta.read_parameters(params=["RA", "Dec"])
 
@@ -47,6 +48,7 @@ def plot_location():
 
 def plot_salt():
     """Plot the salt fit results from the Mongo DB"""
+
     meta = MetadataDB()
     saltres = meta.read_parameters(params=["salt"])["salt"]
 
@@ -73,6 +75,7 @@ def plot_salt():
 
 def plot_salt_tde_chisq():
     """Plot the salt fit vs. TDE fit chisq"""
+
     meta = MetadataDB()
     metadata = meta.read_parameters(params=["_id", "tde_fit_loose_bl", "salt"])
 
@@ -127,6 +130,7 @@ def plot_salt_tde_chisq():
 
 def plot_ampelz():
     """Plot the ampel z distribution"""
+
     meta = MetadataDB()
     ampelz = meta.read_parameters(params=["ampel_z"])["ampel_z"]
 
@@ -152,9 +156,13 @@ def plot_lightcurve(
     ztfid: str,
     magplot: bool = True,
     wise_df: pd.DataFrame = None,
+    wise_bayesian: dict = None,
     snt_threshold=3,
 ):
     """Plot a lightcurve"""
+
+    wise_df.to_csv("test.csv")
+
     if magplot:
         logger.debug("Plotting lightcurve (in magnitude space)")
     else:
@@ -189,15 +197,17 @@ def plot_lightcurve(
         obsmjd = _df.obsmjd.values
 
         if magplot:
-            F0 = 10 ** (_df.magzp / 2.5)
-            F0_err = F0 / 2.5 * np.log(10) * _df.magzpunc
-            Fratio = _df[ampl_column] / F0
-            Fratio_err = np.sqrt(
-                (_df[ampl_err_column] / F0) ** 2
-                + (_df[ampl_column] * F0_err / F0**2) ** 2
-            )
-            abmag = -2.5 * np.log10(Fratio)
-            abmag_err = 2.5 / np.log(10) * Fratio_err / Fratio
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=RuntimeWarning)
+                F0 = 10 ** (_df.magzp / 2.5)
+                F0_err = F0 / 2.5 * np.log(10) * _df.magzpunc
+                Fratio = _df[ampl_column] / F0
+                Fratio_err = np.sqrt(
+                    (_df[ampl_err_column] / F0) ** 2
+                    + (_df[ampl_column] * F0_err / F0**2) ** 2
+                )
+                abmag = -2.5 * np.log10(Fratio)
+                abmag_err = 2.5 / np.log(10) * Fratio_err / Fratio
 
             if snt_threshold:
                 snt_limit = Fratio_err * snt_threshold
@@ -229,6 +239,16 @@ def plot_lightcurve(
                         fmt="o",
                         mec="black",
                         ecolor="black",
+                        alpha=1,
+                        ms=3,
+                        elinewidth=1,
+                    )
+                    ax.errorbar(
+                        wise_df.mean_mjd,
+                        wise_df.W2_mean_mag_ab,
+                        fmt="o",
+                        mec="brown",
+                        ecolor="brown",
                         alpha=1,
                         ms=3,
                         elinewidth=1,

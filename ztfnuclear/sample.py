@@ -11,7 +11,7 @@ from tqdm import tqdm  # type: ignore
 import numpy as np
 import pandas as pd  # type: ignore
 
-from ztfnuclear import io, baseline
+from ztfnuclear import io, baseline, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.plot import plot_lightcurve
 from ztfnuclear.fritz import FritzAPI
@@ -305,14 +305,40 @@ class Transient(object):
         self,
         baseline_correction: bool = True,
         magplot: bool = True,
-        include_wise: bool = False,
+        include_wise: bool = True,
+        wise_baseline_correction: bool = True,
     ):
         """
         Plot the transient lightcurve
         """
         if include_wise:
             wise_df = self.wise_lc
-            print(wise_df)
+
+            if wise_baseline_correction:
+                if "WISE_bayesian" in self.meta.keys():
+                    bl_W1 = self.meta["WISE_bayesian"]["bayesian"]["Wise_W1"][
+                        "baseline"
+                    ][0]
+                    bl_W2 = self.meta["WISE_bayesian"]["bayesian"]["Wise_W2"][
+                        "baseline"
+                    ][0]
+
+                    wise_df["W1_mean_flux_density_bl_corr"] = (
+                        wise_df["W1_mean_flux_density"] - bl_W1
+                    )
+                    wise_df["W2_mean_flux_density_bl_corr"] = (
+                        wise_df["W2_mean_flux_density"] - bl_W2
+                    )
+                    wise_df["W1_mean_mag_ab"] = utils.flux_density_to_abmag(
+                        correct_apcor_bug=True,
+                        flux_density=wise_df["W1_mean_flux_density_bl_corr"] / 1000,
+                        band="W1",
+                    )
+                    wise_df["W2_mean_mag_ab"] = utils.flux_density_to_abmag(
+                        correct_apcor_bug=True,
+                        flux_density=wise_df["W2_mean_flux_density_bl_corr"] / 1000,
+                        band="W2",
+                    )
         else:
             wise_df = None
 
