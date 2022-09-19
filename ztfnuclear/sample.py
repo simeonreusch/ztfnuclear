@@ -168,6 +168,17 @@ class NuclearSample(object):
         date_now = datetime.datetime.now().replace(microsecond=0)
         info.update(data={"fritz_info": {"fritz": True, "date": date_now}})
 
+    def get_transients(self, n: Optional[int] = None):
+        """
+        Loop over all transients in sample and return a Transient Object
+        """
+        if not n:
+            n = len(self.ztfids)
+
+        for ztfid in self.ztfids[:n]:
+            t = Transient(ztfid)
+            yield t
+
 
 class Transient(object):
     """
@@ -180,6 +191,8 @@ class Transient(object):
         self.ztfid = ztfid
 
         self.df = io.get_ztfid_dataframe(ztfid=self.ztfid)
+        if len(self.df) == 0:
+            raise ValueError(f"{ztfid} is not present in the sample")
         self.header = io.get_ztfid_header(ztfid=self.ztfid)
 
         self.ra = float(self.header["ra"])
@@ -307,6 +320,10 @@ class Transient(object):
         magplot: bool = False,
         include_wise: bool = True,
         wise_baseline_correction: bool = True,
+        snt_threshold: float = 3.0,
+        save: bool = True,
+        plot_png: bool = False,
+        wide: bool = False,
     ):
         """
         Plot the transient lightcurve
@@ -345,10 +362,26 @@ class Transient(object):
             wise_df = None
 
         if baseline_correction:
-            plot_lightcurve(
-                df=self.baseline, ztfid=self.ztfid, magplot=magplot, wise_df=wise_df
+            fig = plot_lightcurve(
+                df=self.baseline,
+                ztfid=self.ztfid,
+                magplot=magplot,
+                wise_df=wise_df,
+                snt_threshold=snt_threshold,
+                save=save,
+                plot_png=plot_png,
+                wide=wide,
             )
         else:
-            plot_lightcurve(
-                df=self.raw_lc, ztfid=self.ztfid, magplot=magplot, wise_df=wise_df
+            fig = plot_lightcurve(
+                df=self.raw_lc,
+                ztfid=self.ztfid,
+                magplot=magplot,
+                wise_df=wise_df,
+                snt_threshold=snt_threshold,
+                save=save,
+                plot_png=plot_png,
+                wide=wide,
             )
+
+        return fig

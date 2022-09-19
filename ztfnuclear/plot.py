@@ -158,11 +158,11 @@ def plot_lightcurve(
     wise_df: pd.DataFrame = None,
     wise_bayesian: dict = None,
     snt_threshold=3,
+    save: bool = True,
+    plot_png: bool = False,
+    wide: bool = False,
 ):
     """Plot a lightcurve"""
-
-    wise_df.to_csv("test.csv")
-
     if magplot:
         logger.debug("Plotting lightcurve (in magnitude space)")
     else:
@@ -178,7 +178,12 @@ def plot_lightcurve(
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
 
-    fig, ax = plt.subplots(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
+    if wide:
+        figwidth = 8 / (GOLDEN_RATIO + 0.52)
+    else:
+        figwidth = 8 / GOLDEN_RATIO
+
+    fig, ax = plt.subplots(figsize=(8, figwidth), dpi=300)
 
     bl_correction = True if "ampl_corr" in df.keys() else False
 
@@ -210,14 +215,17 @@ def plot_lightcurve(
             abmag = -2.5 * np.log10(Fratio)
             abmag_err = 2.5 / np.log(10) * Fratio_err / Fratio
 
-            _df["flux_Jy"] = utils.abmag_to_flux_density(abmag)
-
         if snt_threshold:
             snt_limit = Fratio_err * snt_threshold
-            abmag = np.where(Fratio > snt_limit, abmag, 99)
-            abmag_err = np.where(Fratio > snt_limit, abmag_err, 0.0000000001)
+            abmag = np.where(Fratio > snt_limit, abmag, np.nan)
+            abmag_err = np.where(Fratio > snt_limit, abmag_err, np.nan)
             placeholder_obsmjd = obsmjd[np.argmin(abmag)]
             obsmjd = np.where(abmag < 99, obsmjd, placeholder_obsmjd)
+
+        _df["flux_Jy"] = utils.abmag_to_flux_density(abmag)
+        _df["flux_Jy_err"] = utils.abmag_err_to_flux_density_err(
+            abmag=abmag, abmag_err=abmag_err
+        )
 
         if magplot:
 
@@ -262,11 +270,12 @@ def plot_lightcurve(
                     )
 
         else:
-            # ax.set_yscale("log")
+            ax.set_yscale("log")
             ax.errorbar(
                 _df.obsmjd,
-                utils.band_frequency(bandname) * _df["flux_Jy"],
-                _df[ampl_err_column] / 100000000000000000000,
+                utils.band_frequency(bandname) * _df["flux_Jy"] * 1e-23,
+                # _df[ampl_err_column] / 100000000000000000000,
+                utils.band_frequency(bandname) * _df["flux_Jy_err"] * 1e-23,
                 fmt="o",
                 mec=color_dict[filterid],
                 ecolor=color_dict[filterid],
@@ -283,7 +292,7 @@ def plot_lightcurve(
                     ax.errorbar(
                         wise_df.mean_mjd,
                         # wise_df.W1_mean_mag_ab,
-                        utils.band_frequency("W1") * flux_W1,
+                        utils.band_frequency("W1") * flux_W1 * 1e-23,
                         fmt="o",
                         mec="black",
                         ecolor="black",
@@ -295,7 +304,7 @@ def plot_lightcurve(
                     ax.errorbar(
                         wise_df.mean_mjd,
                         # wise_df.W2_mean_mag_ab,
-                        utils.band_frequency("W2") * flux_W2,
+                        utils.band_frequency("W2") * flux_W2 * 1e-23,
                         fmt="o",
                         mec="gray",
                         mfc="gray",
@@ -305,13 +314,25 @@ def plot_lightcurve(
                         elinewidth=1,
                     )
 
-        ax.set_xlabel("Date (MJD)")
-        ax.grid(b=True, alpha=0.8)  # (, axis="y")
+        ax.set_xlabel("Date (MJD)", fontsize=12)
+        ax.set_ylabel(r"$\nu$ F$_\nu$ (erg s$^{-1}$ cm$^{-2}$)", fontsize=12)
+        ax.grid(which="both", b=True, axis="both", alpha=0.3)
 
     if bl_correction:
-        outfile = os.path.join(plot_dir, ztfid + "_bl.pdf")
+        if plot_png:
+            outfile = os.path.join(plot_dir, ztfid + "_bl.png")
+        else:
+            outfile = os.path.join(plot_dir, ztfid + "_bl.pdf")
     else:
-        outfile = os.path.join(plot_dir, ztfid + ".pdf")
+        if plot_png:
+            outfile = os.path.join(plot_dir, ztfid + ".png")
+        else:
+            outfile = os.path.join(plot_dir, ztfid + ".pdf")
+
     plt.tight_layout()
-    plt.savefig(outfile)
-    plt.close()
+
+    if save:
+        plt.savefig(outfile)
+        plt.close()
+
+    return fig

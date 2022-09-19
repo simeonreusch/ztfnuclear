@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ transient.ztfid }}{% endblock %}
+
+
+{% block content %}
+
+
+<div class="sticky-top my-2 py-0" style="background: linear-gradient(to top,
+                                                                rgba(254, 254, 254 ,0.5),
+                                                                rgba(254, 254, 254 , 1 ))">
+    <div class="row">
+        <div class="col-auto me-auto">
+            <h1> Inspect {{ transient.ztfid }} </h1>
+        </div>
+
+
+        <div class="col-auto my-2">
+          <a class="btn btn-outline-secondary" href="http://skipper.caltech.edu:8080/cgi-bin/growth/view_source.cgi?name={{ transient.ztfid }}" target="_blank">
+             See on Growth
+          </a>
+        </div>
+        <div class="col-auto my-2">
+          <a class="btn btn-outline-primary" href="https://fritz.science/source/{{ transient.ztfid }}" target="_blank">
+             See on Fritz
+          </a>
+        </div>
+    </div>
+
+</div>
+
+  <div class="row justify-content-md-center">
+    <img src='data:image/png;base64,{{ lcplot }}' />
+  </div">
+
+{% endblock %}

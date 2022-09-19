@@ -21,6 +21,9 @@ pyarrow = "^9.0.0"
 fastparquet = "^0.8.1"
 extcats = "^2.4.3"
 timewise = "^0.1.10"
+Flask = "^2.2.2"
+Flask-Login = "^0.6.2"
+Flask-WTF = "^1.0.1"
 
 [tool.poetry.dev-dependencies]
 coveralls = "^3.3.1"
