@@ -244,22 +244,25 @@ def plot_lightcurve(
                         fmt="o",
                         mec="black",
                         ecolor="black",
+                        mfc="black",
                         alpha=1,
-                        ms=3,
+                        ms=5,
                         elinewidth=1,
                     )
                     ax.errorbar(
                         wise_df.mean_mjd,
                         wise_df.W2_mean_mag_ab,
                         fmt="o",
-                        mec="brown",
-                        ecolor="brown",
+                        mec="gray",
+                        mfc="gray",
+                        ecolor="gray",
                         alpha=1,
-                        ms=3,
+                        ms=5,
                         elinewidth=1,
                     )
 
         else:
+            # ax.set_yscale("log")
             ax.errorbar(
                 _df.obsmjd,
                 utils.band_frequency(bandname) * _df["flux_Jy"],

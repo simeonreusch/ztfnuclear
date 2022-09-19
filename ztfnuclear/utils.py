@@ -92,12 +92,14 @@ def flux_density_to_abmag(
 
 
 def flux_density_err_to_abmag_err(
-    flux_density: float, flux_density_err: float
+    flux_density: float,
+    flux_density_err: float,
 ) -> float:
     """
     Convert flux density error to AB mag error
     """
     abmag_err = 1.08574 / flux_density * flux_density_err
+
     return abmag_err
 
 
@@ -109,3 +111,11 @@ def abmag_to_flux_density(abmag: float) -> float:
         warnings.filterwarnings("ignore", category=RuntimeWarning)
         flux_density = 10 ** ((8.9 - abmag) / 2.5)
     return flux_density
+
+
+def abmag_err_to_flux_density_err(abmag: float, abmag_err: float) -> float:
+    """
+    Convert abmag error to flux density error (in Jy) -> Check if this is correct
+    """
+    flux_density_err = 3344.07 * np.exp(-0.921034 * abmag_err)
+    return flux_density_err

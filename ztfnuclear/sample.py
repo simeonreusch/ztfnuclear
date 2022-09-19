@@ -304,7 +304,7 @@ class Transient(object):
     def plot(
         self,
         baseline_correction: bool = True,
-        magplot: bool = True,
+        magplot: bool = False,
         include_wise: bool = True,
         wise_baseline_correction: bool = True,
     ):
@@ -331,12 +331,14 @@ class Transient(object):
                     )
                     wise_df["W1_mean_mag_ab"] = utils.flux_density_to_abmag(
                         correct_apcor_bug=True,
-                        flux_density=wise_df["W1_mean_flux_density_bl_corr"] / 1000,
+                        flux_density=wise_df["W1_mean_flux_density_bl_corr"]
+                        / 1000,  # convert from mJy to Jy
                         band="W1",
                     )
                     wise_df["W2_mean_mag_ab"] = utils.flux_density_to_abmag(
                         correct_apcor_bug=True,
-                        flux_density=wise_df["W2_mean_flux_density_bl_corr"] / 1000,
+                        flux_density=wise_df["W2_mean_flux_density_bl_corr"]
+                        / 1000,  # convert from mJy to Jy
                         band="W2",
                     )
         else:
