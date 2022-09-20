@@ -169,6 +169,7 @@ def plot_lightcurve(
         logger.debug("Plotting lightcurve (in flux space)")
 
     color_dict = {1: "green", 2: "red", 3: "orange"}
+    filtername_dict = {1: "ZTF g", 2: "ZTF r", 3: "ZTF i"}
 
     if magplot:
         plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "mag")
@@ -187,7 +188,7 @@ def plot_lightcurve(
 
     bl_correction = True if "ampl_corr" in df.keys() else False
 
-    for filterid in df["filterid"].unique():
+    for filterid in sorted(df["filterid"].unique()):
         _df = df.query("filterid == @filterid")
 
         bandname = utils.ztf_filterid_to_band(filterid, short=True)
@@ -240,34 +241,10 @@ def plot_lightcurve(
                 alpha=0.7,
                 ms=2,
                 elinewidth=0.8,
+                label=filtername_dict[filterid],
             )
             ax.set_ylim([23, 15])
             ax.set_ylabel("Mag (AB)")
-
-            if wise_df is not None:
-                if len(wise_df) > 0:
-                    ax.errorbar(
-                        wise_df.mean_mjd,
-                        wise_df.W1_mean_mag_ab,
-                        fmt="o",
-                        mec="black",
-                        ecolor="black",
-                        mfc="black",
-                        alpha=1,
-                        ms=5,
-                        elinewidth=1,
-                    )
-                    ax.errorbar(
-                        wise_df.mean_mjd,
-                        wise_df.W2_mean_mag_ab,
-                        fmt="o",
-                        mec="gray",
-                        mfc="gray",
-                        ecolor="gray",
-                        alpha=1,
-                        ms=5,
-                        elinewidth=1,
-                    )
 
         else:
             ax.set_yscale("log")
@@ -283,40 +260,73 @@ def plot_lightcurve(
                 alpha=0.7,
                 ms=2,
                 elinewidth=0.5,
+                label=filtername_dict[filterid],
             )
-            if wise_df is not None:
-                if len(wise_df) > 0:
-                    flux_W1 = utils.abmag_to_flux_density(wise_df.W1_mean_mag_ab)
-                    flux_W2 = utils.abmag_to_flux_density(wise_df.W2_mean_mag_ab)
 
-                    ax.errorbar(
-                        wise_df.mean_mjd,
-                        # wise_df.W1_mean_mag_ab,
-                        utils.band_frequency("W1") * flux_W1 * 1e-23,
-                        fmt="o",
-                        mec="black",
-                        ecolor="black",
-                        mfc="black",
-                        alpha=1,
-                        ms=5,
-                        elinewidth=1,
-                    )
-                    ax.errorbar(
-                        wise_df.mean_mjd,
-                        # wise_df.W2_mean_mag_ab,
-                        utils.band_frequency("W2") * flux_W2 * 1e-23,
-                        fmt="o",
-                        mec="gray",
-                        mfc="gray",
-                        ecolor="gray",
-                        alpha=1,
-                        ms=5,
-                        elinewidth=1,
-                    )
+    if magplot:
+        if wise_df is not None:
+            if len(wise_df) > 0:
+                ax.errorbar(
+                    wise_df.mean_mjd,
+                    wise_df.W1_mean_mag_ab,
+                    fmt="o",
+                    mec="black",
+                    ecolor="black",
+                    mfc="black",
+                    alpha=1,
+                    ms=5,
+                    elinewidth=1,
+                )
+                ax.errorbar(
+                    wise_df.mean_mjd,
+                    wise_df.W2_mean_mag_ab,
+                    fmt="o",
+                    mec="gray",
+                    mfc="gray",
+                    ecolor="gray",
+                    alpha=1,
+                    ms=5,
+                    elinewidth=1,
+                )
 
-        ax.set_xlabel("Date (MJD)", fontsize=12)
-        ax.set_ylabel(r"$\nu$ F$_\nu$ (erg s$^{-1}$ cm$^{-2}$)", fontsize=12)
-        ax.grid(which="both", b=True, axis="both", alpha=0.3)
+    else:
+        if wise_df is not None:
+            if len(wise_df) > 0:
+                flux_W1 = utils.abmag_to_flux_density(wise_df.W1_mean_mag_ab)
+                flux_W2 = utils.abmag_to_flux_density(wise_df.W2_mean_mag_ab)
+
+                ax.errorbar(
+                    wise_df.mean_mjd,
+                    # wise_df.W1_mean_mag_ab,
+                    utils.band_frequency("W1") * flux_W1 * 1e-23,
+                    fmt="o",
+                    mec="black",
+                    ecolor="black",
+                    mfc="black",
+                    alpha=1,
+                    ms=5,
+                    elinewidth=1,
+                    label="WISE W1",
+                )
+                ax.errorbar(
+                    wise_df.mean_mjd,
+                    # wise_df.W2_mean_mag_ab,
+                    utils.band_frequency("W2") * flux_W2 * 1e-23,
+                    fmt="o",
+                    mec="gray",
+                    mfc="gray",
+                    ecolor="gray",
+                    alpha=1,
+                    ms=5,
+                    elinewidth=1,
+                    label="WISE W2",
+                )
+
+    ax.set_xlabel("Date (MJD)", fontsize=12)
+    ax.set_ylabel(r"$\nu$ F$_\nu$ (erg s$^{-1}$ cm$^{-2}$)", fontsize=12)
+    ax.grid(which="both", b=True, axis="both", alpha=0.3)
+
+    plt.legend()
 
     if bl_correction:
         if plot_png:
