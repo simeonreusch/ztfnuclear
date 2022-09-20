@@ -428,6 +428,23 @@ pyproj = ">=2.6.1.post1"
 shapely = ">=1.7,<2"
 
 [[package]]
+name = "gunicorn"
+version = "20.1.0"
+description = "WSGI HTTP Server for UNIX"
+category = "main"
+optional = false
+python-versions = ">=3.5"
+
+[package.dependencies]
+setuptools = ">=3.0"
+
+[package.extras]
+eventlet = ["eventlet (>=0.24.1)"]
+gevent = ["gevent (>=1.4.0)"]
+setproctitle = ["setproctitle"]
+tornado = ["tornado (>=0.2)"]
+
+[[package]]
 name = "healpy"
 version = "1.16.1"
 description = "Healpix tools package for Python"
@@ -1340,7 +1357,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "11ffe19aad81d184c7d6143ea091aca80837a73bb9eca2e9865b72b6f255312b"
+content-hash = "8cb71ee5ea4e5e565fbdb06e0a491177f59ca10e3232b269a6c18bc482a2eba7"
 
 [metadata.files]
 alabaster = [
@@ -1623,6 +1640,10 @@ furo = [
 geopandas = [
     {file = "geopandas-0.11.1-py3-none-any.whl", hash = "sha256:f3344937f3866e52996c7e505d56dae78be117dc840cd1c23507da0b33c0af71"},
     {file = "geopandas-0.11.1.tar.gz", hash = "sha256:f0f0c8d0423d30cf81de2056d853145c4362739350a7f8f2d72cc7409ef1eca1"},
+]
+gunicorn = [
+    {file = "gunicorn-20.1.0-py3-none-any.whl", hash = "sha256:9dcc4547dbb1cb284accfb15ab5667a0e5d1881cc443e0677b4882a4067a807e"},
+    {file = "gunicorn-20.1.0.tar.gz", hash = "sha256:e0a968b5ba15f8a328fdfd7ab1fcb5af4470c28aaf7e55df02a99bc13138e6e8"},
 ]
 healpy = [
     {file = "healpy-1.16.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:ca3161612d0813f44187b37b565f8d93f0e772817aa6d777ccddf1833028fce2"},

@@ -4,10 +4,10 @@ import matplotlib
 
 from flask import Flask, render_template, redirect, url_for, request
 from flask_login import current_user, LoginManager
-from sample import NuclearSample, Transient
-from database import SampleInfo
-from utils import is_ztf_name
-from forms import LoginForm
+from ztfnuclear.sample import NuclearSample, Transient
+from ztfnuclear.database import SampleInfo
+from ztfnuclear.utils import is_ztf_name
+from ztfnuclear.forms import LoginForm
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "aotvm8vFJIELTORETU8VFJDK453JKjfdkoo"
@@ -163,3 +163,7 @@ def search():
         return redirect(url_for(f"transient_page", ztfid=ztfid))
     else:
         return redirect(url_for("home"))
+
+
+if __name__ == "__main__":
+    app.run(host="127.0.0.1")
