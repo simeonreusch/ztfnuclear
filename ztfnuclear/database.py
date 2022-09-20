@@ -29,9 +29,19 @@ class SampleInfo(object):
         self.coll = self.db.info
 
     def update(self, data):
-        """Update DB for catalog"""
+        """
+        Update DB for catalog
+        """
+
         self.coll.update_one({"_id": "sample"}, {"$set": data}, upsert=True)
         self.logger.debug(f"Updated info database")
+
+    def read(self):
+        """
+        Read from the catalog info DB
+        """
+        info = self.coll.find_one({"_id": "sample"})
+        return info
 
 
 class MetadataDB(object):
@@ -88,7 +98,7 @@ class MetadataDB(object):
     def read_transient(self, ztfid: str):
         """Read entry for given ztfid"""
 
-        entry = self.coll.find_one({"_id": ztfid})
+        entry = self.coll.find({"_id": ztfid})[0]
 
         self.logger.debug(f"Read info for {ztfid} from database")
 

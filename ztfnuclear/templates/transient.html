@@ -29,6 +29,42 @@
 
 </div>
 
+
+ <div class="row">
+    {% if transient.z != None %}
+        <div class="col-auto me-auto">
+            <h4 style="color:#A9A9A9;">
+              Redshift: {{ "{:,.4f}".format(transient.z) }} (dist: {{ "{:,.4f}".format(transient.z_dist) }} arcsec) 
+            </h4>
+        </div>
+    {% else %}
+        <div class="col-auto me-auto">
+            <h4 style="color:#A9A9A9;">
+              Redshift: None 
+            </h4>
+        </div>
+    {% endif %}
+    {% if 'fritz_class' in transient.meta.keys() %}
+        <div class="col-auto me-auto">
+            <h4 style="color:#A9A9A9;">
+              Fritz classification: {{ transient.meta['fritz_class'] }}
+            </h4>
+        </div>
+    {% else %}
+        <div class="col-auto me-auto">
+            <h4 style="color:#A9A9A9;">
+              Fritz classification: None
+            </h4>
+        </div>
+    {% endif %}
+        <div class="col-auto me-auto">
+            <h4 style="color:#A9A9A9;">
+              Crossmatch: {{ transient.crossmatch_info }}
+            </h4>
+        </div>
+</div>
+
+
   <div class="row justify-content-md-center">
     <img src='data:image/png;base64,{{ lcplot }}' />
   </div">

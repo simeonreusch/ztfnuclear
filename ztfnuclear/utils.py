@@ -2,7 +2,7 @@
 # The coded used here was developed by Valéry Brinnel
 # License: BSD-3-Clause
 
-import os, logging, warnings
+import os, logging, warnings, re
 
 from typing import Optional
 
@@ -20,6 +20,17 @@ wl_angstrom = {
     "W1": 33526,
     "W2": 46028,
 }
+
+
+def is_ztf_name(name) -> bool:
+    """
+    Checks if a string adheres to the ZTF naming scheme
+    """
+    if re.match(r"^ZTF[1-2]\d[a-z]{7}$", name):
+        match = True
+    else:
+        match = False
+    return match
 
 
 def ztf_filterid_to_band(filterid: int, short: str = False):
@@ -96,7 +107,7 @@ def flux_density_err_to_abmag_err(
     flux_density_err: float,
 ) -> float:
     """
-    Convert flux density error to AB mag error
+    Convert flux density error to AB magnitude error
     """
     abmag_err = 1.08574 / flux_density * flux_density_err
 
@@ -105,7 +116,7 @@ def flux_density_err_to_abmag_err(
 
 def abmag_to_flux_density(abmag: float) -> float:
     """
-    Convert abmag to flux density in Jy
+    Convert AB magnitude to flux density in Jy
     """
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -115,7 +126,9 @@ def abmag_to_flux_density(abmag: float) -> float:
 
 def abmag_err_to_flux_density_err(abmag: float, abmag_err: float) -> float:
     """
-    Convert abmag error to flux density error (in Jy) -> Check if this is correct
+    Convert AB magnitude error to flux density error (in Jy) -> Check if this is correct
     """
-    flux_density_err = 3344.07 * np.exp(-0.921034 * abmag_err)
+    # print(abmag_err)
+    flux_density_err = 3344.07 * np.exp(-0.921034 * np.abs(abmag)) * abmag_err
+
     return flux_density_err

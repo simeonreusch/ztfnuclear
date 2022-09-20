@@ -2,10 +2,11 @@ import os, json, random, io, base64
 
 import matplotlib
 
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for, request
 from flask_login import current_user, LoginManager
 from sample import NuclearSample, Transient
-
+from database import SampleInfo
+from utils import is_ztf_name
 from forms import LoginForm
 
 app = Flask(__name__)
@@ -17,6 +18,8 @@ app.jinja_env.auto_reload = True
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"  # where to point to log if needed
+
+sample_ids = NuclearSample().ztfids
 
 
 @login_manager.user_loader
@@ -36,6 +39,9 @@ class Users:
 
 @app.route("/")
 def home():
+    """
+    This is the default page
+    """
     return render_template(
         "home.html",
     )
@@ -63,23 +69,20 @@ def login():
     return render_template("login.html", form=form)
 
 
-# @app.route("/transients/<string:ztfid>")
-# def show_post(ztfid: str):
-#     # show the post with the given id, the id is an integer
-#     t = Transient(ztfid=ztfid)
-#     json_string = json.dumps(t.meta)
-#     return_dict = json.loads(json_string)
-#     print(return_dict)
-#     return return_dict
-
-
 @app.route("/transients/<string:ztfid>")
-def target_page(ztfid):
-    """ """
+def transient_page(ztfid):
+    """
+    Show the transient page
+    """
     matplotlib.pyplot.switch_backend("Agg")
-    # DB
+
+    if not is_ztf_name(ztfid):
+        return render_template("bad_query.html", bad_id=ztfid, rej_reason="not_valid")
+
+    if ztfid not in sample_ids:
+        return render_template("bad_query.html", bad_id=ztfid)
+
     t = Transient(ztfid=ztfid)
-    # print(t.meta)
     t.plot(plot_png=True, wide=True)
     base_dir = os.path.join(str(os.getenv("ZTFDATA")), "nuclear_sample")
     plot_file = os.path.join(
@@ -94,16 +97,69 @@ def target_page(ztfid):
         )
         plot_data = open(plot_file, "rb")
     base64_string = base64.b64encode(plot_data.read()).decode("ascii")
-    # output = io.BytesIO()
-    # fig.savefig("test.png")
-    # _ = fig.savefig(buffer, format="png", dpi=250)
-    # lcplot = base64.b64encode(buffer.getbuffer()).decode("ascii")
+
     return render_template("transient.html", transient=t, lcplot=base64_string)
+
+
+@app.route("/sample")
+def transient_list():
+    """
+    Show a list of all the transients
+    """
+    s = NuclearSample()
+    transients = s.get_transients(n=100)
+    return render_template("transient_list.html", transients=transients)
+
+
+@app.route("/flaringsample")
+def flaring_transient_list():
+    """
+    Show a list of all the transients
+    """
+    s = NuclearSample()
+
+    flaring_transients = s.get_flaring_transients(n=100)
+    return render_template("transient_list.html", transients=flaring_transients)
 
 
 @app.route("/random")
 def transient_random():
-    """ """
+    """
+    Show a random transient
+    """
     s = NuclearSample()
     random_ztfid = random.choice(s.ztfids)
-    return target_page(ztfid=random_ztfid)
+    # return transient_page(ztfid=random_ztfid)
+    return redirect(url_for(f"transient_page", ztfid=random_ztfid))
+
+
+@app.route("/flaringrandom")
+def flaring_transient_random():
+    """
+    Show a random transient
+    """
+    info_db = SampleInfo()
+    flaring_ztfids = info_db.read()["flaring"]["ztfids"]
+    random_flaring_ztfid = random.choice(flaring_ztfids)
+    # return transient_page(ztfid=random_ztfid)
+    return redirect(url_for(f"transient_page", ztfid=random_flaring_ztfid))
+
+
+@app.route("/search", methods=["GET", "POST"])
+def search():
+    """
+    Search for a transient
+    """
+    if request.method == "POST":
+        ztfid = request.form["name"]
+        if not is_ztf_name(ztfid):
+            return render_template(
+                "bad_query.html", bad_id=ztfid, rej_reason="not_valid"
+            )
+
+        if ztfid not in sample_ids:
+            return render_template("bad_query.html", bad_id=ztfid)
+
+        return redirect(url_for(f"transient_page", ztfid=ztfid))
+    else:
+        return redirect(url_for("home"))

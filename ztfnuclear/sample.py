@@ -18,6 +18,8 @@ from ztfnuclear.fritz import FritzAPI
 
 logger = logging.getLogger(__name__)
 
+meta = MetadataDB()
+
 
 class NuclearSample(object):
     """
@@ -179,6 +181,45 @@ class NuclearSample(object):
             t = Transient(ztfid)
             yield t
 
+    def get_flaring_transients(self, n: Optional[int] = None):
+        """
+        Loop over all infrared flaring transients in sample and return a Transient object
+        """
+        info_db = SampleInfo()
+        flaring_ztfids = info_db.read()["flaring"]["ztfids"]
+
+        if not n:
+            n = len(flaring_ztfids)
+
+        for ztfid in flaring_ztfids[:n]:
+            t = Transient(ztfid)
+            yield t
+
+    # def dump_transient_list_to_csv(self):
+    #     df_dict = {}
+
+    #     for t in self.get_transients(n=50):
+    #         print(type(t.z_dist))
+    #         df_dict.update(
+    #             {
+    #                 t.ztfid: {
+    #                     "RA": t.ra,
+    #                     "Dec": t.dec,
+    #                     "z": t.z,
+    #                     "z_dist": t.z_dist if t.z_dist != None else None,
+    #                     "class": t.meta["fritz_class"]
+    #                     if "fritz_class" in t.meta.keys()
+    #                     else None,
+    #                 }
+    #             }
+    #         )
+
+    #     df = pd.DataFrame.from_dict(data=df_dict, orient="index")
+    #     print(df)
+
+    # def get_transients_form_csv(self):
+    #     return None
+
 
 class Transient(object):
     """
@@ -190,16 +231,26 @@ class Transient(object):
         self.logger = logging.getLogger(__name__)
         self.ztfid = ztfid
 
-        self.df = io.get_ztfid_dataframe(ztfid=self.ztfid)
-        if len(self.df) == 0:
-            raise ValueError(f"{ztfid} is not present in the sample")
-        self.header = io.get_ztfid_header(ztfid=self.ztfid)
+        transient_info = meta.read_transient(self.ztfid)
+        self.ra = transient_info["RA"]
+        self.dec = transient_info["Dec"]
 
-        self.ra = float(self.header["ra"])
-        self.dec = float(self.header["dec"])
+        self.location = {"RA": self.ra, "Dec": self.dec}
 
-        location_all = io.get_locations()
-        self.location = location_all.loc[self.ztfid].to_dict()
+    @cached_property
+    def header(self):
+        header = io.get_ztfid_header(ztfid=self.ztfid)
+        return header
+
+    @cached_property
+    def df(self):
+        df = io.get_ztfid_dataframe(ztfid=self.ztfid)
+        return df
+
+    @cached_property
+    def sample_ids(self):
+        ids = NuclearSample().ztfids
+        return ids
 
     @cached_property
     def baseline(self) -> pd.DataFrame:
@@ -236,9 +287,10 @@ class Transient(object):
         """
         Get the AMPEL redshift from the database
         """
-        if "z" in self.meta["ampel_z"].keys():
-            ampel_z = self.meta["ampel_z"]["z"]
-            return ampel_z
+        if "ampel_z" in self.meta.keys():
+            if "z" in self.meta["ampel_z"].keys():
+                ampel_z = self.meta["ampel_z"]["z"]
+                return ampel_z
         else:
             return None
 
@@ -247,9 +299,10 @@ class Transient(object):
         """
         Get the AMPEL redshift distance from the database
         """
-        if "z_dist" in self.meta["ampel_z"].keys():
-            ampel_z_dist = self.meta["ampel_z"]["z_dist"]
-            return ampel_z_dist
+        if "ampel_z" in self.meta.keys():
+            if "z_dist" in self.meta["ampel_z"].keys():
+                ampel_z_dist = self.meta["ampel_z"]["z_dist"]
+                return ampel_z_dist
         else:
             return None
 
@@ -258,7 +311,6 @@ class Transient(object):
         """
         Read all metadata  for transient from the database
         """
-        meta = MetadataDB()
         transient_metadata = meta.read_transient(ztfid=self.ztfid)
         if transient_metadata:
             return transient_metadata
@@ -276,6 +328,27 @@ class Transient(object):
             return None
         else:
             return df
+
+    @cached_property
+    def crossmatch_info(self) -> Optional[str]:
+        """
+        Read the crossmatch results from the DB and return a dict with found values
+        """
+        xmatch = self.meta["crossmatch"]
+        message = ""
+        for key in xmatch.keys():
+            subdict = xmatch[key]
+            if len(subdict) > 0:
+                if subdict is not None and key != "WISE":
+                    message += key
+                    if "type" in subdict.keys():
+                        message += f" {subdict['type']}"
+                    if "dist" in subdict.keys():
+                        message += f" {subdict['dist']:.5f}  "
+        if len(message) == 0:
+            return None
+        else:
+            return message
 
     def crossmatch(self):
         """
@@ -301,7 +374,6 @@ class Transient(object):
             results.update(res)
 
         self.crossmatch = {"crossmatch": results}
-        meta = MetadataDB()
         meta.update_transient(ztfid=self.ztfid, data=self.crossmatch)
 
     def fritz(self):
@@ -311,7 +383,6 @@ class Transient(object):
         fritz = FritzAPI()
         fritzinfo = fritz.get_transient(self.ztfid)
         data = fritzinfo[self.ztfid]
-        meta = MetadataDB()
         meta.update_transient(ztfid=self.ztfid, data=data)
 
     def plot(

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+    <div class="row">
+        <div class="col-auto me-auto">
+          {% if rej_reason == 'not_valid' %}
+           <h1> {{ bad_id }} is not a valid ZTF ID. </h1>
+          {% else %}
+            <h1> {{ bad_id }} is not present in the sample. </h1>
+          {% endif %}
+        </div>
+      </div>
+
+{% endblock %}
