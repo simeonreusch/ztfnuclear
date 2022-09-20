@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<table class="table table-hover">
+<table id="data" class="table table-hover">
     <thead>
         <tr>
             <th scope="col">ztfid</th>
@@ -43,3 +43,20 @@
 
 
 {% endblock content %}
+
+{% block scripts %}
+
+  <script>
+    $(document).ready(function () {
+      $('#data').DataTable({
+        columns: [
+          null,
+          {searchable: true},
+          {orderable: true, searchable: false},
+          {orderable: true, searchable: false},
+          {orderable: false, searchable: true},
+          null],
+      });
+    });
+  </script>
+{% endblock %}
