@@ -86,8 +86,18 @@ def stockid_to_ztfid(stockid: int) -> str:
     return f"ZTF{year}{''.join(l)}"
 
 
+def flux_density_bug_correction(flux_density: float, band: str) -> float:
+    """
+    Correct the aperture correction error
+    """
+    corrections = {"W1": 0.222, "W2": 0.280}
+    flux_density_corrected = flux_density / 10 ** (corrections[band] / 2.5)
+
+    return flux_density_corrected
+
+
 def flux_density_to_abmag(
-    flux_density: float, correct_apcor_bug: bool = True, band: Optional[str] = None
+    flux_density: float, correct_apcor_bug: bool = False, band: Optional[str] = None
 ) -> float:
     """
     Convert flux density in Jy to AB magnitude
