@@ -118,7 +118,7 @@ def flaring_transient_list():
     """
     s = NuclearSample()
 
-    flaring_transients = s.get_flaring_transients(n=100)
+    flaring_transients = s.get_flaring_transients()
     return render_template("transient_list.html", transients=flaring_transients)
 
 
