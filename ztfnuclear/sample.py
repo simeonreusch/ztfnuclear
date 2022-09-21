@@ -430,7 +430,7 @@ class Transient(object):
 
     def plot(
         self,
-        baseline_correction: bool = True,
+        force_baseline_correction: bool = False,
         magplot: bool = False,
         include_wise: bool = True,
         wise_baseline_correction: bool = True,
@@ -484,34 +484,25 @@ class Transient(object):
                         / 1000,  # convert from mJy to Jy
                         band="W2",
                     )
-                    print(wise_df["W1_mean_flux_density_bl_corr"])
 
         else:
             wise_df = None
 
-        if baseline_correction:
-            fig = plot_lightcurve(
-                df=self.baseline,
-                ztfid=self.ztfid,
-                tns_name=self.tns_name,
-                magplot=magplot,
-                wise_df=wise_df,
-                snt_threshold=snt_threshold,
-                save=save,
-                plot_png=plot_png,
-                wide=wide,
-            )
+        if force_baseline_correction:
+            df_to_plot = self.baseline
         else:
-            fig = plot_lightcurve(
-                df=self.raw_lc,
+            if len(self.baseline) == 0:
+                df_to_plot = self.raw_lc
+            else:
+                df_to_plot = self.baseline
+
+            plot_lightcurve(
+                df=df_to_plot,
                 ztfid=self.ztfid,
                 tns_name=self.tns_name,
                 magplot=magplot,
                 wise_df=wise_df,
                 snt_threshold=snt_threshold,
-                save=save,
                 plot_png=plot_png,
                 wide=wide,
             )
-
-        return fig

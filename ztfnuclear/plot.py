@@ -159,7 +159,6 @@ def plot_lightcurve(
     wise_df: pd.DataFrame = None,
     wise_bayesian: dict = None,
     snt_threshold=3,
-    save: bool = True,
     plot_png: bool = False,
     wide: bool = False,
 ):
@@ -337,21 +336,14 @@ def plot_lightcurve(
 
     plt.legend()
 
-    if bl_correction:
-        if plot_png:
-            outfile = os.path.join(plot_dir, ztfid + "_bl.png")
-        else:
-            outfile = os.path.join(plot_dir, ztfid + "_bl.pdf")
+    if plot_png:
+        outfile = os.path.join(plot_dir, ztfid + ".png")
     else:
-        if plot_png:
-            outfile = os.path.join(plot_dir, ztfid + ".png")
-        else:
-            outfile = os.path.join(plot_dir, ztfid + ".pdf")
+        outfile = os.path.join(plot_dir, ztfid + ".pdf")
 
     plt.tight_layout()
 
-    if save:
-        plt.savefig(outfile)
-        plt.close()
+    plt.savefig(outfile)
+    plt.close()
 
-    return fig
+    del fig, ax

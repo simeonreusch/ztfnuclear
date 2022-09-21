@@ -84,19 +84,14 @@ def transient_page(ztfid):
         return render_template("bad_query.html", bad_id=ztfid)
 
     t = Transient(ztfid=ztfid)
+
     t.plot(plot_png=True, wide=True)
+
     base_dir = os.path.join(str(os.getenv("ZTFDATA")), "nuclear_sample")
-    plot_file = os.path.join(
-        base_dir, "plots", "lightcurves", "flux", f"{ztfid}_bl.png"
-    )
-    if os.path.isfile(plot_file):
-        plot_data = open(plot_file, "rb")
-    else:
-        t.plot(plot_png=True, baseline_correction=False, wide=True)
-        plot_file = os.path.join(
-            base_dir, "plots", "lightcurves", "flux", f"{ztfid}.png"
-        )
-        plot_data = open(plot_file, "rb")
+    plot_file = os.path.join(base_dir, "plots", "lightcurves", "flux", f"{ztfid}.png")
+
+    plot_data = open(plot_file, "rb")
+
     base64_string = base64.b64encode(plot_data.read()).decode("ascii")
 
     s = NuclearSample()
@@ -126,19 +121,14 @@ def flaring_page(ztfid):
         return render_template("bad_query.html", bad_id=ztfid)
 
     t = Transient(ztfid=ztfid)
+
     t.plot(plot_png=True, wide=True)
+
     base_dir = os.path.join(str(os.getenv("ZTFDATA")), "nuclear_sample")
-    plot_file = os.path.join(
-        base_dir, "plots", "lightcurves", "flux", f"{ztfid}_bl.png"
-    )
-    if os.path.isfile(plot_file):
-        plot_data = open(plot_file, "rb")
-    else:
-        t.plot(plot_png=True, baseline_correction=False, wide=True)
-        plot_file = os.path.join(
-            base_dir, "plots", "lightcurves", "flux", f"{ztfid}.png"
-        )
-        plot_data = open(plot_file, "rb")
+    plot_file = os.path.join(base_dir, "plots", "lightcurves", "flux", f"{ztfid}.png")
+
+    plot_data = open(plot_file, "rb")
+
     base64_string = base64.b64encode(plot_data.read()).decode("ascii")
 
     s = NuclearSample()
