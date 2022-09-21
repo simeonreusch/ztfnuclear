@@ -62,7 +62,7 @@ def login():
             # Check the hash
             if check_password_hash(user.password_hash, form.password.data):
                 login_user(user)  # Flask login
-                flash("Login Successfull", category="success")
+                flash("Login Successful", category="success")
                 return redirect(url_for("dashboard"))
             else:
                 flash("Wrong Password - Try again", category="error")
@@ -146,12 +146,32 @@ def flaring_page(ztfid):
     )
 
 
-# app.route("/rate/<int:id>", methods=["GET", "POST"])
+@app.route("/rate/<string:ztfid>", methods=["GET", "POST"])
+def rate_transient(ztfid):
+    """ """
+    # - Target action made to
+    t = Transient(ztfid)
 
+    # Information are contained withing this
+    input_key = list(request.form.keys())[0]
 
-# def classify(ztfid):
-#     t = Transient(ztfid)
-#     if request.method == "POST":
+    if request.method == "POST":
+
+        # Classification
+        if input_key == "rating":  # This is a classification
+            raw_value = request.form["rating"]
+            print(raw_value)
+            split = raw_value.split("&")
+            origin = split[0]
+            rating = int(split[1].split("=")[1])
+
+            t.set_rating(rating)
+
+        elif input_key == "pinned":
+            origin = request.form["pinned"]
+            # do stuff
+
+        return redirect(origin)
 
 
 @app.route("/sample")
@@ -183,7 +203,7 @@ def transient_random():
     s = NuclearSample()
     random_ztfid = random.choice(s.ztfids)
     # return transient_page(ztfid=random_ztfid)
-    return redirect(url_for(f"transient_page", ztfid=random_ztfid))
+    return redirect(url_for("transient_page", ztfid=random_ztfid))
 
 
 @app.route("/flaringrandom")
@@ -193,7 +213,7 @@ def flaring_transient_random():
     """
     random_flaring_ztfid = random.choice(flaring_ztfids)
     # return transient_page(ztfid=random_ztfid)
-    return redirect(url_for(f"flaring_page", ztfid=random_flaring_ztfid))
+    return redirect(url_for("flaring_page", ztfid=random_flaring_ztfid))
 
 
 @app.route("/search", methods=["GET", "POST"])

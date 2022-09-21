@@ -6,9 +6,7 @@
 
 
 
-<div class="sticky-top my-2 py-0" style="background: linear-gradient(to top,
-                                                                rgba(254, 254, 254 ,0.5),
-                                                                rgba(254, 254, 254 , 1 ))">
+<div class="sticky-top my-2 py-0" style="background: linear-gradient(to top, rgba(254, 254, 254 ,0.5), rgba(254, 254, 254 , 1 ))">
     <div class="row">
         <div class="col-auto me-auto">
             {% if transient.tns_name != None %}
@@ -68,13 +66,25 @@
     {% endif %}
 </div>
 
-
-<form method="post" action="/classify/{{ transient.ztfid }}" >
+<form method="post" action="/rate/{{ transient.ztfid }}" >
 
     <div class="btn-group" role="group" aria-label="Basic example">
-        <button type="submit" class="btn btn-success">Very interesting</button>
-        <button type="submit" class="btn btn-warning">Maybe interesting</button>
-        <button type="submit" class="btn btn-danger">Not interesting</button>
+        {% if transient.rating == 3 %}
+        <button type="submit" class="btn btn-success" value="{{ request.url }}&rating=3" name="rating">Interesting</button>
+        {% else %}
+        <button type="submit" class="btn btn-outline-success" value="{{ request.url }}&rating=3" name="rating">Interesting</button>
+        {% endif %}
+        {% if transient.rating == 2 %}
+        <button type="submit" class="btn btn-warning" value="{{ request.url }}&rating=2" name="rating">Maybe</button>
+        {% else %}
+        <button type="submit" class="btn btn-outline-warning" value="{{ request.url }}&rating=2" name="rating">Maybe</button>
+        {% endif %}
+        {% if transient.rating == 1 %}
+        <button type="submit" class="btn btn-danger" value="{{ request.url }}&rating=1" name="rating">Boring</button>
+        {% else %}
+        <button type="submit" class="btn btn-outline-danger" value="{{ request.url }}&rating=1" name="rating">Boring</button>
+        {% endif %}
+        <button type="submit" class="btn btn-outline-info" value="{{ request.url }}" name="pinned">Remember</button>
     </div>
 </form>
 

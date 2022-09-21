@@ -366,6 +366,24 @@ class Transient(object):
             return df
 
     @cached_property
+    def rating(self) -> Optional[int]:
+        """
+        Read the rating from the DB (3: interesting, 2: maybe, 1: boring. If none is found, return 0)
+        """
+        if "rating" in self.meta.keys():
+            rating = int(self.meta["rating"])
+        else:
+            rating = 0
+
+        return rating
+
+    def set_rating(self, rating: int):
+        """
+        Update the transient rating
+        """
+        meta.update_transient(self.ztfid, data={"rating": rating})
+
+    @cached_property
     def crossmatch_info(self) -> Optional[str]:
         """
         Read the crossmatch results from the DB and return a dict with found values
