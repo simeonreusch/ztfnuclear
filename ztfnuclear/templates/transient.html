@@ -2,7 +2,6 @@
 
 {% block title %}{{ transient.ztfid }}{% endblock %}
 
-
 {% block content %}
 
 
@@ -11,7 +10,11 @@
                                                                 rgba(254, 254, 254 , 1 ))">
     <div class="row">
         <div class="col-auto me-auto">
-            <h1> Inspect {{ transient.ztfid }} </h1>
+            {% if transient.tns_name != None %}
+            <h1> Inspect {{ transient.ztfid }} ({{ transient.tns_name }}) </h1>
+            {% else %}
+            {{ transient.ztfid }}
+            {% endif %} 
         </div>
 
 
@@ -34,32 +37,32 @@
     {% if transient.z != None %}
         <div class="col-auto me-auto">
             <h4 style="color:#A9A9A9;">
-              Redshift: {{ "{:,.4f}".format(transient.z) }} (dist: {{ "{:,.4f}".format(transient.z_dist) }} arcsec) 
+              z: {{ "{:,.4f}".format(transient.z) }} (dist: {{ "{:,.4f}".format(transient.z_dist) }} arcsec) 
             </h4>
         </div>
     {% else %}
         <div class="col-auto me-auto">
             <h4 style="color:#A9A9A9;">
-              Redshift: None 
+              z: None 
             </h4>
         </div>
     {% endif %}
     {% if 'fritz_class' in transient.meta.keys() %}
         <div class="col-auto me-auto">
             <h4 style="color:#A9A9A9;">
-              Fritz classification: {{ transient.meta['fritz_class'] }}
+              Fritz: {{ transient.meta['fritz_class'] }}
             </h4>
         </div>
     {% else %}
         <div class="col-auto me-auto">
             <h4 style="color:#A9A9A9;">
-              Fritz classification: None
+              Fritz: None
             </h4>
         </div>
     {% endif %}
         <div class="col-auto me-auto">
             <h4 style="color:#A9A9A9;">
-              Crossmatch: {{ transient.crossmatch_info }}
+              X-match: {{ transient.crossmatch_info }}
             </h4>
         </div>
 </div>

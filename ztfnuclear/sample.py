@@ -283,6 +283,16 @@ class Transient(object):
         return lc
 
     @cached_property
+    def tns_name(self) -> Optional[str]:
+        """
+        Get the TNS name if one is present in metadata
+        """
+        if "TNS_name" in self.meta.keys():
+            return self.meta["TNS_name"]
+        else:
+            return None
+
+    @cached_property
     def z(self) -> Optional[float]:
         """
         Get the AMPEL redshift from the database
@@ -448,6 +458,7 @@ class Transient(object):
             fig = plot_lightcurve(
                 df=self.baseline,
                 ztfid=self.ztfid,
+                tns_name=self.tns_name,
                 magplot=magplot,
                 wise_df=wise_df,
                 snt_threshold=snt_threshold,
@@ -459,6 +470,7 @@ class Transient(object):
             fig = plot_lightcurve(
                 df=self.raw_lc,
                 ztfid=self.ztfid,
+                tns_name=self.tns_name,
                 magplot=magplot,
                 wise_df=wise_df,
                 snt_threshold=snt_threshold,

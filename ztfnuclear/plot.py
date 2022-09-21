@@ -154,6 +154,7 @@ def plot_ampelz():
 def plot_lightcurve(
     df: pd.DataFrame,
     ztfid: str,
+    tns_name: str = None,
     magplot: bool = True,
     wise_df: pd.DataFrame = None,
     wise_bayesian: dict = None,
@@ -196,11 +197,19 @@ def plot_lightcurve(
         if bl_correction:
             ampl_column = "ampl_corr"
             ampl_err_column = "ampl_err_corr"
-            fig.suptitle(f"{ztfid} (baseline corrected)", fontsize=14)
+            if tns_name:
+                fig.suptitle(f"{ztfid} ({tns_name}) - baseline corrected", fontsize=14)
+            else:
+                fig.suptitle(f"{ztfid} - baseline corrected", fontsize=14)
         else:
             ampl_column = "ampl"
             ampl_err_column = "ampl.err"
-            fig.suptitle(f"{ztfid} (no baseline correction)", fontsize=14)
+            if tns_name:
+                fig.suptitle(
+                    f"{ztfid} ({tns_name}) - no baseline correction", fontsize=14
+                )
+            else:
+                fig.suptitle(f"{ztfid} - no baseline correction", fontsize=14)
 
         obsmjd = _df.obsmjd.values
 
