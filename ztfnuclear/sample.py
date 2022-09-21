@@ -360,6 +360,7 @@ class Transient(object):
             query_sdss,
             query_gaia,
             query_wise,
+            query_tns,
         )
 
         results = {}
@@ -369,11 +370,16 @@ class Transient(object):
         sdss_res = query_sdss(ra_deg=self.ra, dec_deg=self.dec)
         gaia_res = query_gaia(ra_deg=self.ra, dec_deg=self.dec)
         wise_res = query_wise(ra_deg=self.ra, dec_deg=self.dec)
+        tns_res = query_tns(ra_deg=self.ra, dec_deg=self.dec)
 
-        for res in [crts_res, millliquas_res, sdss_res, gaia_res, wise_res]:
+        for res in [crts_res, millliquas_res, sdss_res, gaia_res, wise_res, tns_res]:
             results.update(res)
 
         self.crossmatch = {"crossmatch": results}
+        if "name" in self.crossmatch["crossmatch"]["TNS"].keys():
+            tns_name = self.crossmatch["crossmatch"]["TNS"]["name"]
+            meta.update_transient(ztfid=self.ztfid, data={"TNS_name": tns_name})
+
         meta.update_transient(ztfid=self.ztfid, data=self.crossmatch)
 
     def fritz(self):

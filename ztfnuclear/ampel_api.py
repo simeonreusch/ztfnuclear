@@ -11,6 +11,8 @@ import requests
 
 API_CATALOGMATCH_URL = "https://ampel.zeuthen.desy.de/api/catalogmatch"
 
+logging.getLogger("backoff").setLevel(logging.ERROR)
+
 
 @backoff.on_exception(
     backoff.expo,

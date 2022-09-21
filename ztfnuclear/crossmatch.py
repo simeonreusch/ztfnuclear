@@ -181,6 +181,37 @@ def query_sdss(
         return {"SDSS": {}}
 
 
+def query_tns(
+    ra_deg: float, dec_deg: float, searchradius_arcsec: float = 1.5
+) -> Optional[dict]:
+    """
+    Query the AMPEL-hosted copy of TNS
+    """
+    logger.debug("Querying TNS")
+
+    res = ampel_api_catalog(
+        catalog="TNS",
+        catalog_type="extcats",
+        ra_deg=ra_deg,
+        dec_deg=dec_deg,
+        search_radius_arcsec=searchradius_arcsec,
+        search_type="nearest",
+    )
+
+    if res:
+        logger.debug("TNS: Match found")
+        res_body = res["body"]
+        name = res_body["objname"]
+        prefix = res_body["name_prefix"]
+        full_name = prefix + name
+        classification = res_body["object_type"]["name"]
+        dist_arcsec = res["dist_arcsec"]
+
+        return {"TNS": {"name": full_name, "type": classification, "dist": dist_arcsec}}
+    else:
+        return {"TNS": {}}
+
+
 def query_wise(
     ra_deg: float, dec_deg: float, searchradius_arcsec: float = 20
 ) -> Optional[dict]:

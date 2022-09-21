@@ -122,6 +122,7 @@ class MetadataDB(object):
             has_wise_lc_by_pos = True if "WISE_lc_by_pos" in testobj.keys() else False
             has_wise_lc_by_id = True if "WISE_lc_by_id" in testobj.keys() else False
             has_wise_bayesian = True if "WISE_bayesian" in testobj.keys() else False
+            has_tns = True if "TNS_name" in testobj.keys() else False
 
         else:
             has_ra = False
@@ -134,6 +135,7 @@ class MetadataDB(object):
             has_wise_lc_by_pos = False
             has_wise_lc_by_id = False
             has_wise_bayesian = False
+            has_tns = False
 
         return {
             "count": items_in_coll,
@@ -147,6 +149,7 @@ class MetadataDB(object):
             "has_wise_lc_by_pos": has_wise_lc_by_pos,
             "has_wise_lc_by_id": has_wise_lc_by_id,
             "has_wise_bayesian": has_wise_bayesian,
+            "has_tns": has_tns,
         }
 
     def to_df(self) -> pd.DataFrame:
@@ -178,7 +181,7 @@ class WISE(object):
         client = mongo_client
         db = client.allwise
         items_in_coll = db.command("collstats", "allwise")["count"]
-        self.logger.info(f"Database contains {items_in_coll} entries")
+        self.logger.debug(f"Database contains {items_in_coll} entries")
         return items_in_coll
 
     def ingest_wise(self):
