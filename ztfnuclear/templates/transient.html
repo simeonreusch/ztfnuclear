@@ -5,6 +5,7 @@
 {% block content %}
 
 
+
 <div class="sticky-top my-2 py-0" style="background: linear-gradient(to top,
                                                                 rgba(254, 254, 254 ,0.5),
                                                                 rgba(254, 254, 254 , 1 ))">
@@ -47,6 +48,11 @@
             </h4>
         </div>
     {% endif %}
+        <div class="col-auto me-auto">
+            <h4 style="color:#A9A9A9;">
+              Crossmatch: {{ transient.crossmatch_info }}
+            </h4>
+        </div>
     {% if 'fritz_class' in transient.meta.keys() %}
         <div class="col-auto me-auto">
             <h4 style="color:#A9A9A9;">
@@ -60,12 +66,33 @@
             </h4>
         </div>
     {% endif %}
-        <div class="col-auto me-auto">
-            <h4 style="color:#A9A9A9;">
-              X-match: {{ transient.crossmatch_info }}
-            </h4>
-        </div>
 </div>
+
+
+<form method="post" action="/classify/{{ transient.ztfid }}" >
+
+    <div class="btn-group" role="group" aria-label="Basic example">
+        <button type="submit" class="btn btn-success">Very interesting</button>
+        <button type="submit" class="btn btn-warning">Maybe interesting</button>
+        <button type="submit" class="btn btn-danger">Not interesting</button>
+    </div>
+</form>
+
+<nav aria-label="Page navigation example">
+  <ul class="pagination">
+    {% if flaring == True %}
+    <li class="page-item"><a class="page-link" href="/flaring/{{ previous_transient }}">Previous</a></li>
+    {% else %}
+    <li class="page-item"><a class="page-link" href="/transients/{{ previous_transient }}">Previous</a></li>
+    {% endif %}
+    {% if flaring == True %}
+    <li class="page-item"><a class="page-link" href="/flaring/{{ next_transient }}">Next</a></li>
+    {% else %}
+    <li class="page-item"><a class="page-link" href="/transients/{{ next_transient }}">
+    Next</a></li>
+    {% endif %}
+  </ul>
+</nav>
 
 
   <div class="row justify-content-md-center">

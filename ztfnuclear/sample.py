@@ -19,6 +19,7 @@ from ztfnuclear.fritz import FritzAPI
 logger = logging.getLogger(__name__)
 
 meta = MetadataDB()
+info_db = SampleInfo()
 
 
 class NuclearSample(object):
@@ -170,6 +171,32 @@ class NuclearSample(object):
         date_now = datetime.datetime.now().replace(microsecond=0)
         info.update(data={"fritz_info": {"fritz": True, "date": date_now}})
 
+    def next_transient(self, ztfid: str, flaring: bool = False):
+        """
+        Get the transient following the current one in the sample
+        """
+        if flaring:
+            flaring_ztfids = info_db.read()["flaring"]["ztfids"]
+            idx = flaring_ztfids.index(ztfid)
+            return flaring_ztfids[idx + 1]
+
+        else:
+            idx = self.ztfids.index(ztfid)
+            return self.ztfids[idx + 1]
+
+    def previous_transient(self, ztfid: str, flaring: bool = False):
+        """
+        Get the transient following the current one in the sample
+        """
+        if flaring:
+            flaring_ztfids = info_db.read()["flaring"]["ztfids"]
+            idx = flaring_ztfids.index(ztfid)
+            return flaring_ztfids[idx - 1]
+
+        else:
+            idx = self.ztfids.index(ztfid)
+            return self.ztfids[idx - 1]
+
     def get_transients(self, n: Optional[int] = None):
         """
         Loop over all transients in sample and return a Transient Object
@@ -185,7 +212,6 @@ class NuclearSample(object):
         """
         Loop over all infrared flaring transients in sample and return a Transient object
         """
-        info_db = SampleInfo()
         flaring_ztfids = info_db.read()["flaring"]["ztfids"]
 
         if not n:
@@ -352,7 +378,8 @@ class Transient(object):
                 if subdict is not None and key != "WISE":
                     message += key
                     if "type" in subdict.keys():
-                        message += f" {subdict['type']}"
+                        if key == "TNS" and subdict["type"] is not None:
+                            message += f" {subdict['type']}"
                     if "dist" in subdict.keys():
                         message += f" {subdict['dist']:.5f}  "
         if len(message) == 0:
