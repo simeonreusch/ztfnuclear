@@ -447,12 +447,19 @@ class Transient(object):
 
             if wise_baseline_correction:
                 if "WISE_bayesian" in self.meta.keys():
-                    bl_W1 = self.meta["WISE_bayesian"]["bayesian"]["Wise_W1"][
+                    bl_W1_uncorr = self.meta["WISE_bayesian"]["bayesian"]["Wise_W1"][
                         "baseline"
                     ][0]
-                    bl_W2 = self.meta["WISE_bayesian"]["bayesian"]["Wise_W2"][
+                    bl_W2_uncorr = self.meta["WISE_bayesian"]["bayesian"]["Wise_W2"][
                         "baseline"
                     ][0]
+
+                    bl_W1 = utils.flux_density_bug_correction(
+                        flux_density=bl_W1_uncorr, band="W1"
+                    )
+                    bl_W2 = utils.flux_density_bug_correction(
+                        flux_density=bl_W2_uncorr, band="W2"
+                    )
 
                     wise_df["W1_mean_flux_density"] = utils.flux_density_bug_correction(
                         flux_density=wise_df["W1_mean_flux_density"], band="W1"
@@ -477,6 +484,7 @@ class Transient(object):
                         / 1000,  # convert from mJy to Jy
                         band="W2",
                     )
+                    print(wise_df["W1_mean_flux_density_bl_corr"])
 
         else:
             wise_df = None
