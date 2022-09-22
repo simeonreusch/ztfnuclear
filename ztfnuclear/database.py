@@ -17,7 +17,9 @@ logging.getLogger("extcats.CatalogQuery").setLevel(logging.WARN)
 
 
 class SampleInfo(object):
-    """Mongo DB collection storing information about the sample"""
+    """
+    Mongo DB collection storing information about the sample
+    """
 
     def __init__(self):
         super(SampleInfo, self).__init__()
@@ -45,7 +47,9 @@ class SampleInfo(object):
 
 
 class MetadataDB(object):
-    """Mongo DB collection storing all transient metadata"""
+    """
+    Mongo DB collection storing all transient metadata
+    """
 
     def __init__(self):
         super(MetadataDB, self).__init__()
@@ -57,14 +61,16 @@ class MetadataDB(object):
         self.coll = self.db.metadata
 
     def update_transient(self, ztfid: str, data: dict):
-        """Update DB for given ztfid"""
-
+        """
+        Update DB for given ztfid
+        """
         self.coll.update_one({"_id": ztfid}, {"$set": data}, upsert=True)
         self.logger.debug(f"Updated database for {ztfid}")
 
     def update_many(self, ztfids: list, data: List[dict]):
-        """Update DB for a list of ztfids"""
-
+        """
+        Update DB for a list of ztfids
+        """
         bulk_operations = []
         allowed_ztfids = io.get_all_ztfids()
 
@@ -80,15 +86,36 @@ class MetadataDB(object):
         self.coll.bulk_write(bulk_operations)
         self.logger.debug(f"Updated database for {len(ztfids)} ztfids")
 
-    def read_parameters(self, params: List[str]):
-        """Get all values for the parameters in the list"""
+    # def read_parameters(self, params: List[str]):
+    #     """
+    #     Get all values for the parameters in the list
+    #     """
+    #     returndict = collections.defaultdict(list)
+
+    #     for entry in self.coll.find():
+    #         for param in params:
+    #             if entry.get(param, None) is not None:
+    #                 returndict[param].append(entry[param])
+    #             else:
+    #                 returndict[param].append(None)
+
+    #     return returndict
+
+    def read_parameters(self, params: List[str]) -> dict:
+        """
+        Get all values for the parameters in the list
+        """
         returndict = collections.defaultdict(list)
+        search_dict = {}
 
-        # for param in params:
+        for param in params:
+            search_dict.update({param: 1})
 
-        for entry in self.coll.find():
+        search_res = self.coll.find({}, search_dict)
+
+        for entry in search_res:
             for param in params:
-                if entry.get(param, None) is not None:
+                if param in entry.keys():
                     returndict[param].append(entry[param])
                 else:
                     returndict[param].append(None)
@@ -96,7 +123,9 @@ class MetadataDB(object):
         return returndict
 
     def read_transient(self, ztfid: str):
-        """Read entry for given ztfid"""
+        """
+        Read entry for given ztfid
+        """
 
         entry = self.coll.find({"_id": ztfid})[0]
 
@@ -105,7 +134,9 @@ class MetadataDB(object):
         return entry
 
     def get_statistics(self):
-        """Get collection statistic"""
+        """
+        Get collection statistic
+        """
         items_in_coll = self.db.command("collstats", "metadata")["count"]
         testobj = self.read_transient(ztfid="ZTF19aatubsj")
 
@@ -162,7 +193,9 @@ class MetadataDB(object):
 
 
 class WISE(object):
-    """Interface with WISE MongoDB"""
+    """
+    Interface with WISE MongoDB
+    """
 
     def __init__(self):
         super(WISE, self).__init__()
@@ -185,7 +218,9 @@ class WISE(object):
         return items_in_coll
 
     def ingest_wise(self):
-        """Ingest the WISE catalogue from the parquet file"""
+        """
+        Ingest the WISE catalogue from the parquet file
+        """
         self.logger.info(
             "Reading WISE.parquet and creating Mongo database from it for querying by location. This will take a considerable amount of time, CPU and RAM!"
         )

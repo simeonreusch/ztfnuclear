@@ -221,30 +221,39 @@ class NuclearSample(object):
             t = Transient(ztfid)
             yield t
 
-    # def dump_transient_list_to_csv(self):
-    #     df_dict = {}
+    def get_transients_subset_chisq(
+        self, fitname: str, max_red_chisq: float, n: Optional[int] = None
+    ):
+        """
+        Loop over all transients in sample and return those that match a maximum reduced chisquare from one of the fit distributions
+        """
 
-    #     for t in self.get_transients(n=50):
-    #         print(type(t.z_dist))
-    #         df_dict.update(
-    #             {
-    #                 t.ztfid: {
-    #                     "RA": t.ra,
-    #                     "Dec": t.dec,
-    #                     "z": t.z,
-    #                     "z_dist": t.z_dist if t.z_dist != None else None,
-    #                     "class": t.meta["fritz_class"]
-    #                     if "fritz_class" in t.meta.keys()
-    #                     else None,
-    #                 }
-    #             }
-    #         )
+        selected_ztfids = []
 
-    #     df = pd.DataFrame.from_dict(data=df_dict, orient="index")
-    #     print(df)
+        meta = MetadataDB()
+        db_res = meta.read_parameters(params=["_id", "salt_loose_bl"])
+        fitres = db_res[fitname]
+        ztfids = db_res["_id"]
 
-    # def get_transients_form_csv(self):
-    #     return None
+        print(ztfids)
+
+        # for ztfid in self.ztfids:
+        #     t = Transient(ztfid)
+        #     if fitname in t.meta.keys():
+        #         fitres = t.meta[fitname]
+        #         if fitres != "failure":
+        #             chisq = float(fitres["chisq"])
+        #             ndof = float(fitres["ndof"])
+        #             red_chisq = chisq / ndof
+        #             if red_chisq <= max_red_chisq:
+        #                 selected_ztfids.append(ztfid)
+
+        # if n is None:
+        #     n = len(selected_ztfids)
+
+        # for sel_ztfid in selected_ztfids[:n]:
+        #     t = Transient(sel_ztfid)
+        #     yield t
 
 
 class Transient(object):

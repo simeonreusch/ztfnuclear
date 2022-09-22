@@ -50,7 +50,7 @@ def plot_salt():
     """Plot the salt fit results from the Mongo DB"""
 
     meta = MetadataDB()
-    saltres = meta.read_parameters(params=["salt"])["salt"]
+    saltres = meta.read_parameters(params=["salt_loose_bl"])["salt_loose_bl"]
 
     red_chisq = []
     for entry in saltres:
@@ -73,15 +73,42 @@ def plot_salt():
     plt.close()
 
 
+def plot_tde():
+    """Plot the salt fit results from the Mongo DB"""
+
+    meta = MetadataDB()
+    tde_res = meta.read_parameters(params=["tde_fit_loose_bl"])["tde_fit_loose_bl"]
+
+    red_chisq = []
+    for entry in tde_res:
+        if entry:
+            if entry != "failure":
+                chisq = float(entry["chisq"])
+                ndof = float(entry["ndof"])
+                red_chisq.append(chisq / ndof)
+
+    fig, ax = plt.subplots(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
+    fig.suptitle(
+        f"TDE fit reduced chisquare distribution (n={len(red_chisq)})", fontsize=14
+    )
+
+    ax.hist(red_chisq, bins=100, range=[0, 10])
+
+    outfile = os.path.join(io.LOCALSOURCE_plots, "tde_chisq_dist.pdf")
+    plt.tight_layout()
+    plt.savefig(outfile)
+    plt.close()
+
+
 def plot_salt_tde_chisq():
     """Plot the salt fit vs. TDE fit chisq"""
 
     meta = MetadataDB()
-    metadata = meta.read_parameters(params=["_id", "tde_fit_loose_bl", "salt"])
+    metadata = meta.read_parameters(params=["_id", "tde_fit_loose_bl", "salt_loose_bl"])
 
     ztfids = metadata["_id"]
     tde_res = metadata["tde_fit_loose_bl"]
-    salt_res = metadata["salt"]
+    salt_res = metadata["salt_loose_bl"]
 
     salt_red_chisq = []
     tde_red_chisq = []
