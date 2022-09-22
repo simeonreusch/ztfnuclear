@@ -2,42 +2,112 @@ import os, json, random, io, base64
 
 import matplotlib
 
-from flask import Flask, render_template, redirect, url_for, request
-from flask_login import current_user, LoginManager
+from datetime import datetime
+
+from flask import Flask, render_template, redirect, url_for, request, flash
+from flask_pymongo import PyMongo
+from flask_login import current_user, LoginManager, login_required, UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+
 from ztfnuclear.sample import NuclearSample, Transient
+
 from ztfnuclear.database import SampleInfo
 from ztfnuclear.utils import is_ztf_name
-from ztfnuclear.forms import LoginForm
-
-app = Flask(__name__)
-app.config["SECRET_KEY"] = "aotvm8vFJIELTORETU8VFJDK453JKjfdkoo"
-app.jinja_env.auto_reload = True
+from ztfnuclear.forms import LoginForm, UserForm
 
 matplotlib.pyplot.switch_backend("Agg")
 
-# Flask Login Stuff
-login_manager = LoginManager()
+# Class-based application configuration
+class ConfigClass(object):
+    """Flask application config"""
+
+    # Flask settings
+    SECRET_KEY = "aotvm8vFJIELTORETU8VFJDK453JKjfdkoo"
+
+    # Flask-MongoEngine settings
+    MONGO_URI = "mongodb://localhost:27017/ztfnuclear_viewer"
+
+    USER_APP_NAME = "ZTFNuclear Sample"
+    USER_ENABLE_EMAIL = False
+    USER_ENABLE_USERNAME = True
+    USER_REQUIRE_RETYPE_PASSWORD = False
+
+
+app = Flask(__name__)
+app.config.from_object(__name__ + ".ConfigClass")
+app.jinja_env.auto_reload = True
+
+mongo = PyMongo(app)
+
+login_manager = LoginManager(app)
 login_manager.init_app(app)
-login_manager.login_view = "login"  # where to point to log if needed
+login_manager.login_view = "login"
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+
+class User:
+    def __init__(self, username, password_hash):
+        self.username = username
+        self.password_hash = password_hash
+
+    @staticmethod
+    def is_authenticated():
+        return True
+
+    @staticmethod
+    def is_active():
+        return True
+
+    @staticmethod
+    def is_anonymous():
+        return False
+
+    def get_id(self):
+        return self.username
+
+    @staticmethod
+    def check_password(password_hash, password):
+        return check_password_hash(password_hash, password)
+
+    @login_manager.user_loader
+    def load_user(username):
+        u = mongo.db.ztfnuclear_viewer.find_one({"Name": username})
+        print("-----")
+        print(u)
+        print("------")
+        if not u:
+            return None
+        return User(username=u["Name"])
+
+    @app.route("/login", methods=["GET", "POST"])
+    def login():
+        if current_user.is_authenticated:
+            return redirect(url_for("index"))
+        form = LoginForm()
+        if form.validate_on_submit():
+            user = mongo.db.ztfnuclear_viewer.find_one({"Name": form.name.data})
+            if user and User.check_password(user["Password"], form.password.data):
+                user_obj = User(username=user["Name"])
+                login_user(user_obj)
+                next_page = request.args.get("next")
+                if not next_page or url_parse(next_page).netloc != "":
+                    next_page = url_for("index")
+                return redirect(next_page)
+            else:
+                flash("Invalid username or password")
+        return render_template("login.html", title="Sign In", form=form)
+
+    @app.route("/logout")
+    def logout():
+        logout_user()
+        return redirect(url_for("login"))
+
 
 sample_ztfids = NuclearSample().ztfids
 info_db = SampleInfo()
 flaring_ztfids = info_db.read()["flaring"]["ztfids"]
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    """ """
-    try:
-        return Users.query.get(int(user_id))
-    except:
-        return None
-
-
-class Users:
-
-    id: int = 15
-    username: str = "simeon"
 
 
 @app.route("/")
@@ -48,28 +118,6 @@ def home():
     return render_template(
         "home.html",
     )
-
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    """ """
-    form = LoginForm()
-    # entry the if went hit submit from login.html
-    if form.validate_on_submit():
-        # grab the first user given the inputform username
-        user = Users.query.filter_by(username=form.username.data).first()
-        if user:
-            # Check the hash
-            if check_password_hash(user.password_hash, form.password.data):
-                login_user(user)  # Flask login
-                flash("Login Successful", category="success")
-                return redirect(url_for("dashboard"))
-            else:
-                flash("Wrong Password - Try again", category="error")
-        else:  # no user
-            flash("That user doesn't exist - Try again", category="warning")
-
-    return render_template("login.html", form=form)
 
 
 @app.route("/transients/<string:ztfid>")
@@ -230,6 +278,51 @@ def search():
         return redirect(url_for(f"transient_page", ztfid=ztfid))
     else:
         return redirect(url_for("home"))
+
+
+@app.route("/register", methods=["GET", "POST"])
+def add_user():
+    """ """
+    form = UserForm()
+    if form.validate_on_submit():  # If you submit, this happens
+
+        # query the Users-Database that have the inout user email and return the first one
+        # This should return None if it is indeed unique
+        # user = User.query.filter_by(username=form.name.data).first()
+        user = mongo.db.ztfnuclear_viewer.find_one({"Name": form.name.data})
+        print(form.name.data)
+        print(user)
+        if user is None:
+            # create a new db user entry
+            hashed_pwd = generate_password_hash(form.password_hash.data, "sha256")
+
+            user = User(
+                username=form.name.data,
+                password_hash=hashed_pwd,
+            )
+            mongo.db.ztfnuclear_viewer.update_one(
+                {"Name": form.name.data},
+                {"$set": {"Name": form.name.data, "Password": hashed_pwd}},
+                upsert=False,
+            )
+
+            # add it to the actual db
+            # mongo.db.ztfnuclear_viewer.add(user)
+            # and commit it
+            # mongo.db.ztfnuclear_viewer.commit()
+            flash("User added successfully", category="success")
+        else:
+            flash(
+                "Username already used. User not added to the database",
+                category="error",
+            )
+
+        # Clearing this out
+        name = form.name.data
+        form.name.data = ""
+        form.password_hash.data = ""
+
+    return render_template("register.html", form=form)
 
 
 if __name__ == "__main__":

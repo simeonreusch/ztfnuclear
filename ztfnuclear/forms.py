@@ -11,9 +11,7 @@ from wtforms.validators import DataRequired, EqualTo, Length
 
 # Create a Form Class
 class UserForm(FlaskForm):
-    username = StringField("Username", validators=[DataRequired()])
-    name = StringField("Name", validators=[DataRequired()])
-    email = StringField("Email", validators=[DataRequired()])
+    name = StringField("Username", validators=[DataRequired()])
     password_hash = PasswordField(
         "Password",
         validators=[
@@ -34,7 +32,7 @@ class UserForm(FlaskForm):
 
 # Create LoginForm
 class LoginForm(FlaskForm):
-    username = StringField("Username", validators=[DataRequired()])
+    name = StringField("Username", validators=[DataRequired()])
     password = PasswordField("Password", validators=[DataRequired()])
     submit = SubmitField("Submit")  # For the button
 
