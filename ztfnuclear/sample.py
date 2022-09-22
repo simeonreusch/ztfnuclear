@@ -226,7 +226,6 @@ class NuclearSample(object):
         fitname: str,
         max_red_chisq: float,
         n: Optional[int] = None,
-        ztfid_only=False,
     ):
         """
         Loop over all transients in sample and return those that match a maximum reduced chisquare from one of the fit distributions
@@ -251,14 +250,83 @@ class NuclearSample(object):
         if n is None:
             n = len(selected_ztfids)
 
-        if ztfid_only:
-            for sel_ztfid in selected_ztfids[:n]:
-                yield sel_ztfid
+        for sel_ztfid in selected_ztfids[:n]:
+            t = Transient(sel_ztfid)
+            yield
 
-        else:
-            for sel_ztfid in selected_ztfids[:n]:
-                t = Transient(sel_ztfid)
-                yield t
+    def get_transients_subset_chisq_list(
+        self,
+        fitname: str,
+        max_red_chisq: float,
+        n: Optional[int] = None,
+    ):
+        """
+        Loop over all transients in sample and return a ztfid-list of those that match a maximum reduced chisquare from one of the fit distributions
+        """
+
+        selected_ztfids = []
+
+        meta = MetadataDB()
+        db_res = meta.read_parameters(params=["_id", fitname])
+        fitres_all = db_res[fitname]
+        ztfids_all = db_res["_id"]
+
+        for i, ztfid in enumerate(ztfids_all):
+            fitres = fitres_all[i]
+            if fitres != "failure" and fitres != None:
+                chisq = float(fitres["chisq"])
+                ndof = float(fitres["ndof"])
+                red_chisq = chisq / ndof
+                if red_chisq <= max_red_chisq:
+                    selected_ztfids.append(ztfid)
+
+        if n is None:
+            n = len(selected_ztfids)
+
+        return selected_ztfids[:n]
+
+    def generate_ir_flare_sample(self):
+        """
+        Create a list of transients that match the WISE IR flare selection and write them to the info db
+        """
+        meta = MetadataDB()
+        db_res = meta.read_parameters(
+            params=[
+                "_id",
+                "WISE_bayesian",
+            ]
+        )
+
+        final_ztfids = []
+
+        for i, entry in enumerate(db_res["WISE_bayesian"]):
+
+            if entry is not None:
+                if "bayesian" in entry.keys():
+                    if entry["bayesian"] is not None:
+                        if "start_excess" in entry["bayesian"].keys():
+                            start_excess = entry["bayesian"]["start_excess"]
+                    else:
+                        start_excess = None
+                else:
+                    start_excess = None
+
+                if "dustecho" in entry.keys():
+                    if entry["dustecho"] is not None:
+                        if "status" in entry["dustecho"]:
+                            status = entry["dustecho"]["status"]
+                        else:
+                            status = None
+                    else:
+                        status = None
+                else:
+                    status = None
+
+            if start_excess != None and status != "No further investigation":
+                if start_excess >= 2458239.50000:
+                    final_ztfids.append(db_res["_id"][i])
+
+        info_db.update(data={"flaring": {"ztfids": final_ztfids}})
 
 
 class Transient(object):
@@ -329,6 +397,34 @@ class Transient(object):
         """
         if "TNS_name" in self.meta.keys():
             return self.meta["TNS_name"]
+        else:
+            return None
+
+    @cached_property
+    def tde_res(self) -> Optional[float]:
+        """
+        Get the TDE fit reduced chisq
+        """
+        if "tde_fit_loose_bl" in self.meta.keys():
+            if self.meta["tde_fit_loose_bl"] != "failure":
+                chisq = self.meta["tde_fit_loose_bl"]["chisq"]
+                ndof = self.meta["tde_fit_loose_bl"]["ndof"]
+                red_chisq = chisq / ndof
+                return red_chisq
+        else:
+            return None
+
+    @cached_property
+    def salt_res(self) -> Optional[float]:
+        """
+        Get the TDE fit reduced chisq
+        """
+        if "tde_fit_loose_bl" in self.meta.keys():
+            if self.meta["salt_loose_bl"] != "failure":
+                chisq = self.meta["salt_loose_bl"]["chisq"]
+                ndof = self.meta["salt_loose_bl"]["ndof"]
+                red_chisq = chisq / ndof
+                return red_chisq
         else:
             return None
 

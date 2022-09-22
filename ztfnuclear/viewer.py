@@ -149,18 +149,14 @@ def flaring_page(ztfid):
 @app.route("/rate/<string:ztfid>", methods=["GET", "POST"])
 def rate_transient(ztfid):
     """ """
-    # - Target action made to
     t = Transient(ztfid)
 
-    # Information are contained withing this
     input_key = list(request.form.keys())[0]
 
     if request.method == "POST":
 
-        # Classification
-        if input_key == "rating":  # This is a classification
+        if input_key == "rating":
             raw_value = request.form["rating"]
-            print(raw_value)
             split = raw_value.split("&")
             origin = split[0]
             rating = int(split[1].split("=")[1])

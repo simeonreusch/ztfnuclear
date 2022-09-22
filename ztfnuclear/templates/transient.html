@@ -10,9 +10,9 @@
     <div class="row">
         <div class="col-auto me-auto">
             {% if transient.tns_name != None %}
-            <h1> Inspect {{ transient.ztfid }} ({{ transient.tns_name }}) </h1>
+            <h1> {{ transient.ztfid }} ({{ transient.tns_name }}) </h1>
             {% else %}
-            <h1> Inspect {{ transient.ztfid }} </h1>
+            <h1> {{ transient.ztfid }} </h1>
             {% endif %} 
         </div>
 
@@ -42,7 +42,7 @@
     {% else %}
         <div class="col-auto me-auto">
             <h4 style="color:#A9A9A9;">
-              z: None 
+              z: --- 
             </h4>
         </div>
     {% endif %}
@@ -60,11 +60,41 @@
     {% else %}
         <div class="col-auto me-auto">
             <h4 style="color:#A9A9A9;">
-              Fritz: None
+              Fritz: ---
             </h4>
         </div>
     {% endif %}
 </div>
+
+ <div class="row">
+    {% if transient.tde_res != None %}
+        <div class="col-auto me-auto">
+            <h4 style="color:#A9A9A9;">
+              TDE fit red_chisq: {{ "{:,.3f}".format(transient.tde_res) }}
+            </h4>
+        </div>
+    {% else %}
+        <div class="col-auto me-auto">
+            <h4 style="color:#A9A9A9;">
+              TDE fit red_chisq: ---
+            </h4>
+        </div>
+    {% endif %}
+    {% if transient.salt_res != None %}
+    <div class="col-auto me-auto">
+            <h4 style="color:#A9A9A9;">
+              SALT fit red_chisq: {{ "{:,.3f}".format(transient.salt_res) }} 
+            </h4>
+    </div>
+    {% else %}
+    <div class="col-auto me-auto">
+            <h4 style="color:#A9A9A9;">
+              SALT fit red_chisq: --- 
+            </h4>
+    </div>
+    {% endif %}
+</div>
+
 
 <form method="post" action="/rate/{{ transient.ztfid }}" >
 
