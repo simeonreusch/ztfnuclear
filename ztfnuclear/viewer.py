@@ -263,7 +263,12 @@ def rate_transient(ztfid):
             origin = request.form["pinned"]
             # do stuff
 
-        return redirect(origin)
+        if "transients" in origin:
+            return redirect(url_for("transient_random"))
+        elif "flaring" in origin:
+            return redirect(url_for("flaring_transient_random"))
+        else:
+            return redirect(origin)
 
 
 @app.route("/sample")
