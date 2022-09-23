@@ -9,36 +9,28 @@ from wtforms import (
 )
 from wtforms.validators import DataRequired, EqualTo, Length
 
-# Create a Form Class
-class UserForm(FlaskForm):
-    name = StringField("Username", validators=[DataRequired()])
-    password_hash = PasswordField(
-        "Password",
-        validators=[
-            DataRequired(),
-            EqualTo("password_hash_matched", "password must match"),
-        ],
-    )
-    newpassword_hash = PasswordField("New password")
 
-    password_hash_matched = PasswordField(
-        "Confirm Password", validators=[DataRequired()]
-    )
-
-    submit = SubmitField("Submit")  # For the button
-
-    config__lcplot = StringField("config__lcplot")
-
-
-# Create LoginForm
 class LoginForm(FlaskForm):
-    name = StringField("Username", validators=[DataRequired()])
+    username = StringField("Username", validators=[DataRequired()])
     password = PasswordField("Password", validators=[DataRequired()])
-    submit = SubmitField("Submit")  # For the button
+    remember_me = BooleanField("Remember Me")
+    submit = SubmitField("Sign In")
 
 
-class ClassForm(FlaskForm):
+class RegistrationForm(FlaskForm):
+    username = StringField("Username", validators=[DataRequired()])
+    password = PasswordField("Password", validators=[DataRequired()])
+    password2 = PasswordField(
+        "Repeat Password", validators=[DataRequired(), EqualTo("password")]
+    )
+    submit = SubmitField("Register")
 
-    username = StringField("Username")
-    targetname = PasswordField("targetname")
-    snia = SubmitField("Submit")  # For the button
+    def validate_username(self, username):
+        user = User.objects(username=username.data).first()
+        if user is not None:
+            raise ValidationError("Please use a different username.")
+
+    def validate_email(self, email):
+        user = User.objects(email=email.data).first()
+        if user is not None:
+            raise ValidationError("Please use a different email address.")

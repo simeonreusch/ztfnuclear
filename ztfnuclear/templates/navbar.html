@@ -34,6 +34,19 @@
             <form action="/search" class="d-flex" method="POST">
               <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="name">
             </form>
+            <ul class="nav navbar-nav float-md-right">
+               {% if current_user.is_authenticated %}
+                <li class="nav-item">
+                  <a class="nav-link active" aria-current="page" href="{{ url_for('logout') }}">Logout</a>
+                </li>
+              {% else %}
+                <li class="nav-item">
+                  <a class="nav-link active" aria-current="page" href="{{ url_for('login') }}">Login</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link active" aria-current="page" href="{{ url_for('register') }}">Register</a>
+                </li>
+              {% endif%}
           </div>
     </div>
   </nav>

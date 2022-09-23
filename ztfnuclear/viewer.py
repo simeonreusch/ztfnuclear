@@ -4,105 +4,101 @@ import matplotlib
 
 from datetime import datetime
 
+from flask_wtf import FlaskForm
+from wtforms import (
+    StringField,
+    SubmitField,
+    PasswordField,
+    BooleanField,
+    ValidationError,
+)
+from wtforms.validators import DataRequired, EqualTo, Length
+
 from flask import Flask, render_template, redirect, url_for, request, flash
-from flask_pymongo import PyMongo
-from flask_login import current_user, LoginManager, login_required, UserMixin
+from flask_mongoengine import MongoEngine, Document
+from flask_login import (
+    current_user,
+    LoginManager,
+    logout_user,
+    login_required,
+    UserMixin,
+    login_user,
+)
 from werkzeug.security import generate_password_hash, check_password_hash
+
+from werkzeug.urls import url_parse
 
 from ztfnuclear.sample import NuclearSample, Transient
 
 from ztfnuclear.database import SampleInfo
 from ztfnuclear.utils import is_ztf_name
-from ztfnuclear.forms import LoginForm, UserForm
+
 
 matplotlib.pyplot.switch_backend("Agg")
 
-# Class-based application configuration
-class ConfigClass(object):
-    """Flask application config"""
 
-    # Flask settings
-    SECRET_KEY = "aotvm8vFJIELTORETU8VFJDK453JKjfdkoo"
+class LoginForm(FlaskForm):
+    username = StringField("Username", validators=[DataRequired()])
+    password = PasswordField("Password", validators=[DataRequired()])
+    remember_me = BooleanField("Remember Me")
+    submit = SubmitField("Sign In")
 
-    # Flask-MongoEngine settings
-    MONGO_URI = "mongodb://localhost:27017/ztfnuclear_viewer"
 
-    USER_APP_NAME = "ZTFNuclear Sample"
-    USER_ENABLE_EMAIL = False
-    USER_ENABLE_USERNAME = True
-    USER_REQUIRE_RETYPE_PASSWORD = False
+class RegistrationForm(FlaskForm):
+    username = StringField("Username", validators=[DataRequired()])
+    password = PasswordField("Password", validators=[DataRequired()])
+    password2 = PasswordField(
+        "Repeat Password", validators=[DataRequired(), EqualTo("password")]
+    )
+    submit = SubmitField("Register")
+
+    def validate_username(self, username):
+        user = User.objects(username=username.data).first()
+        if user is not None:
+            raise ValidationError("Please use a different username.")
 
 
 app = Flask(__name__)
-app.config.from_object(__name__ + ".ConfigClass")
+app.config["MONGODB_SETTINGS"] = [
+    {
+        "db": "ztfnuclear_viewer",
+        "host": "localhost",
+        "port": 27017,
+        "alias": "default",
+    }
+]
+app.config["SECRET_KEY"] = "aotvm8vFJIELTORETU8VFJDK453JKjfdkoo"
 app.jinja_env.auto_reload = True
 
-mongo = PyMongo(app)
 
-login_manager = LoginManager(app)
-login_manager.init_app(app)
-login_manager.login_view = "login"
+login = LoginManager(app)
+login.login_view = "login"
+
+db = MongoEngine(app)
 
 if __name__ == "__main__":
     app.run(debug=True)
 
 
-class User:
-    def __init__(self, username, password_hash):
-        self.username = username
-        self.password_hash = password_hash
+@login.user_loader
+def load_user(id):
+    return User.objects.get(id=id)
 
-    @staticmethod
-    def is_authenticated():
-        return True
 
-    @staticmethod
-    def is_active():
-        return True
+class User(UserMixin, db.Document):
+    meta = {"collection": "users"}
+    username = db.StringField(default=True, unique=True)
+    password_hash = db.StringField(default=True)
+    timestamp = db.DateTimeField(default=datetime.now())
 
-    @staticmethod
-    def is_anonymous():
-        return False
+    def __repr__(self):
+        return "<User {}>".format(self.username)
 
-    def get_id(self):
-        return self.username
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
 
-    @staticmethod
-    def check_password(password_hash, password):
-        return check_password_hash(password_hash, password)
-
-    @login_manager.user_loader
-    def load_user(username):
-        u = mongo.db.ztfnuclear_viewer.find_one({"Name": username})
-        print("-----")
-        print(u)
-        print("------")
-        if not u:
-            return None
-        return User(username=u["Name"])
-
-    @app.route("/login", methods=["GET", "POST"])
-    def login():
-        if current_user.is_authenticated:
-            return redirect(url_for("index"))
-        form = LoginForm()
-        if form.validate_on_submit():
-            user = mongo.db.ztfnuclear_viewer.find_one({"Name": form.name.data})
-            if user and User.check_password(user["Password"], form.password.data):
-                user_obj = User(username=user["Name"])
-                login_user(user_obj)
-                next_page = request.args.get("next")
-                if not next_page or url_parse(next_page).netloc != "":
-                    next_page = url_for("index")
-                return redirect(next_page)
-            else:
-                flash("Invalid username or password")
-        return render_template("login.html", title="Sign In", form=form)
-
-    @app.route("/logout")
-    def logout():
-        logout_user()
-        return redirect(url_for("login"))
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
 
 sample_ztfids = NuclearSample().ztfids
@@ -120,7 +116,47 @@ def home():
     )
 
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("home"))
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.objects(username=form.username.data).first()
+        if user is None or not user.check_password(form.password.data):
+            flash("Invalid username or password")
+            return redirect(url_for("login"))
+        login_user(user, remember=form.remember_me.data)
+        next_page = request.args.get("next")
+        if not next_page or url_parse(next_page).netloc != "":
+            next_page = url_for("home")
+        return redirect(next_page)
+    return render_template("login.html", title="Sign In", form=form)
+
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for("home"))
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for("home"))
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = User(username=form.username.data)
+        user.set_password(form.password.data)
+        user.save()
+        flash("Congratulations, you have now registered!")
+        return redirect(url_for("login"))
+    return render_template("register.html", title="Register", form=form)
+
+
 @app.route("/transients/<string:ztfid>")
+@login_required
 def transient_page(ztfid):
     """
     Show the transient page
@@ -158,6 +194,7 @@ def transient_page(ztfid):
 
 
 @app.route("/flaring/<string:ztfid>")
+@login_required
 def flaring_page(ztfid):
     """
     Show the page of a flaring transient
@@ -195,6 +232,7 @@ def flaring_page(ztfid):
 
 
 @app.route("/rate/<string:ztfid>", methods=["GET", "POST"])
+@login_required
 def rate_transient(ztfid):
     """ """
     t = Transient(ztfid)
@@ -219,6 +257,7 @@ def rate_transient(ztfid):
 
 
 @app.route("/sample")
+@login_required
 def transient_list():
     """
     Show a list of all the transients
@@ -229,6 +268,7 @@ def transient_list():
 
 
 @app.route("/flaringsample")
+@login_required
 def flaring_transient_list():
     """
     Show a list of all the transients
@@ -240,6 +280,7 @@ def flaring_transient_list():
 
 
 @app.route("/random")
+@login_required
 def transient_random():
     """
     Show a random transient
@@ -251,6 +292,7 @@ def transient_random():
 
 
 @app.route("/flaringrandom")
+@login_required
 def flaring_transient_random():
     """
     Show a random transient
@@ -261,6 +303,7 @@ def flaring_transient_random():
 
 
 @app.route("/search", methods=["GET", "POST"])
+@login_required
 def search():
     """
     Search for a transient
