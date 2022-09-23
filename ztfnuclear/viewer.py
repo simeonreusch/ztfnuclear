@@ -109,7 +109,7 @@ flaring_ztfids = info_db.read()["flaring"]["ztfids"]
 @app.route("/")
 def home():
     """
-    This is the default page
+    This is the landing page
     """
     s = NuclearSample()
     if current_user.is_authenticated:
@@ -314,11 +314,11 @@ def list_interesting():
 @login_required
 def transient_random():
     """
-    Show a random transient
+    Show a random transient that has NOT been rated yet
     """
     s = NuclearSample()
     random_ztfid = random.choice(s.ztfids)
-    # return transient_page(ztfid=random_ztfid)
+
     return redirect(url_for("transient_page", ztfid=random_ztfid))
 
 
@@ -326,10 +326,10 @@ def transient_random():
 @login_required
 def flaring_transient_random():
     """
-    Show a random transient
+    Show a random IR flaring transient that has NOT been rated yet
     """
     random_flaring_ztfid = random.choice(flaring_ztfids)
-    # return transient_page(ztfid=random_ztfid)
+
     return redirect(url_for("flaring_page", ztfid=random_flaring_ztfid))
 
 
@@ -356,18 +356,15 @@ def search():
 
 @app.route("/register", methods=["GET", "POST"])
 def add_user():
-    """ """
+    """
+    Add a user, hash his/her password and write that to the UserDB
+    """
     form = UserForm()
-    if form.validate_on_submit():  # If you submit, this happens
+    if form.validate_on_submit():
 
-        # query the Users-Database that have the inout user email and return the first one
-        # This should return None if it is indeed unique
-        # user = User.query.filter_by(username=form.name.data).first()
         user = mongo.db.ztfnuclear_viewer.find_one({"Name": form.name.data})
-        print(form.name.data)
-        print(user)
+
         if user is None:
-            # create a new db user entry
             hashed_pwd = generate_password_hash(form.password_hash.data, "sha256")
 
             user = User(
@@ -380,10 +377,6 @@ def add_user():
                 upsert=False,
             )
 
-            # add it to the actual db
-            # mongo.db.ztfnuclear_viewer.add(user)
-            # and commit it
-            # mongo.db.ztfnuclear_viewer.commit()
             flash("User added successfully", category="success")
         else:
             flash(
@@ -391,7 +384,6 @@ def add_user():
                 category="error",
             )
 
-        # Clearing this out
         name = form.name.data
         form.name.data = ""
         form.password_hash.data = ""
