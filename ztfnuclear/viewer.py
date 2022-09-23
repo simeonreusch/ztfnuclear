@@ -310,6 +310,24 @@ def list_interesting():
     return render_template("transient_list.html", transients=interesting_transients)
 
 
+@app.route("/maybe")
+@login_required
+def list_maybe():
+    """
+    List all the transients selected as 'interesting'
+    """
+    s = NuclearSample()
+    maybe_interesting_ztfids = list(
+        s.get_ratings(username=current_user.username, select="maybe").keys()
+    )
+
+    maybe_interesting_transients = s.get_transients(ztfids=maybe_interesting_ztfids)
+
+    return render_template(
+        "transient_list.html", transients=maybe_interesting_transients
+    )
+
+
 @app.route("/random")
 @login_required
 def transient_random():
