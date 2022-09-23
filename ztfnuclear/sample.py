@@ -5,7 +5,7 @@
 import os, logging, datetime
 
 from functools import cached_property
-from typing import Optional
+from typing import Optional, List
 
 from tqdm import tqdm  # type: ignore
 import numpy as np
@@ -173,12 +173,30 @@ class NuclearSample(object):
         date_now = datetime.datetime.now().replace(microsecond=0)
         info.update(data={"fritz_info": {"fritz": True, "date": date_now}})
 
-    def get_ratings(self, username: str = None) -> dict:
+    def get_ratings(self, username: str = None, select="all") -> dict:
         """
         Get all ratings for the sample (for all or a given user)
         """
         ratings = self.meta.get_rating_overview(username=username)
-        return ratings
+
+        rating_to_value = {
+            "interesting": 3,
+            "maybe": 2,
+            "boring": 1,
+        }
+
+        value_to_rating = {v: k for k, v in rating_to_value.items()}
+
+        returndict = {}
+
+        if select == "all":
+            returndict = ratings
+        else:
+            for k, v in ratings.items():
+                if v[username] == rating_to_value[select]:
+                    returndict.update({k: v})
+
+        return returndict
 
     def next_transient(self, ztfid: str, flaring: bool = False):
         """
@@ -206,16 +224,27 @@ class NuclearSample(object):
             idx = self.ztfids.index(ztfid)
             return self.ztfids[idx - 1]
 
-    def get_transients(self, n: Optional[int] = None):
+    def get_transients(
+        self, n: Optional[int] = None, ztfids: Optional[List[str]] = None
+    ):
         """
-        Loop over all transients in sample and return a Transient Object
+        Loop over all transients in sample (or over all ztfids if given) and return a Transient Object
         """
         if not n:
-            n = len(self.ztfids)
+            if ztfids is None:
+                n = len(self.ztfids)
+            else:
+                n = len(ztfids)
 
-        for ztfid in self.ztfids[:n]:
-            t = Transient(ztfid)
-            yield t
+        if ztfids is None:
+            for ztfid in self.ztfids[:n]:
+                t = Transient(ztfid)
+                yield t
+
+        else:
+            for ztfid in ztfids[:n]:
+                t = Transient(ztfid)
+                yield t
 
     def get_flaring_transients(self, n: Optional[int] = None):
         """
@@ -413,6 +442,18 @@ class Transient(object):
             return None
 
     @cached_property
+    def tns_class(self) -> Optional[str]:
+        """
+        Get the TNS classification if one is present in metadata
+        """
+        if "crossmatch" in self.meta.keys():
+            if "TNS" in self.meta["crossmatch"].keys():
+                if "type" in self.meta["crossmatch"]["TNS"].keys():
+                    return self.meta["crossmatch"]["TNS"]["type"]
+        else:
+            return None
+
+    @cached_property
     def tde_res(self) -> Optional[float]:
         """
         Get the TDE fit reduced chisq
@@ -537,8 +578,7 @@ class Transient(object):
 
         meta.update_transient(self.ztfid, data={"rating": rating_dict})
 
-    @cached_property
-    def crossmatch_info(self) -> Optional[str]:
+    def get_crossmatch_info(self, exclude: list = ["WISE"]) -> Optional[str]:
         """
         Read the crossmatch results from the DB and return a dict with found values
         """
@@ -547,7 +587,7 @@ class Transient(object):
         for key in xmatch.keys():
             subdict = xmatch[key]
             if len(subdict) > 0:
-                if subdict is not None and key != "WISE":
+                if subdict is not None and key not in exclude:
                     message += key
                     if "type" in subdict.keys():
                         if key == "TNS" and subdict["type"] is not None:

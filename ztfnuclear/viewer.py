@@ -294,6 +294,22 @@ def flaring_transient_list():
     return render_template("transient_list.html", transients=flaring_transients)
 
 
+@app.route("/interesting")
+@login_required
+def list_interesting():
+    """
+    List all the transients selected as 'interesting'
+    """
+    s = NuclearSample()
+    interesting_ztfids = list(
+        s.get_ratings(username=current_user.username, select="interesting").keys()
+    )
+
+    interesting_transients = s.get_transients(ztfids=interesting_ztfids)
+
+    return render_template("transient_list.html", transients=interesting_transients)
+
+
 @app.route("/random")
 @login_required
 def transient_random():

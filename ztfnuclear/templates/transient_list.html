@@ -8,19 +8,19 @@
     <thead>
         <tr>
             <th scope="col">ztfid</th>
-            <th scope="col">ra</th>
-            <th scope="col">dec</th>
             <th scope="col">z</th>
             <th scope="col">z_dist</th>
-            <th scope="col">class</th>
+            <th scope="col">TNS class.</th>
+            <th scope="col">Fritz class.</th>
+            <th scope="col">Crossmatch</th>
+            <th scope="col">TDE fit</th>
+            <th scope="col">SALT fit</th>
         </tr>
     </thead>
     <tbody>
         {% for transient in transients %}
             <tr>
                 <td><a href="{{ url_for('transient_page', ztfid=transient.ztfid)}}" > {{ transient.ztfid }} </a></td>
-                <td>{{ "{:,.6f}".format(transient.ra) }}</td>
-                <td>{{ "{:,.6f}".format(transient.dec) }}</td>
                 {% if transient.z == None %}
                     <td> --- </td>
                 {% else %}
@@ -31,11 +31,32 @@
                 {% else %}
                     <td>{{ "{:,.5f}".format(transient.z_dist) }}</td>
                 {% endif %}
+                {% if transient.tns_class == None %}
+                    <td> --- </td>
+                {% else %}
+                    <td>{{ transient.tns_class }}</td>
+                {% endif %}
                 {% if 'fritz_class' in transient.meta.keys() %}
                     <td> {{ transient.meta['fritz_class'] }} </td>
                 {% else %}
                     <td> --- </td>
                 {% endif %}
+                {% if transient.get_crossmatch_info(exclude=['WISE','TNS']) != None %}
+                    <td> {{ transient.get_crossmatch_info(exclude=['WISE','TNS']) }} </td>
+                {% else %}
+                    <td> --- </td>
+                {% endif %}
+                {% if transient.tde_res == None %}
+                    <td> --- </td>
+                {% else %}
+                    <td>{{ "{:,.3f}".format(transient.tde_res) }}</td>
+                {% endif %}
+                {% if transient.salt_res == None %}
+                    <td> --- </td>
+                {% else %}
+                    <td>{{ "{:,.3f}".format(transient.salt_res) }}</td>
+                {% endif %}
+
             </tr>
         {% endfor %}
     </tbody>
@@ -51,6 +72,8 @@
       $('#data').DataTable({
         columns: [
           null,
+          {orderable: true, searchable: false},
+          {orderable: true, searchable: false},
           {orderable: true, searchable: false},
           {orderable: true, searchable: false},
           {orderable: true, searchable: false},
