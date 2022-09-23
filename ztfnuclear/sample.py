@@ -160,7 +160,9 @@ class NuclearSample(object):
         info.update(data={"crossmatch_info": {"crossmatch": True, "date": date_now}})
 
     def fritz(self, startindex: int = 0):
-        """Query Fritz for the full sample"""
+        """
+        Query Fritz for the full sample
+        """
         self.logger.info("Obtaining metadata on full sample from Fritz")
         for i, ztfid in tqdm(enumerate(self.ztfids[startindex:])):
             self.logger.debug(f"{ztfid}: Querying Fritz")
@@ -170,6 +172,13 @@ class NuclearSample(object):
         info = SampleInfo()
         date_now = datetime.datetime.now().replace(microsecond=0)
         info.update(data={"fritz_info": {"fritz": True, "date": date_now}})
+
+    def get_ratings(self, username: str = None) -> dict:
+        """
+        Get all ratings for the sample (for all or a given user)
+        """
+        ratings = self.meta.get_rating_overview(username=username)
+        return ratings
 
     def next_transient(self, ztfid: str, flaring: bool = False):
         """
@@ -362,8 +371,9 @@ class Transient(object):
 
     @cached_property
     def baseline(self) -> pd.DataFrame:
-        """Obtain the baseline correction, recalculate if not present"""
-
+        """
+        Obtain the baseline correction, create if not present
+        """
         bl_file = os.path.join(io.LOCALSOURCE_baseline, self.ztfid + "_bl.csv")
         if os.path.isfile(bl_file):
             bl = pd.read_csv(bl_file)
@@ -376,7 +386,9 @@ class Transient(object):
             return bl
 
     def recreate_baseline(self):
-        """Recalculate the baseline"""
+        """
+        Recreate the baseline
+        """
         bl, bl_info = baseline.baseline(transient=self, primary_grid_only=True)
         self.baseline = bl
 
@@ -417,7 +429,7 @@ class Transient(object):
     @cached_property
     def salt_res(self) -> Optional[float]:
         """
-        Get the TDE fit reduced chisq
+        Get the SALT fit reduced chisq
         """
         if "tde_fit_loose_bl" in self.meta.keys():
             if self.meta["salt_loose_bl"] != "failure":
@@ -455,7 +467,7 @@ class Transient(object):
     @cached_property
     def meta(self) -> Optional[dict]:
         """
-        Read all metadata  for transient from the database
+        Read all metadata for the transient from the database
         """
         transient_metadata = meta.read_transient(ztfid=self.ztfid)
         if transient_metadata:
@@ -475,23 +487,55 @@ class Transient(object):
         else:
             return df
 
-    @cached_property
-    def rating(self) -> Optional[int]:
+    def get_rating(self, username: str) -> Optional[int]:
         """
         Read the rating from the DB (3: interesting, 2: maybe, 1: boring. If none is found, return 0)
         """
         if "rating" in self.meta.keys():
-            rating = int(self.meta["rating"])
+            if username in self.meta["rating"].keys():
+                rating = int(self.meta["rating"][username])
+            else:
+                rating = 0
         else:
             rating = 0
 
         return rating
 
-    def set_rating(self, rating: int):
+    def get_rating_overview(self) -> dict:
+        """
+        Read all the ratings (from different users) for a transient and return the individual ratings
+        """
+        if "rating" in self.meta.keys():
+            return self.meta["rating"]
+        else:
+            return {}
+
+    def get_rating_average(self) -> float:
+        """
+        Read all the ratings (from different users) for a transient and return the average rating
+        """
+        ratings = self.get_rating_overview()
+        if ratings:
+            avg_list = []
+            for key in ratings.keys():
+                avg_list.append(ratings[key])
+
+            return np.average(avg_list)
+        else:
+            return 0
+
+    def set_rating(self, rating: int, username: str):
         """
         Update the transient rating
         """
-        meta.update_transient(self.ztfid, data={"rating": rating})
+        if "rating" in self.meta.keys():
+            rating_dict = self.meta["rating"]
+        else:
+            rating_dict = {}
+
+        rating_dict.update({username: rating})
+
+        meta.update_transient(self.ztfid, data={"rating": rating_dict})
 
     @cached_property
     def crossmatch_info(self) -> Optional[str]:

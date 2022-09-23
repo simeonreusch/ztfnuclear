@@ -111,8 +111,16 @@ def home():
     """
     This is the default page
     """
+    s = NuclearSample()
+    if current_user.is_authenticated:
+        ratings = s.get_ratings(username=current_user.username)
+        user_rate_percentage = len(ratings) / len(flaring_ztfids) * 100
+    else:
+        user_rate_percentage = None
+
     return render_template(
         "home.html",
+        user_rate_percentage=user_rate_percentage,
     )
 
 
@@ -243,11 +251,13 @@ def rate_transient(ztfid):
 
         if input_key == "rating":
             raw_value = request.form["rating"]
+            print(raw_value)
             split = raw_value.split("&")
             origin = split[0]
             rating = int(split[1].split("=")[1])
+            username = str(split[2].split("=")[1])
 
-            t.set_rating(rating)
+            t.set_rating(rating, username=username)
 
         elif input_key == "pinned":
             origin = request.form["pinned"]

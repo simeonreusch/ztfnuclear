@@ -86,21 +86,6 @@ class MetadataDB(object):
         self.coll.bulk_write(bulk_operations)
         self.logger.debug(f"Updated database for {len(ztfids)} ztfids")
 
-    # def read_parameters(self, params: List[str]):
-    #     """
-    #     Get all values for the parameters in the list
-    #     """
-    #     returndict = collections.defaultdict(list)
-
-    #     for entry in self.coll.find():
-    #         for param in params:
-    #             if entry.get(param, None) is not None:
-    #                 returndict[param].append(entry[param])
-    #             else:
-    #                 returndict[param].append(None)
-
-    #     return returndict
-
     def read_parameters(self, params: List[str]) -> dict:
         """
         Get all values for the parameters in the list
@@ -127,11 +112,26 @@ class MetadataDB(object):
         Read entry for given ztfid
         """
 
-        entry = self.coll.find({"_id": ztfid})[0]
+        entry = self.coll.find_one({"_id": ztfid})
 
         self.logger.debug(f"Read info for {ztfid} from database")
 
         return entry
+
+    def get_rating_overview(self, username: str = None) -> dict:
+
+        res_dict = {}
+        if username:
+            res = self.coll.find(
+                {f"rating.{username}": {"$exists": "true"}}, {"rating": {username: 1}}
+            )
+        else:
+            res = self.coll.find({"rating": {"$exists": "true"}}, {"rating": 1})
+
+        for entry in res:
+            res_dict.update({entry["_id"]: entry["rating"]})
+
+        return res_dict
 
     def get_statistics(self):
         """
