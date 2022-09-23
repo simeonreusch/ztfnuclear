@@ -278,7 +278,7 @@ def transient_list():
     Show a list of all the transients
     """
     s = NuclearSample()
-    transients = s.get_transients(n=100)
+    transients = s.get_transients()
     return render_template("transient_list.html", transients=transients)
 
 
@@ -317,7 +317,14 @@ def transient_random():
     Show a random transient that has NOT been rated yet
     """
     s = NuclearSample()
-    random_ztfid = random.choice(s.ztfids)
+
+    rated_ztfids = set(list(s.get_ratings(username=current_user.username).keys()))
+
+    all_ztfids = set(s.ztfids)
+
+    non_rated_ztfids = list(all_ztfids.difference(rated_ztfids))
+
+    random_ztfid = random.choice(non_rated_ztfids)
 
     return redirect(url_for("transient_page", ztfid=random_ztfid))
 
@@ -328,9 +335,15 @@ def flaring_transient_random():
     """
     Show a random IR flaring transient that has NOT been rated yet
     """
-    random_flaring_ztfid = random.choice(flaring_ztfids)
+    s = NuclearSample()
 
-    return redirect(url_for("flaring_page", ztfid=random_flaring_ztfid))
+    rated_ztfids = set(list(s.get_ratings(username=current_user.username).keys()))
+
+    non_rated_ztfids = list(set(flaring_ztfids).difference(rated_ztfids))
+
+    random_ztfid = random.choice(non_rated_ztfids)
+
+    return redirect(url_for("flaring_page", ztfid=random_ztfid))
 
 
 @app.route("/search", methods=["GET", "POST"])

@@ -587,7 +587,11 @@ class Transient(object):
         for key in xmatch.keys():
             subdict = xmatch[key]
             if len(subdict) > 0:
-                if subdict is not None and key not in exclude:
+                if (
+                    subdict is not None
+                    and key not in exclude
+                    and isinstance(subdict, dict)
+                ):
                     message += key
                     if "type" in subdict.keys():
                         if key == "TNS" and subdict["type"] is not None:
