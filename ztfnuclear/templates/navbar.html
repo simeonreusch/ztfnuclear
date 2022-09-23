@@ -1,7 +1,8 @@
-  <nav class="navbar navbar-dark navbar-expand" style="background-color: #6c3483;">
+<nav class="navbar navbar-dark navbar-expand-lg" style="background-color: #6c3483">
 
       <div class="container-fluid">
-          <a class="navbar-brand" href="{{ url_for('home')}}">ZTF Nuclear Sample </a>
+          <a class="navbar-brand" href="{{ url_for('home')}}">ZTF Nuclear Sample
+          </a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                   data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
                   aria-expanded="false" aria-label="Toggle navigation">
@@ -16,6 +17,13 @@
               <li class="nav-item ">
                 <a class="nav-link" href="{{ url_for('transient_list')}}">All Transients</a>
               </li>
+              <li class="nav-item ">
+                <a class="nav-link" href="{{ url_for('transient_list')}}">All Transients</a>
+              </li>
+              <li class="nav-item ">
+                <a class="nav-link" href="{{ url_for('transient_list')}}">All Transients</a>
+              </li>
+
 
               <li class="nav-item ">
                 <a class="nav-link" href="{{ url_for('flaring_transient_list')}}">💥 Flaring Transients</a>
@@ -40,6 +48,7 @@
             <form action="/search" class="d-flex" method="POST">
               <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="name">
             </form>
+
             <ul class="nav navbar-nav float-md-right">
                {% if current_user.is_authenticated %}
                 <li class="nav-item">
@@ -53,6 +62,7 @@
                   <a class="nav-link active" aria-current="page" href="{{ url_for('register') }}">Register</a>
                 </li>
               {% endif%}
+            </ul>
           </div>
     </div>
   </nav>
