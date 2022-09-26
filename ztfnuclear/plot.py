@@ -14,7 +14,7 @@ import pandas as pd
 import matplotlib.pyplot as plt  # type: ignore
 
 from ztfnuclear import io, utils
-from ztfnuclear.database import MetadataDB
+from ztfnuclear.database import MetadataDB, SampleInfo
 
 
 GOLDEN_RATIO = 1.62
@@ -155,6 +155,69 @@ def plot_salt_tde_chisq():
     plt.savefig(outfile)
 
     plt.close()
+
+
+def plot_tde_risedecay():
+    """
+    Plot the rise vs. fadetime of the TDE fit results
+    """
+    meta = MetadataDB()
+    res = meta.read_parameters(params=["tde_fit_loose_bl", "_id"])
+    tde_res = res["tde_fit_loose_bl"]
+    all_ztfids = res["_id"]
+
+    risetimes = []
+    decaytimes = []
+    ztfids = []
+
+    for i, entry in enumerate(tde_res):
+        if entry:
+            if entry != "failure":
+                if tde_res[i]:
+                    if tde_res[i] != "failure":
+                        paramdict = tde_res[i]["paramdict"]
+                        risetimes.append(paramdict["risetime"])
+                        decaytimes.append(paramdict["decaytime"])
+                        ztfids.append(all_ztfids[i])
+
+    sample = pd.DataFrame()
+    sample["ztfid"] = ztfids
+    sample["rise"] = risetimes
+    sample["decay"] = decaytimes
+
+    sample.query("rise < 1.6 and rise > 1", inplace=True)
+    sample.query("decay < 2.3 and decay > 1", inplace=True)
+
+    fig, ax = plt.subplots(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
+    fig.suptitle(f"TDE fit rise- vs. decaytime", fontsize=14)
+
+    ax.scatter(
+        sample.rise,
+        sample.decay,
+        marker=".",
+        s=2,
+    )
+
+    ax.set_xlabel("Rise time")
+    ax.set_ylabel("Decay time")
+
+    # outfile_zoom = os.path.join(io.LOCALSOURCE_plots, "salt_vs_tde_chisq_zoom.pdf")
+    outfile = os.path.join(io.LOCALSOURCE_plots, "tde_risedecay.pdf")
+    plt.tight_layout()
+
+    plt.savefig(outfile)
+
+    plt.close()
+
+    info_db = SampleInfo()
+    flaring_ztfids = set(info_db.read()["flaring"]["ztfids"])
+
+    flaring_subset = []
+    for ztfid in sample.ztfid:
+        if ztfid in flaring_ztfids:
+            flaring_subset.append(ztfid)
+
+    print(flaring_subset)
 
 
 def plot_ampelz():

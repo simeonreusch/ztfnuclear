@@ -351,6 +351,7 @@ class NuclearSample(object):
         final_ztfids = []
 
         for i, entry in enumerate(db_res["WISE_bayesian"]):
+            ztfid = db_res["_id"][i]
 
             if entry is not None:
                 if "bayesian" in entry.keys():
@@ -373,9 +374,9 @@ class NuclearSample(object):
                 else:
                     status = None
 
-            if start_excess != None and status != "No further investigation":
-                if start_excess >= 2458239.50000:
-                    final_ztfids.append(db_res["_id"][i])
+                if start_excess != None and status != "No further investigation":
+                    if start_excess >= 2458239.50000:
+                        final_ztfids.append(ztfid)
 
         info_db.update(data={"flaring": {"ztfids": final_ztfids}})
 
