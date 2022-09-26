@@ -9,6 +9,7 @@
     <thead>
         <tr>
             <th scope="col">ztfid</th>
+            <th scope="col">Lightcurve</th>
             <th scope="col">z</th>
             <th scope="col">z_dist</th>
             <th scope="col">TNS class.</th>
@@ -22,6 +23,11 @@
         {% for transient in transients %}
             <tr>
                 <td><a href="{{ url_for('transient_page', ztfid=transient.ztfid)}}" > {{ transient.ztfid }} </a></td>
+                {% if transient.thumbnail != None %}
+                    <td><img src='data:image/png;base64,{{ transient.thumbnail }}' class="img-fluid img-thumbnail"/></td>
+                {% else %}
+                    <td> --- </td>
+                {% endif %}
                 {% if transient.z == None %}
                     <td> --- </td>
                 {% else %}
@@ -71,9 +77,11 @@
   <script>
     $(document).ready(function () {
       $('#data').DataTable({
+        "pageLength": 50,
         columns: [
           null,
           {orderable: true, searchable: false},
+          {orderable: false, searchable: false},
           {orderable: true, searchable: false},
           {orderable: false, searchable: true},
           {orderable: false, searchable: true},

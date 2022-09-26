@@ -2,7 +2,7 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, datetime
+import os, logging, datetime, base64
 
 from functools import cached_property
 from typing import Optional, List
@@ -185,6 +185,18 @@ class NuclearSample(object):
             self.logger.debug(f"{ztfid}: Obtaining IRSA lc")
             t = Transient(ztfid)
             t.irsa()
+
+    def generate_thumbnails(self, startindex: int = 0):
+        """
+        Generate thumbnail lightcurve plots for all transients
+        """
+        self.logger.info("Generating thumbnails for full sample")
+
+        for i, ztfid in tqdm(
+            enumerate(self.ztfids[startindex:]), total=len(self.ztfids[startindex:])
+        ):
+            t = Transient(ztfid)
+            t.plot(plot_png=True, thumbnail=True)
 
     def get_ratings(self, username: str = None, select="all") -> dict:
         """
@@ -542,6 +554,23 @@ class Transient(object):
         else:
             return df
 
+    @cached_property
+    def thumbnail(self) -> Optional[str]:
+        """
+        Read the thumbnail image and return as base64 string
+        """
+        plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "thumbnails")
+        thumb_file = os.path.join(plot_dir, self.ztfid + "_thumbnail.png")
+
+        if os.path.isfile(thumb_file):
+
+            thumb_data = open(thumb_file, "rb")
+            thumb_b64 = base64.b64encode(thumb_data.read()).decode("ascii")
+            return thumb_b64
+
+        else:
+            return None
+
     def irsa(self):
         """
         Load the IRSA lightcurve if not locally present
@@ -680,6 +709,7 @@ class Transient(object):
         save: bool = True,
         plot_png: bool = False,
         wide: bool = False,
+        thumbnail: bool = False,
     ):
         """
         Plot the transient lightcurve
@@ -689,43 +719,51 @@ class Transient(object):
 
             if wise_baseline_correction:
                 if "WISE_bayesian" in self.meta.keys():
-                    bl_W1_uncorr = self.meta["WISE_bayesian"]["bayesian"]["Wise_W1"][
-                        "baseline"
-                    ][0]
-                    bl_W2_uncorr = self.meta["WISE_bayesian"]["bayesian"]["Wise_W2"][
-                        "baseline"
-                    ][0]
+                    if (
+                        "bayesian" in self.meta["WISE_bayesian"].keys()
+                        and self.meta["WISE_bayesian"]["bayesian"] is not None
+                    ):
+                        bl_W1_uncorr = self.meta["WISE_bayesian"]["bayesian"][
+                            "Wise_W1"
+                        ]["baseline"][0]
+                        bl_W2_uncorr = self.meta["WISE_bayesian"]["bayesian"][
+                            "Wise_W2"
+                        ]["baseline"][0]
 
-                    bl_W1 = utils.flux_density_bug_correction(
-                        flux_density=bl_W1_uncorr, band="W1"
-                    )
-                    bl_W2 = utils.flux_density_bug_correction(
-                        flux_density=bl_W2_uncorr, band="W2"
-                    )
+                        bl_W1 = utils.flux_density_bug_correction(
+                            flux_density=bl_W1_uncorr, band="W1"
+                        )
+                        bl_W2 = utils.flux_density_bug_correction(
+                            flux_density=bl_W2_uncorr, band="W2"
+                        )
 
-                    wise_df["W1_mean_flux_density"] = utils.flux_density_bug_correction(
-                        flux_density=wise_df["W1_mean_flux_density"], band="W1"
-                    )
-                    wise_df["W2_mean_flux_density"] = utils.flux_density_bug_correction(
-                        flux_density=wise_df["W2_mean_flux_density"], band="W2"
-                    )
+                        wise_df[
+                            "W1_mean_flux_density"
+                        ] = utils.flux_density_bug_correction(
+                            flux_density=wise_df["W1_mean_flux_density"], band="W1"
+                        )
+                        wise_df[
+                            "W2_mean_flux_density"
+                        ] = utils.flux_density_bug_correction(
+                            flux_density=wise_df["W2_mean_flux_density"], band="W2"
+                        )
 
-                    wise_df["W1_mean_flux_density_bl_corr"] = (
-                        wise_df["W1_mean_flux_density"] - bl_W1
-                    )
-                    wise_df["W2_mean_flux_density_bl_corr"] = (
-                        wise_df["W2_mean_flux_density"] - bl_W2
-                    )
-                    wise_df["W1_mean_mag_ab"] = utils.flux_density_to_abmag(
-                        flux_density=wise_df["W1_mean_flux_density_bl_corr"]
-                        / 1000,  # convert from mJy to Jy
-                        band="W1",
-                    )
-                    wise_df["W2_mean_mag_ab"] = utils.flux_density_to_abmag(
-                        flux_density=wise_df["W2_mean_flux_density_bl_corr"]
-                        / 1000,  # convert from mJy to Jy
-                        band="W2",
-                    )
+                        wise_df["W1_mean_flux_density_bl_corr"] = (
+                            wise_df["W1_mean_flux_density"] - bl_W1
+                        )
+                        wise_df["W2_mean_flux_density_bl_corr"] = (
+                            wise_df["W2_mean_flux_density"] - bl_W2
+                        )
+                        wise_df["W1_mean_mag_ab"] = utils.flux_density_to_abmag(
+                            flux_density=wise_df["W1_mean_flux_density_bl_corr"]
+                            / 1000,  # convert from mJy to Jy
+                            band="W1",
+                        )
+                        wise_df["W2_mean_mag_ab"] = utils.flux_density_to_abmag(
+                            flux_density=wise_df["W2_mean_flux_density_bl_corr"]
+                            / 1000,  # convert from mJy to Jy
+                            band="W2",
+                        )
 
         else:
             wise_df = None
@@ -738,16 +776,24 @@ class Transient(object):
             else:
                 df_to_plot = self.baseline
 
-            plot_lightcurve(
-                df=df_to_plot,
-                ztfid=self.ztfid,
-                tns_name=self.tns_name,
-                magplot=magplot,
-                wise_df=wise_df,
-                snt_threshold=snt_threshold,
-                plot_png=plot_png,
-                wide=wide,
-            )
+        if self.z is not None:
+            if self.z_dist < 1:
+                z = self.z
+        else:
+            z = None
+
+        plot_lightcurve(
+            df=df_to_plot,
+            ztfid=self.ztfid,
+            z=z,
+            tns_name=self.tns_name,
+            magplot=magplot,
+            wise_df=wise_df,
+            snt_threshold=snt_threshold,
+            plot_png=plot_png,
+            wide=wide,
+            thumbnail=thumbnail,
+        )
 
     def plot_irsa(
         self, wide: bool = False, magplot: bool = False, plot_png: bool = False

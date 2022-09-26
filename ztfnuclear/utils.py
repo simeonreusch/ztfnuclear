@@ -6,6 +6,8 @@ import os, logging, warnings, re
 
 from typing import Optional
 
+from astropy import units as u
+
 import numpy as np
 
 alphabet = "abcdefghijklmnopqrstuvwxyz"
@@ -110,6 +112,21 @@ def flux_density_to_abmag(
         abmag = abmag + wise_appcor[band]
 
     return abmag
+
+
+def flux_density_to_luminosity(flux_density: float, z: float) -> float:
+    """
+    Convert flux density to luminosity (given redshift z)
+    """
+    from astropy.cosmology import FlatLambdaCDM
+
+    cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
+
+    conversion_factor = (
+        4 * np.pi * cosmo.luminosity_distance(z=z).to(u.cm) ** 2.0 / (1 + z)
+    )
+
+    return flux_density * conversion_factor
 
 
 def flux_density_err_to_abmag_err(

@@ -246,6 +246,7 @@ def plot_ampelz():
 def plot_lightcurve(
     df: pd.DataFrame,
     ztfid: str,
+    z: float = None,
     tns_name: str = None,
     magplot: bool = True,
     wise_df: pd.DataFrame = None,
@@ -253,6 +254,7 @@ def plot_lightcurve(
     snt_threshold=3,
     plot_png: bool = False,
     wide: bool = False,
+    thumbnail: bool = False,
 ):
     """Plot a lightcurve"""
     if magplot:
@@ -266,7 +268,10 @@ def plot_lightcurve(
     if magplot:
         plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "mag")
     else:
-        plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "flux")
+        if thumbnail:
+            plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "thumbnails")
+        else:
+            plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "flux")
 
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
@@ -276,7 +281,10 @@ def plot_lightcurve(
     else:
         figwidth = 8 / GOLDEN_RATIO
 
-    fig, ax = plt.subplots(figsize=(8, figwidth), dpi=300)
+    if thumbnail:
+        fig, ax = plt.subplots(figsize=(8 / 3, figwidth / 3), dpi=100)
+    else:
+        fig, ax = plt.subplots(figsize=(8, figwidth), dpi=300)
 
     bl_correction = True if "ampl_corr" in df.keys() else False
 
@@ -288,19 +296,23 @@ def plot_lightcurve(
         if bl_correction:
             ampl_column = "ampl_corr"
             ampl_err_column = "ampl_err_corr"
-            if tns_name:
-                fig.suptitle(f"{ztfid} ({tns_name}) - baseline corrected", fontsize=14)
-            else:
-                fig.suptitle(f"{ztfid} - baseline corrected", fontsize=14)
+            if not thumbnail:
+                if tns_name:
+                    fig.suptitle(
+                        f"{ztfid} ({tns_name}) - baseline corrected", fontsize=14
+                    )
+                else:
+                    fig.suptitle(f"{ztfid} - baseline corrected", fontsize=14)
         else:
             ampl_column = "ampl"
             ampl_err_column = "ampl.err"
-            if tns_name:
-                fig.suptitle(
-                    f"{ztfid} ({tns_name}) - no baseline correction", fontsize=14
-                )
-            else:
-                fig.suptitle(f"{ztfid} - no baseline correction", fontsize=14)
+            if not thumbnail:
+                if tns_name:
+                    fig.suptitle(
+                        f"{ztfid} ({tns_name}) - no baseline correction", fontsize=14
+                    )
+                else:
+                    fig.suptitle(f"{ztfid} - no baseline correction", fontsize=14)
 
         obsmjd = _df.obsmjd.values
 
@@ -347,11 +359,15 @@ def plot_lightcurve(
             ax.set_ylabel("Mag (AB)")
 
         else:
+
+            nu_fnu = utils.band_frequency(bandname) * _df["flux_Jy"] * 1e-23
+            nu_fnu_err = utils.band_frequency(bandname) * _df["flux_Jy_err"] * 1e-23
+
             ax.set_yscale("log")
             ax.errorbar(
                 _df.obsmjd,
-                utils.band_frequency(bandname) * _df["flux_Jy"] * 1e-23,
-                utils.band_frequency(bandname) * _df["flux_Jy_err"] * 1e-23,
+                nu_fnu,
+                nu_fnu_err,
                 fmt="o",
                 mec=color_dict[filterid],
                 ecolor=color_dict[filterid],
@@ -361,6 +377,22 @@ def plot_lightcurve(
                 elinewidth=0.5,
                 label=filtername_dict[filterid],
             )
+
+            if z is not None:
+
+                from astropy.cosmology import FlatLambdaCDM
+
+                cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
+
+                lumidist = cosmo.luminosity_distance(z)
+                lumidist = lumidist.to(u.cm).value
+
+                lumi = lambda flux: flux * 4 * np.pi * lumidist**2
+                flux = lambda lumi: lumi / (4 * np.pi * lumidist**2)
+
+                ax2 = ax.secondary_yaxis("right", functions=(lumi, flux))
+
+                ax2.set_ylabel(r"$\nu$ L$_\nu$ (erg s$^{-1}$)", fontsize=12)
 
     if magplot:
         if wise_df is not None:
@@ -419,14 +451,22 @@ def plot_lightcurve(
                     label="WISE W2",
                 )
 
-    ax.set_xlabel("Date (MJD)", fontsize=12)
-    ax.set_ylabel(r"$\nu$ F$_\nu$ (erg s$^{-1}$ cm$^{-2}$)", fontsize=12)
-    ax.grid(which="both", b=True, axis="both", alpha=0.3)
-
-    plt.legend()
+    if not thumbnail:
+        ax.set_xlabel("Date (MJD)", fontsize=12)
+        ax.set_ylabel(r"$\nu$ F$_\nu$ (erg s$^{-1}$ cm$^{-2}$)", fontsize=12)
+        ax.grid(which="both", b=True, axis="both", alpha=0.3)
+        plt.legend()
+    else:
+        ax.xaxis.set_ticklabels([])
+        ax.yaxis.set_ticklabels([])
+        plt.tick_params(bottom=False)
+        plt.tick_params(left=False)
 
     if plot_png:
-        outfile = os.path.join(plot_dir, ztfid + ".png")
+        if thumbnail:
+            outfile = os.path.join(plot_dir, ztfid + "_thumbnail.png")
+        else:
+            outfile = os.path.join(plot_dir, ztfid + ".png")
     else:
         outfile = os.path.join(plot_dir, ztfid + ".pdf")
 
