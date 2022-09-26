@@ -7,6 +7,7 @@ import os, logging, warnings
 import astropy  # type: ignore
 from astropy import units as u  # type: ignore
 from astropy.coordinates import Angle  # type: ignore
+from astropy import constants as const  # type: ignore
 
 import numpy as np
 import pandas as pd
@@ -14,6 +15,7 @@ import matplotlib.pyplot as plt  # type: ignore
 
 from ztfnuclear import io, utils
 from ztfnuclear.database import MetadataDB
+
 
 GOLDEN_RATIO = 1.62
 
@@ -374,3 +376,100 @@ def plot_lightcurve(
     plt.close()
 
     del fig, ax
+
+
+def plot_lightcurve_irsa(
+    df: pd.DataFrame,
+    ztfid: str,
+    ra: float,
+    dec: float,
+    wide: bool = False,
+    magplot: bool = False,
+    plot_png: bool = False,
+):
+    """
+    Get the non-difference alert photometry for a transient and plot it
+    """
+    if wide:
+        figwidth = 8 / (GOLDEN_RATIO + 0.52)
+    else:
+        figwidth = 8 / GOLDEN_RATIO
+
+    if magplot:
+        plot_dir = os.path.join(io.LOCALSOURCE_plots_irsa, "mag")
+    else:
+        plot_dir = os.path.join(io.LOCALSOURCE_plots_irsa, "flux")
+
+    if not os.path.exists(plot_dir):
+        os.makedirs(plot_dir)
+
+    fig, ax = plt.subplots(figsize=(8, figwidth), dpi=300)
+
+    cmap = {"zg": "g", "zr": "r", "zi": "orange"}
+    wl = {
+        "zg": 472.27,
+        "zr": 633.96,
+        "zi": 788.61,
+    }
+    fig.suptitle(f"{ztfid} - non-diff alert photometry", fontsize=14)
+
+    for fc in ["zg", "zr", "zi"]:
+        mask = df["filtercode"] == fc
+
+        mags = list(df["mag"][mask]) * u.ABmag
+
+        magerrs = list((df["magerr"][mask] + df["mag"][mask])) * u.ABmag
+
+        if magplot:
+            ax.invert_yaxis()
+            ax.errorbar(
+                df["mjd"][mask],
+                mags.value,
+                yerr=df["magerr"][mask],
+                marker="o",
+                linestyle=" ",
+                markersize=2,
+                c=cmap[fc],
+                label=f"ZTF {fc[-1]}",
+            )
+
+        else:
+
+            flux_j = mags.to(u.Jansky)
+
+            f = (const.c / (wl[fc] * u.nm)).to("Hz")
+
+            flux = (flux_j * f).to("erg cm-2 s-1")
+
+            jerrs = magerrs.to(u.Jansky)
+            ferrs = (jerrs * f).to("erg cm-2 s-1").value - flux.value
+            ax.set_yscale("log")
+
+            ax.errorbar(
+                df["mjd"][mask],
+                flux.to("erg cm-2 s-1").value,
+                yerr=ferrs,
+                fmt="o",
+                mfc="None",
+                alpha=0.7,
+                ms=2,
+                elinewidth=0.5,
+                c=cmap[fc],
+                label=f"ZTF {fc[-1]}",
+            )
+
+            ax.set_ylabel(r"$\nu$ F$_\nu$ (erg s$^{-1}$ cm$^{-2}$)", fontsize=12)
+
+    ax.set_xlabel("Date (MJD)", fontsize=12)
+
+    ax.grid(which="both", b=True, axis="both", alpha=0.3)
+
+    plt.tight_layout()
+    plt.legend()
+
+    if plot_png:
+        outfile = os.path.join(plot_dir, ztfid + ".png")
+    else:
+        outfile = os.path.join(plot_dir, ztfid + ".pdf")
+
+    plt.savefig(outfile)

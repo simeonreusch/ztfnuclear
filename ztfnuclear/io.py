@@ -7,13 +7,18 @@ from typing import Optional, List, Dict
 
 from ztfnuclear import utils
 
+from ztfquery.io import LOCALSOURCE  # type: ignore
+from ztfquery.lightcurve import LCQuery  # type: ignore
+
 import pandas as pd  # type: ignore
+import numpy as np
 
 if os.getenv("ZTFDATA"):
 
     _SOURCEDIR = os.path.dirname(os.path.realpath(__file__))
     LOCALSOURCE = os.path.join(str(os.getenv("ZTFDATA")), "nuclear_sample")
     LOCALSOURCE_dfs = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "data")
+    LOCALSOURCE_irsa = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "irsa")
     LOCALSOURCE_fitres = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "fitres")
     LOCALSOURCE_ampelz = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "ampel_z.json")
     LOCALSOURCE_location = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "location.csv")
@@ -30,6 +35,7 @@ if os.getenv("ZTFDATA"):
         LOCALSOURCE, "FINAL_SAMPLE", "wise_bayesian_blocks.json"
     )
     LOCALSOURCE_plots = os.path.join(LOCALSOURCE, "plots")
+    LOCALSOURCE_plots_irsa = os.path.join(LOCALSOURCE, "plots", "lightcurves_irsa")
     LOCALSOURCE_baseline = os.path.join(LOCALSOURCE, "baseline")
 
     DOWNLOAD_URL_SAMPLE = (
@@ -47,7 +53,13 @@ else:
 logger = logging.getLogger(__name__)
 
 
-for p in [LOCALSOURCE, LOCALSOURCE_plots, LOCALSOURCE_baseline, LOCALSOURCE_WISE]:
+for p in [
+    LOCALSOURCE,
+    LOCALSOURCE_plots,
+    LOCALSOURCE_baseline,
+    LOCALSOURCE_WISE,
+    LOCALSOURCE_plots_irsa,
+]:
     if not os.path.exists(p):
         os.makedirs(p)
 
@@ -300,3 +312,33 @@ def parse_ampel_json(filepath: str, parameter_name: str) -> dict:
     logger.info(f"Imported {len(resultdict)} entries from {filepath}")
 
     return resultdict
+
+
+def load_irsa(ra: float, dec: float, radius_arcsec: float = 0.5) -> pd.DataFrame:
+    """
+    Get lightcuve from IPAC
+    """
+
+    logger.debug("Querying IPAC")
+    df = LCQuery.from_position(ra, dec, radius_arcsec).data
+
+    logger.debug(f"Found {len(df)} datapoints")
+
+    if len(df) == 0:
+        logger.info("No data found.")
+        return df
+
+    else:
+        mask = df.catflags > 0
+
+        flags = list(set(df.catflags))
+
+        logger.info(
+            f"Found {len(df)} datapoints, masking {np.sum(mask)} datapoints with bad flags."
+        )
+
+        for flag in sorted(flags):
+            logger.debug(f"{np.sum(df.catflags == flag)} datapoints with flag {flag}")
+
+        df = df.drop(df[mask].index)
+        return df

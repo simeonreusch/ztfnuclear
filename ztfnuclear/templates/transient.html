@@ -151,4 +151,11 @@
     <img src='data:image/png;base64,{{ lcplot }}' />
   </div">
 
+  {% if plot_irsa == True %}
+  <br>
+  <div class="row justify-content-md-center">
+    <img src='data:image/png;base64,{{ lcplot_irsa }}' />
+  </div">
+  {% endif %}
+
 {% endblock %}

@@ -13,7 +13,7 @@ import pandas as pd  # type: ignore
 
 from ztfnuclear import io, baseline, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
-from ztfnuclear.plot import plot_lightcurve
+from ztfnuclear.plot import plot_lightcurve, plot_lightcurve_irsa
 from ztfnuclear.fritz import FritzAPI
 
 logger = logging.getLogger(__name__)
@@ -172,6 +172,19 @@ class NuclearSample(object):
         info = SampleInfo()
         date_now = datetime.datetime.now().replace(microsecond=0)
         info.update(data={"fritz_info": {"fritz": True, "date": date_now}})
+
+    def irsa(self, startindex: int = 0):
+        """
+        Obtain non-difference photometry lightcurves for full sample
+        """
+        self.logger.info("Obtaining IRSA lightcurves for full sample")
+
+        for i, ztfid in tqdm(
+            enumerate(self.ztfids[startindex:]), total=len(self.ztfids)
+        ):
+            self.logger.debug(f"{ztfid}: Obtaining IRSA lc")
+            t = Transient(ztfid)
+            t.irsa()
 
     def get_ratings(self, username: str = None, select="all") -> dict:
         """
@@ -528,6 +541,18 @@ class Transient(object):
         else:
             return df
 
+    def irsa(self):
+        """
+        Load the IRSA lightcurve if not locally present
+        """
+        path_to_lc = os.path.join(io.LOCALSOURCE_irsa, f"{self.ztfid}.csv")
+        if not os.path.isfile(path_to_lc):
+            df = io.load_irsa(ra=self.ra, dec=self.dec, radius_arcsec=0.5)
+            df.to_csv(path_to_lc)
+        else:
+            df = pd.read_csv(path_to_lc)
+        return df
+
     def get_rating(self, username: str) -> Optional[int]:
         """
         Read the rating from the DB (3: interesting, 2: maybe, 1: boring. If none is found, return 0)
@@ -722,3 +747,21 @@ class Transient(object):
                 plot_png=plot_png,
                 wide=wide,
             )
+
+    def plot_irsa(
+        self, wide: bool = False, magplot: bool = False, plot_png: bool = False
+    ):
+        """
+        Get the non-difference alert photometry for this transient from IRSA and plot it
+        """
+        df = self.irsa()
+
+        plot_lightcurve_irsa(
+            df=df,
+            ztfid=self.ztfid,
+            ra=self.ra,
+            dec=self.dec,
+            wide=wide,
+            magplot=magplot,
+            plot_png=plot_png,
+        )
