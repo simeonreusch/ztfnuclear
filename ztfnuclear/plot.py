@@ -282,7 +282,7 @@ def plot_lightcurve(
         figwidth = 8 / GOLDEN_RATIO
 
     if thumbnail:
-        fig, ax = plt.subplots(figsize=(8 / 3, figwidth / 3), dpi=100)
+        fig, ax = plt.subplots(figsize=(8 / 4, figwidth / 4), dpi=100)
     else:
         fig, ax = plt.subplots(figsize=(8, figwidth), dpi=300)
 
@@ -364,6 +364,12 @@ def plot_lightcurve(
             nu_fnu_err = utils.band_frequency(bandname) * _df["flux_Jy_err"] * 1e-23
 
             ax.set_yscale("log")
+
+            if thumbnail:
+                ms = 1
+            else:
+                ms = 2
+
             ax.errorbar(
                 _df.obsmjd,
                 nu_fnu,
@@ -373,12 +379,12 @@ def plot_lightcurve(
                 ecolor=color_dict[filterid],
                 mfc="None",
                 alpha=0.7,
-                ms=2,
+                ms=ms,
                 elinewidth=0.5,
                 label=filtername_dict[filterid],
             )
 
-            if z is not None:
+            if z is not None and thumbnail is False:
 
                 from astropy.cosmology import FlatLambdaCDM
 
@@ -426,6 +432,11 @@ def plot_lightcurve(
                 flux_W1 = utils.abmag_to_flux_density(wise_df.W1_mean_mag_ab)
                 flux_W2 = utils.abmag_to_flux_density(wise_df.W2_mean_mag_ab)
 
+                if thumbnail:
+                    ms = 3
+                else:
+                    ms = 5
+
                 ax.errorbar(
                     wise_df.mean_mjd,
                     utils.band_frequency("W1") * flux_W1 * 1e-23,
@@ -434,7 +445,7 @@ def plot_lightcurve(
                     ecolor="black",
                     mfc="black",
                     alpha=1,
-                    ms=5,
+                    ms=ms,
                     elinewidth=1,
                     label="WISE W1",
                 )
@@ -446,7 +457,7 @@ def plot_lightcurve(
                     mfc="gray",
                     ecolor="gray",
                     alpha=1,
-                    ms=5,
+                    ms=ms,
                     elinewidth=1,
                     label="WISE W2",
                 )

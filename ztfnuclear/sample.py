@@ -779,6 +779,8 @@ class Transient(object):
         if self.z is not None:
             if self.z_dist < 1:
                 z = self.z
+            else:
+                z = None
         else:
             z = None
 
