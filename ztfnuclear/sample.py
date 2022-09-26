@@ -36,6 +36,7 @@ class NuclearSample(object):
         self.get_all_ztfids()
         self.location()
         self.meta = MetadataDB()
+        self.info_db = info_db
         db_check = self.meta.get_statistics()
 
         if not db_check["has_ra"]:
@@ -228,7 +229,7 @@ class NuclearSample(object):
         Get the transient following the current one in the sample
         """
         if flaring:
-            flaring_ztfids = info_db.read()["flaring"]["ztfids"]
+            flaring_ztfids = self.info_db.read()["flaring"]["ztfids"]
             idx = flaring_ztfids.index(ztfid)
             return flaring_ztfids[idx + 1]
 
@@ -241,7 +242,7 @@ class NuclearSample(object):
         Get the transient following the current one in the sample
         """
         if flaring:
-            flaring_ztfids = info_db.read()["flaring"]["ztfids"]
+            flaring_ztfids = self.info_db.read()["flaring"]["ztfids"]
             idx = flaring_ztfids.index(ztfid)
             return flaring_ztfids[idx - 1]
 
@@ -275,7 +276,7 @@ class NuclearSample(object):
         """
         Loop over all infrared flaring transients in sample and return a Transient object
         """
-        flaring_ztfids = info_db.read()["flaring"]["ztfids"]
+        flaring_ztfids = self.info_db.read()["flaring"]["ztfids"]
 
         if not n:
             n = len(flaring_ztfids)
@@ -390,7 +391,7 @@ class NuclearSample(object):
                     if start_excess >= 2458239.50000:
                         final_ztfids.append(ztfid)
 
-        info_db.update(data={"flaring": {"ztfids": final_ztfids}})
+        self.info_db.update(data={"flaring": {"ztfids": final_ztfids}})
 
 
 class Transient(object):

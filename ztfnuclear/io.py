@@ -149,6 +149,17 @@ def get_locations() -> pd.DataFrame:
     return df
 
 
+def get_thumbnail_count() -> int:
+    """
+    Checks how many thumbnails there are on the disk
+    """
+    thumbnail_dir = os.path.join(LOCALSOURCE_plots, "lightcurves", "thumbnails")
+    _, _, files = next(os.walk(thumbnail_dir))
+    file_count = len(files)
+
+    return file_count
+
+
 def get_ztfid_dataframe(ztfid: str) -> Optional[pd.DataFrame]:
     """
     Get the Pandas Dataframe of a single transient
