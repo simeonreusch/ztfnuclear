@@ -187,6 +187,8 @@ def transient_page(ztfid):
 
     base64_string = base64.b64encode(plot_data.read()).decode("ascii")
 
+    t.plot_irsa(plot_png=True, wide=True)
+
     plot_file_irsa = os.path.join(
         base_dir, "plots", "lightcurves_irsa", "flux", f"{ztfid}.png"
     )

@@ -288,7 +288,6 @@ def plot_lightcurve(
             ax.errorbar(
                 _df.obsmjd,
                 utils.band_frequency(bandname) * _df["flux_Jy"] * 1e-23,
-                # _df[ampl_err_column] / 100000000000000000000,
                 utils.band_frequency(bandname) * _df["flux_Jy_err"] * 1e-23,
                 fmt="o",
                 mec=color_dict[filterid],
@@ -334,7 +333,6 @@ def plot_lightcurve(
 
                 ax.errorbar(
                     wise_df.mean_mjd,
-                    # wise_df.W1_mean_mag_ab,
                     utils.band_frequency("W1") * flux_W1 * 1e-23,
                     fmt="o",
                     mec="black",
@@ -347,7 +345,6 @@ def plot_lightcurve(
                 )
                 ax.errorbar(
                     wise_df.mean_mjd,
-                    # wise_df.W2_mean_mag_ab,
                     utils.band_frequency("W2") * flux_W2 * 1e-23,
                     fmt="o",
                     mec="gray",
