@@ -151,9 +151,11 @@
                     <div class="be-comment">
                         <div class="be-comment-content">
                             {% for comment in comments %}
-                            <p class="be-comment-text">
-                                <b>{{ comment['username'] }}</b>: {{ comment['comment'] }}
-                            </p>
+                            {% if comment != None %}
+                                <p class="be-comment-text">
+                                    <b>{{ comment['username'] }}</b>: {{ comment['comment'] }}
+                                </p>
+                            {% endif %}
                             {% endfor %}
                         </div>
                     </div>
