@@ -145,15 +145,31 @@
         </div>
     </div>
     <div class="col">
-      here go the comments
-    </div>
-  </div>
+        <div class="container">
+            <div class="be-comment-block">
+                <h5 class="comments-title">Comments ({{ comment_count }})</h5>
+                    <div class="be-comment">
+                        <div class="be-comment-content">
+                            {% for comment in comments %}
+                            <p class="be-comment-text">
+                                <b>{{ comment['username'] }}</b>: {{ comment['comment'] }}
+                            </p>
+                            {% endfor %}
+                        </div>
+                    </div>
+            </div>
+        </div>
+        <form class="form-group" method="post" role="form" action="/comment/{{ transient.ztfid }}">
+            <div class="row">
+                <div class="col">                                 
+                    <input class="form-control form-control-sm" type="text" placeholder="Enter your comment here" name="comment">
+                </div>
+                <div class="col">
+                    <button type="submit" class="btn btn-outline-dark btn-sm" value="{{ request.url }}" name="origin">Submit comment</button>
+                </div>
+            </div>
+        </form>
 </div>
-
-
-
-
-
 
 
 

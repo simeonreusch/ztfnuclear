@@ -209,6 +209,9 @@ def transient_page(ztfid):
     previous_transient = s.previous_transient(ztfid)
     next_transient = s.next_transient(ztfid)
 
+    comments = t.get_comments_generator()
+    comment_count = t.get_comment_count()
+
     return render_template(
         "transient.html",
         transient=t,
@@ -218,6 +221,8 @@ def transient_page(ztfid):
         previous_transient=previous_transient,
         next_transient=next_transient,
         flaring=False,
+        comments=comments,
+        comment_count=comment_count,
     )
 
 
@@ -266,6 +271,9 @@ def flaring_page(ztfid):
     previous_transient = s.previous_transient(ztfid, flaring=True)
     next_transient = s.next_transient(ztfid, flaring=True)
 
+    comments = t.get_comments_generator()
+    comment_count = t.get_comment_count()
+
     return render_template(
         "transient.html",
         transient=t,
@@ -275,13 +283,17 @@ def flaring_page(ztfid):
         previous_transient=previous_transient,
         next_transient=next_transient,
         flaring=False,
+        comments=comments,
+        comment_count=comment_count,
     )
 
 
 @app.route("/rate/<string:ztfid>", methods=["GET", "POST"])
 @login_required
 def rate_transient(ztfid):
-    """ """
+    """
+    To deal with rating form data
+    """
     t = Transient(ztfid)
 
     input_key = list(request.form.keys())[0]
@@ -290,7 +302,7 @@ def rate_transient(ztfid):
 
         if input_key == "rating":
             raw_value = request.form["rating"]
-            print(raw_value)
+
             split = raw_value.split("&")
             origin = split[0]
             rating = int(split[1].split("=")[1])
@@ -298,9 +310,9 @@ def rate_transient(ztfid):
 
             t.set_rating(rating, username=username)
 
-        elif input_key == "pinned":
-            origin = request.form["pinned"]
-            # do stuff
+        # elif input_key == "pinned":
+        #     origin = request.form["pinned"]
+        #     # do stuff
 
         if "transients" in origin:
             return redirect(url_for("transient_random"))
@@ -308,6 +320,29 @@ def rate_transient(ztfid):
             return redirect(url_for("flaring_transient_random"))
         else:
             return redirect(origin)
+
+
+@app.route("/comment/<string:ztfid>", methods=["GET", "POST"])
+@login_required
+def comment_on_transient(ztfid):
+    """
+    To deal with comment form data
+    """
+    t = Transient(ztfid)
+
+    if request.method == "POST":
+
+        for input_key in list(request.form.keys()):
+
+            if input_key == "comment":
+                comment_text = request.form["comment"]
+
+            if input_key == "origin":
+                origin = request.form["origin"]
+
+    t.add_comment(username=current_user.username, comment=comment_text)
+
+    return redirect(origin)
 
 
 @app.route("/sample")

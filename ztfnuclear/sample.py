@@ -2,7 +2,7 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, datetime, base64
+import os, logging, datetime, base64, time
 
 from functools import cached_property
 from typing import Optional, List
@@ -633,6 +633,60 @@ class Transient(object):
         rating_dict.update({username: rating})
 
         meta.update_transient(self.ztfid, data={"rating": rating_dict})
+
+    def get_comments(self) -> Optional[dict]:
+        """
+        Read the transient comments from the database
+        """
+        if "comments" in self.meta.keys():
+            return self.meta["comments"]
+        else:
+            return None
+
+    def get_comment_count(self) -> int:
+        """
+        Return number of comments for transient
+        """
+        if "comments" in self.meta.keys():
+            return len(self.meta["comments"])
+        else:
+            return 0
+
+    def delete_comments(self):
+        """
+        Delete all comments for a transient
+        """
+        meta.update_transient(self.ztfid, data={"comments": {}})
+
+    def get_comments_generator(self):
+        """
+        Iterate over transient comments
+        """
+        comments = self.get_comments()
+
+        if comments is None:
+            yield None
+
+        else:
+            for timestamp, content in dict(sorted(comments.items())).items():
+                yield content
+
+    def add_comment(self, username: str, comment: str):
+        """
+        Add a comment to the database
+        """
+        if "comments" in self.meta.keys():
+            comments_dict = self.meta["comments"]
+        else:
+            comments_dict = {}
+
+        timestamp = str(time.time())
+
+        comments_dict.update(
+            {timestamp: {"username": username, "comment": str(comment)}}
+        )
+
+        meta.update_transient(self.ztfid, data={"comments": comments_dict})
 
     def get_crossmatch_info(self, exclude: list = ["WISE"]) -> Optional[str]:
         """
