@@ -14,7 +14,7 @@
             {% endif %} 
         </div>
 
-        <div class="col-auto me-auto my-2">
+        <div class="col-auto my-2">
             <form method="post" action="/rate/{{ transient.ztfid }}" >
 
                 <div class="btn-group" role="group" aria-label="Basic example">
@@ -79,6 +79,8 @@
           <a class="btn btn-outline-dark" href="https://www.wis-tns.org/object/{{ transient.tns_name[2:] }}" target="_blank">
              TNS
           </a>
+        {% else %}
+        <button type="button" class="btn btn-outline-dark" disabled>TNS</button>
         {% endif %}
         </div>
     </div>
