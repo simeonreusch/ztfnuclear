@@ -522,7 +522,7 @@ def plot_lightcurve_irsa(
         "zr": 633.96,
         "zi": 788.61,
     }
-    fig.suptitle(f"{ztfid} - non-diff alert photometry", fontsize=14)
+    fig.suptitle(f"{ztfid} - non-subtracted alert photometry", fontsize=14)
 
     for fc in ["zg", "zr", "zi"]:
         mask = df["filtercode"] == fc

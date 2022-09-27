@@ -181,7 +181,7 @@ class NuclearSample(object):
         self.logger.info("Obtaining IRSA lightcurves for full sample")
 
         for i, ztfid in tqdm(
-            enumerate(self.ztfids[startindex:]), total=len(self.ztfids)
+            enumerate(self.ztfids[startindex:]), total=len(self.ztfids[startindex:])
         ):
             self.logger.debug(f"{ztfid}: Obtaining IRSA lc")
             t = Transient(ztfid)

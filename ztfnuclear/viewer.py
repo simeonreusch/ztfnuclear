@@ -244,6 +244,23 @@ def flaring_page(ztfid):
 
     base64_string = base64.b64encode(plot_data.read()).decode("ascii")
 
+    t.plot_irsa(plot_png=True, wide=True)
+
+    plot_file_irsa = os.path.join(
+        base_dir, "plots", "lightcurves_irsa", "flux", f"{ztfid}.png"
+    )
+
+    if os.path.isfile(plot_file_irsa):
+
+        plot_data_irsa = open(plot_file_irsa, "rb")
+        base64_string_irsa = base64.b64encode(plot_data_irsa.read()).decode("ascii")
+        plot_irsa = True
+
+    else:
+
+        plot_irsa = False
+        base64_string_irsa = None
+
     s = NuclearSample()
 
     previous_transient = s.previous_transient(ztfid, flaring=True)
@@ -253,9 +270,11 @@ def flaring_page(ztfid):
         "transient.html",
         transient=t,
         lcplot=base64_string,
+        plot_irsa=plot_irsa,
+        lcplot_irsa=base64_string_irsa,
         previous_transient=previous_transient,
         next_transient=next_transient,
-        flaring=True,
+        flaring=False,
     )
 
 

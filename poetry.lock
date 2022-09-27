@@ -7,6 +7,20 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "asteval"
+version = "0.9.27"
+description = "Safe, minimalistic evaluator of python expression using ast module"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+all = ["Sphinx", "build", "coverage", "pytest", "pytest-cov", "twine"]
+dev = ["build", "twine"]
+doc = ["Sphinx"]
+test = ["coverage", "pytest", "pytest-cov"]
+
+[[package]]
 name = "astroplan"
 version = "0.8"
 description = "Observation planning package for astronomers"
@@ -467,6 +481,14 @@ sphinx = ">=4.0,<6.0"
 sphinx-basic-ng = "*"
 
 [[package]]
+name = "future"
+version = "0.18.2"
+description = "Clean single-source support for Python 3 and 2"
+category = "main"
+optional = false
+python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
+
+[[package]]
 name = "geopandas"
 version = "0.11.1"
 description = "Geographic pandas extensions"
@@ -610,6 +632,20 @@ description = "A fast implementation of the Cassowary constraint solver"
 category = "main"
 optional = false
 python-versions = ">=3.7"
+
+[[package]]
+name = "lmfit"
+version = "1.0.3"
+description = "Least-Squares Minimization with Bounds and Constraints"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+asteval = ">=0.9.22"
+numpy = ">=1.18"
+scipy = ">=1.4"
+uncertainties = ">=3.0.1"
 
 [[package]]
 name = "lxml"
@@ -1342,6 +1378,23 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "uncertainties"
+version = "3.1.7"
+description = "Transparent calculations with uncertainties on the quantities involved (aka error propagation); fast calculation of derivatives"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+future = "*"
+
+[package.extras]
+all = ["nose", "numpy", "sphinx"]
+docs = ["sphinx"]
+optional = ["numpy"]
+tests = ["nose", "numpy"]
+
+[[package]]
 name = "urllib3"
 version = "1.26.12"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
@@ -1423,12 +1476,16 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "338e2a86c7abdf1cbd1011f139dc8a8a107b657fc265ceced944d937f82190a1"
+content-hash = "b83803baff0c442edfc64b3bef72857de51f5d551b21bb6ec206ab6ffb6f1c7d"
 
 [metadata.files]
 alabaster = [
     {file = "alabaster-0.7.12-py2.py3-none-any.whl", hash = "sha256:446438bdcca0e05bd45ea2de1668c1d9b032e1a9154c2c259092d77031ddd359"},
     {file = "alabaster-0.7.12.tar.gz", hash = "sha256:a661d72d58e6ea8a57f7a86e37d86716863ee5e92788398526d58b26a4e4dc02"},
+]
+asteval = [
+    {file = "asteval-0.9.27-py3-none-any.whl", hash = "sha256:c31678db0e1c758a47d776c693a63709eb898f8af8065eb6201c65d68c3f7a3f"},
+    {file = "asteval-0.9.27.tar.gz", hash = "sha256:de838c33aed4c9bb25737eadbb7d1edaaf875e2bab505cc079f1a4b35de03e47"},
 ]
 astroplan = [
     {file = "astroplan-0.8.tar.gz", hash = "sha256:0cc463474e034f5f58f7399ef830ff60e91d2fac32e89cf2224e1de50946bdc7"},
@@ -1719,6 +1776,9 @@ furo = [
     {file = "furo-2022.6.21-py3-none-any.whl", hash = "sha256:061b68e323345e27fcba024cf33a1e77f3dfd8d9987410be822749a706e2add6"},
     {file = "furo-2022.6.21.tar.gz", hash = "sha256:9aa983b7488a4601d13113884bfb7254502c8729942e073a0acb87a5512af223"},
 ]
+future = [
+    {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},
+]
 geopandas = [
     {file = "geopandas-0.11.1-py3-none-any.whl", hash = "sha256:f3344937f3866e52996c7e505d56dae78be117dc840cd1c23507da0b33c0af71"},
     {file = "geopandas-0.11.1.tar.gz", hash = "sha256:f0f0c8d0423d30cf81de2056d853145c4362739350a7f8f2d72cc7409ef1eca1"},
@@ -1835,6 +1895,9 @@ kiwisolver = [
     {file = "kiwisolver-1.4.4-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f6cb459eea32a4e2cf18ba5fcece2dbdf496384413bc1bae15583f19e567f3b2"},
     {file = "kiwisolver-1.4.4-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:36dafec3d6d6088d34e2de6b85f9d8e2324eb734162fba59d2ba9ed7a2043d5b"},
     {file = "kiwisolver-1.4.4.tar.gz", hash = "sha256:d41997519fcba4a1e46eb4a2fe31bc12f0ff957b2b81bac28db24744f333e955"},
+]
+lmfit = [
+    {file = "lmfit-1.0.3.tar.gz", hash = "sha256:d067c3ea501f035af5d3c079e6e6e35dc3cc1ac7d439429a425b0aeb5a7858a2"},
 ]
 lxml = [
     {file = "lxml-4.9.1-cp27-cp27m-macosx_10_15_x86_64.whl", hash = "sha256:98cafc618614d72b02185ac583c6f7796202062c41d2eeecdf07820bad3295ed"},
@@ -2571,6 +2634,10 @@ tqdm = [
 typing-extensions = [
     {file = "typing_extensions-4.3.0-py3-none-any.whl", hash = "sha256:25642c956049920a5aa49edcdd6ab1e06d7e5d467fc00e0506c44ac86fbfca02"},
     {file = "typing_extensions-4.3.0.tar.gz", hash = "sha256:e6d2677a32f47fc7eb2795db1dd15c1f34eff616bcaf2cfb5e997f854fa1c4a6"},
+]
+uncertainties = [
+    {file = "uncertainties-3.1.7-py2.py3-none-any.whl", hash = "sha256:4040ec64d298215531922a68fa1506dc6b1cb86cd7cca8eca848fcfe0f987151"},
+    {file = "uncertainties-3.1.7.tar.gz", hash = "sha256:80111e0839f239c5b233cb4772017b483a0b7a1573a581b92ab7746a35e6faab"},
 ]
 urllib3 = [
     {file = "urllib3-1.26.12-py2.py3-none-any.whl", hash = "sha256:b930dd878d5a8afb066a637fbb35144fe7901e3b209d1cd4f524bd0e9deee997"},
