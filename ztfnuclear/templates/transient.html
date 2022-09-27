@@ -92,57 +92,57 @@
     <div class="col">
         <div class="row">
             {% if transient.z != None %}
-                    <h4 style="color:#A9A9A9;">
+                    <h5 style="color:#787878;">
                       z: {{ "{:,.4f}".format(transient.z) }} (dist: {{ "{:,.4f}".format(transient.z_dist) }} arcsec) 
-                    </h4>
+                    </h5>
             {% else %}
-                    <h4 style="color:#A9A9A9;">
+                    <h5 style="color:#C9C9C9;">
                       z: --- 
-                    </h4>
+                    </h5>
             {% endif %}
         </div>
         <div class="row">
             {% if transient.get_crossmatch_info() != None %}
-                    <h4 style="color:#A9A9A9;">
+                    <h5 style="color:#787878;">
                       Crossmatch: {{ transient.get_crossmatch_info() }}
-                    </h4>
+                    </h5>
             {% else %}
-                    <h4 style="color:#A9A9A9;">
+                    <h5 style="color:#C9C9C9;">
                       Crossmatch: --- 
-                    </h4>
+                    </h5>
             {% endif %}
         </div>
         <div class="row">
             {% if 'fritz_class' in transient.meta.keys() %}
-                    <h4 style="color:#A9A9A9;">
+                    <h5 style="color:#787878;">
                       Fritz: {{ transient.meta['fritz_class'] }}
-                    </h4>
+                    </h5>
             {% else %}
-                    <h4 style="color:#A9A9A9;">
+                    <h5 style="color:#C9C9C9;">
                       Fritz: ---
-                    </h4>
+                    </h5>
             {% endif %}
         </div>
         <div class="row">
             {% if transient.tde_res != None %}
-                    <h4 style="color:#A9A9A9;">
+                    <h5 style="color:#787878;">
                       TDE fit red_chisq: {{ "{:,.3f}".format(transient.tde_res) }}
-                    </h4>
+                    </h5>
             {% else %}
-                    <h4 style="color:#A9A9A9;">
+                    <h5 style="color:#C9C9C9;">
                       TDE fit red_chisq: ---
-                    </h4>
+                    </h5>
             {% endif %}
         </div>
         <div class="row">
             {% if transient.salt_res != None %}
-                    <h4 style="color:#A9A9A9;">
+                    <h5 style="color:#787878;">
                       SALT fit red_chisq: {{ "{:,.3f}".format(transient.salt_res) }} 
-                    </h4>
+                    </h5>
             {% else %}
-                    <h4 style="color:#A9A9A9;">
+                    <h5 style="color:#C9C9C9;">
                       SALT fit red_chisq: --- 
-                    </h4>
+                    </h5>
             {% endif %}
         </div>
     </div>
