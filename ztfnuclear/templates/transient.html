@@ -53,14 +53,14 @@
             <nav aria-label="Page navigation">
               <ul class="pagination">
                 {% if flaring == True %}
-                <li class="page-item"><a class="page-link" href="/flaring/{{ previous_transient }}">Previous</a></li>
+                <li class="page-item"><a class="page-link" href="/flaring/{{ previous_transient }}" style="color:#6c3483;">Previous</a></li>
                 {% else %}
-                <li class="page-item"><a class="page-link" href="/transients/{{ previous_transient }}">Previous</a></li>
+                <li class="page-item"><a class="page-link" href="/transients/{{ previous_transient }}" style="color:#6c3483;">Previous</a></li>
                 {% endif %}
                 {% if flaring == True %}
-                <li class="page-item"><a class="page-link" href="/flaring/{{ next_transient }}">Next</a></li>
+                <li class="page-item"><a class="page-link" href="/flaring/{{ next_transient }}" style="color:#6c3483;">Next</a></li>
                 {% else %}
-                <li class="page-item"><a class="page-link" href="/transients/{{ next_transient }}">
+                <li class="page-item"><a class="page-link" href="/transients/{{ next_transient }}" style="color:#6c3483;">
                 Next</a></li>
                 {% endif %}
               </ul>
