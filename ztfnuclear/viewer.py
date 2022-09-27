@@ -282,7 +282,7 @@ def flaring_page(ztfid):
         lcplot_irsa=base64_string_irsa,
         previous_transient=previous_transient,
         next_transient=next_transient,
-        flaring=False,
+        flaring=True,
         comments=comments,
         comment_count=comment_count,
     )
