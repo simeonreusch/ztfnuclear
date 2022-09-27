@@ -14,137 +14,147 @@
             {% endif %} 
         </div>
 
+        <div class="col-auto my-2">
+            <form method="post" action="/rate/{{ transient.ztfid }}" >
+
+                <div class="btn-group" role="group" aria-label="Basic example">
+                    {% if transient.get_rating(current_user.username) == 3 %}
+                        <button type="submit" class="btn btn-success" value="{{ request.url }}&rating=3&user={{ current_user.username }}" name="rating">
+                            Interesting
+                        </button>
+                    {% else %}
+                        <button type="submit" class="btn btn-outline-success" value="{{ request.url }}&rating=3&user={{ current_user.username }}" name="rating">
+                            Interesting
+                        </button>
+                    {% endif %}
+                    {% if transient.get_rating(current_user.username) == 2 %}
+                        <button type="submit" class="btn btn-warning" value="{{ request.url }}&rating=2&user={{ current_user.username }}" name="rating">
+                            Maybe
+                        </button>
+                    {% else %}
+                        <button type="submit" class="btn btn-outline-warning" value="{{ request.url }}&rating=2&user={{ current_user.username }}" name="rating">
+                            Maybe
+                        </button>
+                    {% endif %}
+                    {% if transient.get_rating(current_user.username) == 1 %}
+                        <button type="submit" class="btn btn-danger" value="{{ request.url }}&rating=1&user={{ current_user.username }}" name="rating">
+                            Boring
+                        </button>
+                    {% else %}
+                        <button type="submit" class="btn btn-outline-danger" value="{{ request.url }}&rating=1&user={{ current_user.username }}" name="rating">
+                            Boring
+                        </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <div class="col-auto my-2">
+            <nav aria-label="Page navigation">
+              <ul class="pagination">
+                {% if flaring == True %}
+                <li class="page-item"><a class="page-link" href="/flaring/{{ previous_transient }}">Previous</a></li>
+                {% else %}
+                <li class="page-item"><a class="page-link" href="/transients/{{ previous_transient }}">Previous</a></li>
+                {% endif %}
+                {% if flaring == True %}
+                <li class="page-item"><a class="page-link" href="/flaring/{{ next_transient }}">Next</a></li>
+                {% else %}
+                <li class="page-item"><a class="page-link" href="/transients/{{ next_transient }}">
+                Next</a></li>
+                {% endif %}
+              </ul>
+            </nav>
+        </div>
+
 
         <div class="col-auto my-2">
           <a class="btn btn-outline-dark" href="http://skipper.caltech.edu:8080/cgi-bin/growth/view_source.cgi?name={{ transient.ztfid }}" target="_blank">
-             See on Growth
+             Growth
           </a>
-        </div>
-        <div class="col-auto my-2">
           <a class="btn btn-outline-dark" href="https://fritz.science/source/{{ transient.ztfid }}" target="_blank">
-             See on Fritz
+             Fritz
           </a>
-        </div>
         {% if transient.tns_name != None %}
-        <div class="col-auto my-2">
           <a class="btn btn-outline-dark" href="https://www.wis-tns.org/object/{{ transient.tns_name[2:] }}" target="_blank">
-             See on TNS
+             TNS
           </a>
-        </div>
         {% endif %}
+        </div>
     </div>
-
 </div>
 
 
- <div class="row">
-    {% if transient.z != None %}
-        <div class="col-auto me-auto">
-            <h4 style="color:#A9A9A9;">
-              z: {{ "{:,.4f}".format(transient.z) }} (dist: {{ "{:,.4f}".format(transient.z_dist) }} arcsec) 
-            </h4>
+<div class="container">
+  <div class="row">
+    <div class="col">
+        <div class="row">
+            {% if transient.z != None %}
+                    <h4 style="color:#A9A9A9;">
+                      z: {{ "{:,.4f}".format(transient.z) }} (dist: {{ "{:,.4f}".format(transient.z_dist) }} arcsec) 
+                    </h4>
+            {% else %}
+                    <h4 style="color:#A9A9A9;">
+                      z: --- 
+                    </h4>
+            {% endif %}
         </div>
-    {% else %}
-        <div class="col-auto me-auto">
-            <h4 style="color:#A9A9A9;">
-              z: --- 
-            </h4>
+        <div class="row">
+            {% if transient.get_crossmatch_info() != None %}
+                    <h4 style="color:#A9A9A9;">
+                      Crossmatch: {{ transient.get_crossmatch_info() }}
+                    </h4>
+            {% else %}
+                    <h4 style="color:#A9A9A9;">
+                      z: --- 
+                    </h4>
+            {% endif %}
         </div>
-    {% endif %}
-    {% if transient.get_crossmatch_info() != None %}
-        <div class="col-auto me-auto">
-            <h4 style="color:#A9A9A9;">
-              Crossmatch: {{ transient.get_crossmatch_info() }}
-            </h4>
+        <div class="row">
+            {% if 'fritz_class' in transient.meta.keys() %}
+                    <h4 style="color:#A9A9A9;">
+                      Fritz: {{ transient.meta['fritz_class'] }}
+                    </h4>
+            {% else %}
+                    <h4 style="color:#A9A9A9;">
+                      Fritz: ---
+                    </h4>
+            {% endif %}
         </div>
-    {% else %}
-        <div class="col-auto me-auto">
-            <h4 style="color:#A9A9A9;">
-              z: --- 
-            </h4>
+        <div class="row">
+            {% if transient.tde_res != None %}
+                    <h4 style="color:#A9A9A9;">
+                      TDE fit red_chisq: {{ "{:,.3f}".format(transient.tde_res) }}
+                    </h4>
+            {% else %}
+                    <h4 style="color:#A9A9A9;">
+                      TDE fit red_chisq: ---
+                    </h4>
+            {% endif %}
         </div>
-    {% endif %}
-    {% if 'fritz_class' in transient.meta.keys() %}
-        <div class="col-auto me-auto">
-            <h4 style="color:#A9A9A9;">
-              Fritz: {{ transient.meta['fritz_class'] }}
-            </h4>
+        <div class="row">
+            {% if transient.salt_res != None %}
+                    <h4 style="color:#A9A9A9;">
+                      SALT fit red_chisq: {{ "{:,.3f}".format(transient.salt_res) }} 
+                    </h4>
+            {% else %}
+                    <h4 style="color:#A9A9A9;">
+                      SALT fit red_chisq: --- 
+                    </h4>
+            {% endif %}
         </div>
-    {% else %}
-        <div class="col-auto me-auto">
-            <h4 style="color:#A9A9A9;">
-              Fritz: ---
-            </h4>
-        </div>
-    {% endif %}
-</div>
-
- <div class="row">
-    {% if transient.tde_res != None %}
-        <div class="col-auto me-auto">
-            <h4 style="color:#A9A9A9;">
-              TDE fit red_chisq: {{ "{:,.3f}".format(transient.tde_res) }}
-            </h4>
-        </div>
-    {% else %}
-        <div class="col-auto me-auto">
-            <h4 style="color:#A9A9A9;">
-              TDE fit red_chisq: ---
-            </h4>
-        </div>
-    {% endif %}
-    {% if transient.salt_res != None %}
-    <div class="col-auto me-auto">
-            <h4 style="color:#A9A9A9;">
-              SALT fit red_chisq: {{ "{:,.3f}".format(transient.salt_res) }} 
-            </h4>
     </div>
-    {% else %}
-    <div class="col-auto me-auto">
-            <h4 style="color:#A9A9A9;">
-              SALT fit red_chisq: --- 
-            </h4>
+    <div class="col">
+      here go the comments
     </div>
-    {% endif %}
+  </div>
 </div>
 
 
-<form method="post" action="/rate/{{ transient.ztfid }}" >
 
-    <div class="btn-group" role="group" aria-label="Basic example">
-        {% if transient.get_rating(current_user.username) == 3 %}
-        <button type="submit" class="btn btn-success" value="{{ request.url }}&rating=3&user={{ current_user.username }}" name="rating">Interesting</button>
-        {% else %}
-        <button type="submit" class="btn btn-outline-success" value="{{ request.url }}&rating=3&user={{ current_user.username }}" name="rating">Interesting</button>
-        {% endif %}
-        {% if transient.get_rating(current_user.username) == 2 %}
-        <button type="submit" class="btn btn-warning" value="{{ request.url }}&rating=2&user={{ current_user.username }}" name="rating">Maybe</button>
-        {% else %}
-        <button type="submit" class="btn btn-outline-warning" value="{{ request.url }}&rating=2&user={{ current_user.username }}" name="rating">Maybe</button>
-        {% endif %}
-        {% if transient.get_rating(current_user.username) == 1 %}
-        <button type="submit" class="btn btn-danger" value="{{ request.url }}&rating=1&user={{ current_user.username }}" name="rating">Boring</button>
-        {% else %}
-        <button type="submit" class="btn btn-outline-danger" value="{{ request.url }}&rating=1&user={{ current_user.username }}" name="rating">Boring</button>
-        {% endif %}
-    </div>
-</form>
 
-<nav aria-label="Page navigation example">
-  <ul class="pagination">
-    {% if flaring == True %}
-    <li class="page-item"><a class="page-link" href="/flaring/{{ previous_transient }}">Previous</a></li>
-    {% else %}
-    <li class="page-item"><a class="page-link" href="/transients/{{ previous_transient }}">Previous</a></li>
-    {% endif %}
-    {% if flaring == True %}
-    <li class="page-item"><a class="page-link" href="/flaring/{{ next_transient }}">Next</a></li>
-    {% else %}
-    <li class="page-item"><a class="page-link" href="/transients/{{ next_transient }}">
-    Next</a></li>
-    {% endif %}
-  </ul>
-</nav>
+
+
 
 
   <div class="row justify-content-md-center">
