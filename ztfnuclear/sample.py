@@ -771,6 +771,7 @@ class Transient(object):
         """
         if include_wise:
             wise_df = self.wise_lc
+            wise_df_to_plot = None
 
             if wise_baseline_correction:
                 if "WISE_bayesian" in self.meta.keys():
@@ -849,9 +850,7 @@ class Transient(object):
                             / 1000,  # convert from mJy to Jy
                             band="W2",
                         )
-
-        else:
-            wise_df = None
+                        wise_df_to_plot = wise_df
 
         if force_baseline_correction:
             df_to_plot = self.baseline
@@ -875,7 +874,7 @@ class Transient(object):
             z=z,
             tns_name=self.tns_name,
             magplot=magplot,
-            wise_df=wise_df,
+            wise_df=wise_df_to_plot,
             snt_threshold=snt_threshold,
             plot_png=plot_png,
             wide=wide,
