@@ -445,7 +445,7 @@ class Transient(object):
         """
         Recreate the baseline
         """
-        bl, bl_info = baseline.baseline(transient=self, primary_grid_only=True)
+        bl, bl_info = baseline.baseline(transient=self, primary_grid_only=False)
         self.baseline = bl
 
     @cached_property
@@ -839,7 +839,7 @@ class Transient(object):
         else:
             z = None
 
-        plot_lightcurve(
+        axlims = plot_lightcurve(
             df=df_to_plot,
             ztfid=self.ztfid,
             z=z,
@@ -852,8 +852,14 @@ class Transient(object):
             thumbnail=thumbnail,
         )
 
+        return axlims
+
     def plot_irsa(
-        self, wide: bool = False, magplot: bool = False, plot_png: bool = False
+        self,
+        wide: bool = False,
+        magplot: bool = False,
+        plot_png: bool = False,
+        axlims: dict = None,
     ):
         """
         Get the non-difference alert photometry for this transient from IRSA and plot it
@@ -868,4 +874,5 @@ class Transient(object):
             wide=wide,
             magplot=magplot,
             plot_png=plot_png,
+            axlims=axlims,
         )

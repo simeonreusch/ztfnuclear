@@ -255,7 +255,7 @@ def plot_lightcurve(
     plot_png: bool = False,
     wide: bool = False,
     thumbnail: bool = False,
-):
+) -> list:
     """Plot a lightcurve"""
     if magplot:
         logger.debug("Plotting lightcurve (in magnitude space)")
@@ -486,7 +486,14 @@ def plot_lightcurve(
     plt.savefig(outfile)
     plt.close()
 
+    xlim1, xlim2 = ax.get_xlim()
+    # ylim1, ylim2 = ax.get_ylim()
+
+    axlims = {"xlim": [xlim1, xlim2]}
+
     del fig, ax
+
+    return axlims
 
 
 def plot_lightcurve_irsa(
@@ -497,6 +504,7 @@ def plot_lightcurve_irsa(
     wide: bool = False,
     magplot: bool = False,
     plot_png: bool = False,
+    axlims: dict = None,
 ):
     """
     Get the non-difference alert photometry for a transient and plot it
@@ -572,6 +580,12 @@ def plot_lightcurve_irsa(
             ax.set_ylabel(r"$\nu$ F$_\nu$ (erg s$^{-1}$ cm$^{-2}$)", fontsize=12)
 
     ax.set_xlabel("Date (MJD)", fontsize=12)
+
+    if axlims:
+        if "xlim" in axlims.keys():
+            ax.set_xlim(axlims["xlim"])
+        if "ylim" in axlims.keys():
+            ax.set_ylim(axlims["ylim"])
 
     ax.grid(which="both", b=True, axis="both", alpha=0.3)
 
