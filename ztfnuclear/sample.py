@@ -785,11 +785,24 @@ class Transient(object):
                             "Wise_W2"
                         ]["baseline"][0]
 
+                        bl_W1_err_uncorr = self.meta["WISE_bayesian"]["bayesian"][
+                            "Wise_W1"
+                        ]["baseline_rms"][0]
+                        bl_W2_err_uncorr = self.meta["WISE_bayesian"]["bayesian"][
+                            "Wise_W2"
+                        ]["baseline_rms"][0]
+
                         bl_W1 = utils.flux_density_bug_correction(
                             flux_density=bl_W1_uncorr, band="W1"
                         )
                         bl_W2 = utils.flux_density_bug_correction(
                             flux_density=bl_W2_uncorr, band="W2"
+                        )
+                        bl_W1_err = utils.flux_density_bug_correction(
+                            flux_density=bl_W1_err_uncorr, band="W1"
+                        )
+                        bl_W2_err = utils.flux_density_bug_correction(
+                            flux_density=bl_W2_err_uncorr, band="W2"
                         )
 
                         wise_df[
@@ -802,6 +815,16 @@ class Transient(object):
                         ] = utils.flux_density_bug_correction(
                             flux_density=wise_df["W2_mean_flux_density"], band="W2"
                         )
+                        wise_df[
+                            "W1_flux_density_rms"
+                        ] = utils.flux_density_bug_correction(
+                            flux_density=wise_df["W1_flux_density_rms"], band="W1"
+                        )
+                        wise_df[
+                            "W2_flux_density_rms"
+                        ] = utils.flux_density_bug_correction(
+                            flux_density=wise_df["W2_flux_density_rms"], band="W2"
+                        )
 
                         wise_df["W1_mean_flux_density_bl_corr"] = (
                             wise_df["W1_mean_flux_density"] - bl_W1
@@ -809,6 +832,13 @@ class Transient(object):
                         wise_df["W2_mean_flux_density_bl_corr"] = (
                             wise_df["W2_mean_flux_density"] - bl_W2
                         )
+                        wise_df["W1_mean_flux_density_bl_corr_err"] = np.sqrt(
+                            wise_df["W1_flux_density_rms"].values ** 2 + bl_W1_err**2
+                        )
+                        wise_df["W2_mean_flux_density_bl_corr_err"] = np.sqrt(
+                            wise_df["W2_flux_density_rms"].values ** 2 + bl_W2_err**2
+                        )
+
                         wise_df["W1_mean_mag_ab"] = utils.flux_density_to_abmag(
                             flux_density=wise_df["W1_mean_flux_density_bl_corr"]
                             / 1000,  # convert from mJy to Jy

@@ -429,8 +429,10 @@ def plot_lightcurve(
     else:
         if wise_df is not None:
             if len(wise_df) > 0:
-                flux_W1 = utils.abmag_to_flux_density(wise_df.W1_mean_mag_ab)
-                flux_W2 = utils.abmag_to_flux_density(wise_df.W2_mean_mag_ab)
+                flux_W1 = wise_df["W1_mean_flux_density_bl_corr"] / 1000
+                flux_W1_err = wise_df["W1_mean_flux_density_bl_corr_err"] / 1000
+                flux_W2 = wise_df["W2_mean_flux_density_bl_corr"] / 1000
+                flux_W2_err = wise_df["W2_mean_flux_density_bl_corr_err"] / 1000
 
                 if thumbnail:
                     ms = 3
@@ -440,6 +442,7 @@ def plot_lightcurve(
                 ax.errorbar(
                     wise_df.mean_mjd,
                     utils.band_frequency("W1") * flux_W1 * 1e-23,
+                    utils.band_frequency("W1") * flux_W1_err * 1e-23,
                     fmt="o",
                     mec="black",
                     ecolor="black",
@@ -452,6 +455,7 @@ def plot_lightcurve(
                 ax.errorbar(
                     wise_df.mean_mjd,
                     utils.band_frequency("W2") * flux_W2 * 1e-23,
+                    utils.band_frequency("W2") * flux_W2_err * 1e-23,
                     fmt="o",
                     mec="gray",
                     mfc="gray",
