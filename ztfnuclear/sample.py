@@ -231,10 +231,15 @@ class NuclearSample(object):
         if flaring:
             flaring_ztfids = self.info_db.read()["flaring"]["ztfids"]
             idx = flaring_ztfids.index(ztfid)
+
+            if idx == len(flaring_ztfids) - 1:
+                return flaring_ztfids[idx]
             return flaring_ztfids[idx + 1]
 
         else:
             idx = self.ztfids.index(ztfid)
+            if idx == len(self.ztfids) - 1:
+                return self.ztfids[idx]
             return self.ztfids[idx + 1]
 
     def previous_transient(self, ztfid: str, flaring: bool = False):
