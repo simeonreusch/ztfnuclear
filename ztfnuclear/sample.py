@@ -215,8 +215,14 @@ class NuclearSample(object):
 
         returndict = {}
 
-        if select == "all":
+        if select == "all" and username is None:
             returndict = ratings
+
+        elif select == "all" and username is not None:
+            for k, v in ratings.items():
+                for user in v.keys():
+                    if user == username:
+                        returndict.update({k: v})
 
         elif username is not None:
             for k, v in ratings.items():
