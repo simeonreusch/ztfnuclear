@@ -13,7 +13,7 @@
 
 
             <ul class="navbar-nav ml-auto">
-
+              {% if current_user.is_authenticated %}
               <li class="nav-item ">
                 <a class="nav-link" href="{{ url_for('transient_list')}}">All</a>
               </li>
@@ -29,8 +29,6 @@
               <li class="nav-item ">
                 <a class="nav-link" href="{{ url_for('flaring_transient_random')}}">💥 Flaring Random</a>
               </li>
-
-              {% if current_user.is_authenticated %}
               <li class="nav-item ">
                 <a class="nav-link" href="{{ url_for('list_golden')}}">🥇Gold</a>
               </li>
