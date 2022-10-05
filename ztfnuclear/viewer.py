@@ -440,7 +440,11 @@ def transient_random():
 
     non_rated_ztfids = list(all_ztfids.difference(rated_ztfids))
 
-    random_ztfid = random.choice(non_rated_ztfids)
+    if len(non_rated_ztfids) > 0:
+        random_ztfid = random.choice(non_rated_ztfids)
+
+    else:
+        random_ztfid = random.choice(all_ztfids)
 
     return redirect(url_for("transient_page", ztfid=random_ztfid))
 
@@ -457,7 +461,11 @@ def flaring_transient_random():
 
     non_rated_ztfids = list(set(flaring_ztfids).difference(rated_ztfids))
 
-    random_ztfid = random.choice(non_rated_ztfids)
+    if len(non_rated_ztfids) > 0:
+        random_ztfid = random.choice(non_rated_ztfids)
+
+    else:
+        random_ztfid = random.choice(flaring_ztfids)
 
     return redirect(url_for("flaring_page", ztfid=random_ztfid))
 
