@@ -402,6 +402,24 @@ def list_maybe():
     )
 
 
+@app.route("/golden")
+@login_required
+def list_golden():
+    """
+    List all the transients selected as 'interesting' by at least 2 users
+    """
+    s = NuclearSample()
+    golden_sample_ztfids = []
+    interesting_ztfids = s.get_ratings(select="interesting")
+    for k, v in interesting_ztfids.items():
+        if len(v) > 1:
+            golden_sample_ztfids.append(k)
+
+    golden_sample_transients = s.get_transients(ztfids=golden_sample_ztfids)
+
+    return render_template("transient_list.html", transients=golden_sample_transients)
+
+
 @app.route("/random")
 @login_required
 def transient_random():

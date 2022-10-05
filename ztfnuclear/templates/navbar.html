@@ -15,11 +15,11 @@
             <ul class="navbar-nav ml-auto">
 
               <li class="nav-item ">
-                <a class="nav-link" href="{{ url_for('transient_list')}}">All Transients</a>
+                <a class="nav-link" href="{{ url_for('transient_list')}}">All</a>
               </li>
 
               <li class="nav-item ">
-                <a class="nav-link" href="{{ url_for('flaring_transient_list')}}">💥 Flaring Transients</a>
+                <a class="nav-link" href="{{ url_for('flaring_transient_list')}}">💥 Flaring</a>
               </li>
 
               <li class="nav-item ">
@@ -32,10 +32,13 @@
 
               {% if current_user.is_authenticated %}
               <li class="nav-item ">
-                <a class="nav-link" href="{{ url_for('list_interesting')}}">🟢Interesting</a>
+                <a class="nav-link" href="{{ url_for('list_golden')}}">🥇Gold</a>
               </li>
               <li class="nav-item ">
-                <a class="nav-link" href="{{ url_for('list_maybe')}}">🟡Maybe</a>
+                <a class="nav-link" href="{{ url_for('list_interesting')}}">🟢 Interesting</a>
+              </li>
+              <li class="nav-item ">
+                <a class="nav-link" href="{{ url_for('list_maybe')}}">🟠 Maybe</a>
               </li>
               {% endif %}
 

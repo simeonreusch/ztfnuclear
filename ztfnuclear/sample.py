@@ -203,7 +203,7 @@ class NuclearSample(object):
         """
         Get all ratings for the sample (for all or a given user)
         """
-        ratings = self.meta.get_rating_overview(username=username)
+        ratings = self.meta.get_rating_overview()
 
         rating_to_value = {
             "interesting": 3,
@@ -217,10 +217,19 @@ class NuclearSample(object):
 
         if select == "all":
             returndict = ratings
+
+        elif username is not None:
+            for k, v in ratings.items():
+                for user in v.keys():
+                    if user == username:
+                        if v[username] == rating_to_value[select]:
+                            returndict.update({k: v})
+
         else:
             for k, v in ratings.items():
-                if v[username] == rating_to_value[select]:
-                    returndict.update({k: v})
+                for user in v.keys():
+                    if v[user] == rating_to_value[select]:
+                        returndict.update({k: v})
 
         return returndict
 
