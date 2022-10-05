@@ -13,6 +13,9 @@
 <br>
 
 {% if current_user.is_authenticated %}
+<div class="row justify-content-center fs-5 mb-2">
+  Percentage of IR flaring transients rated
+</div>
 <div class="progress"  style="height: 20px;">
   <div class="progress-bar bg-primary" role="progressbar"
     style="width: {{ user_rate_percentage }}%;"
