@@ -113,8 +113,14 @@ def home():
     """
     s = NuclearSample()
     if current_user.is_authenticated:
+
         ratings = s.get_ratings(username=current_user.username)
-        user_rate_percentage = len(ratings) / len(flaring_ztfids) * 100
+        ratings_ztfids = list(ratings.keys())
+        flaring_rated = []
+        for ztfid in ratings_ztfids:
+            if ztfid in flaring_ztfids:
+                flaring_rated.append(ztfid)
+        user_rate_percentage = len(flaring_rated) / len(flaring_ztfids) * 100
     else:
         user_rate_percentage = None
 
