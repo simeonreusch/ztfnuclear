@@ -408,7 +408,7 @@ def list_maybe():
     )
 
 
-@app.route("/golden")
+@app.route("/gold")
 @login_required
 def list_golden():
     """

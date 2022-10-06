@@ -302,6 +302,7 @@ class WISE(object):
         hpcp, hpcp_dist = mqc_query.findclosest(
             ra=ra_deg, dec=dec_deg, rs_arcsec=searchradius_arcsec, method="healpix"
         )
+
         if hpcp:
             ra = float(hpcp[0])
             dec = float(hpcp[1])
