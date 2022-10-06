@@ -34,7 +34,6 @@ class SampleInfo(object):
         """
         Update DB for catalog
         """
-
         self.coll.update_one({"_id": "sample"}, {"$set": data}, upsert=True)
         self.logger.debug(f"Updated info database")
 
@@ -107,7 +106,7 @@ class MetadataDB(object):
 
         return returndict
 
-    def read_transient(self, ztfid: str):
+    def read_transient(self, ztfid: str) -> dict:
         """
         Read entry for given ztfid
         """
@@ -115,6 +114,15 @@ class MetadataDB(object):
         entry = self.coll.find_one({"_id": ztfid})
 
         self.logger.debug(f"Read info for {ztfid} from database")
+
+        return entry
+
+    def find_by_tns(self, tns_name: str) -> dict:
+        """
+        Search the database for a TNS name
+        """
+
+        entry = self.coll.find_one({"TNS_name": tns_name})
 
         return entry
 

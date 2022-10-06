@@ -35,6 +35,17 @@ def is_ztf_name(name) -> bool:
     return match
 
 
+def is_tns_name(name) -> bool:
+    """
+    Checks if a string adheres to the TNS naming scheme
+    """
+    if re.match(r"^(AT|SN)(19|20)\d{2}[a-z]{3,4}$", name):
+        match = True
+    else:
+        match = False
+    return match
+
+
 def ztf_filterid_to_band(filterid: int, short: str = False):
     """
     Get the band name associated with a ZTF filter id

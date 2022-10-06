@@ -30,8 +30,8 @@ from werkzeug.urls import url_parse
 
 from ztfnuclear.sample import NuclearSample, Transient
 
-from ztfnuclear.database import SampleInfo
-from ztfnuclear.utils import is_ztf_name
+from ztfnuclear.database import SampleInfo, MetadataDB
+from ztfnuclear.utils import is_ztf_name, is_tns_name
 
 
 matplotlib.pyplot.switch_backend("Agg")
@@ -484,15 +484,25 @@ def search():
     """
     Search for a transient
     """
+    meta = MetadataDB()
     if request.method == "POST":
-        ztfid = request.form["name"]
-        if not is_ztf_name(ztfid):
+        object_id = request.form["name"]
+        if not is_ztf_name(object_id) and not is_tns_name(object_id):
             return render_template(
-                "bad_query.html", bad_id=ztfid, rej_reason="not_valid"
+                "bad_query.html", bad_id=object_id, rej_reason="not_valid"
             )
 
-        if ztfid not in sample_ztfids:
-            return render_template("bad_query.html", bad_id=ztfid)
+        if is_ztf_name(object_id) and object_id not in sample_ztfids:
+            return render_template("bad_query.html", bad_id=object_id)
+
+        if is_tns_name(object_id) and object_id not in info_db.read()["tns_names"]:
+            return render_template("bad_query.html", bad_id=object_id)
+
+        if is_tns_name(object_id):
+            ztfid = meta.find_by_tns(tns_name=object_id)["_id"]
+
+        if is_ztf_name(object_id):
+            ztfid = object_id
 
         return redirect(url_for(f"transient_page", ztfid=ztfid))
     else:
