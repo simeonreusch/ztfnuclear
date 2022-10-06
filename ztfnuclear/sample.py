@@ -672,7 +672,18 @@ class Transient(object):
         else:
             return 0
 
-    def delete_comments(self):
+    def delete_comment(self, timestamp):
+        """
+        Delete a comment matching to a timecode
+        """
+        all_comments = self.get_comments()
+        print(all_comments)
+        if timestamp in all_comments.keys():
+            del all_comments[timestamp]
+
+        meta.update_transient(self.ztfid, data={"comments": all_comments})
+
+    def delete_all_comments(self):
         """
         Delete all comments for a transient
         """
@@ -689,7 +700,7 @@ class Transient(object):
 
         else:
             for timestamp, content in dict(sorted(comments.items())).items():
-                yield content
+                yield {"timestamp": timestamp, "content": content}
 
     def add_comment(self, username: str, comment: str):
         """

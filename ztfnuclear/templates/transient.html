@@ -154,9 +154,21 @@
                         <div class="be-comment-content">
                             {% for comment in comments %}
                             {% if comment != None %}
-                                <p class="be-comment-text">
-                                    <b>{{ comment['username'] }}</b>: {{ comment['comment'] }}
-                                </p>
+                                <div class="row">
+                                    <div class="col">
+                                        <p class="be-comment-text">
+                                            <b>{{ comment['content']['username'] }}</b>: {{ comment['content']['comment'] }}
+                                        </p>
+                                    </div>
+                                    <div class="col">
+                                        {% if comment['content']['username'] == current_user.username %}
+                                        <form method="post" action="/comment/{{ transient.ztfid }}" >
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" value="origin={{ request.url }}&delete={{ comment['timestamp'] }}" name="delete">Delete
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             {% endif %}
                             {% endfor %}
                         </div>

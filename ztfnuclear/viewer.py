@@ -340,6 +340,14 @@ def comment_on_transient(ztfid):
 
         for input_key in list(request.form.keys()):
 
+            if input_key == "delete":
+                raw = request.form["delete"]
+                origin = raw.split("&")[0].split("=")[1]
+                timestamp = raw.split("&")[1].split("=")[1]
+                t.delete_comment(timestamp=timestamp)
+
+                return redirect(origin)
+
             if input_key == "comment":
                 comment_text = request.form["comment"]
 
