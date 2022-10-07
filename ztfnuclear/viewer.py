@@ -425,9 +425,14 @@ def list_golden():
     s = NuclearSample()
     golden_sample_ztfids = []
     interesting_ztfids = s.get_ratings(select="interesting")
+
     for k, v in interesting_ztfids.items():
         if len(v) > 1:
-            golden_sample_ztfids.append(k)
+            rating_sum = 0
+            for entry in v.keys():
+                rating_sum += v[entry]
+            if rating_sum >= 6:
+                golden_sample_ztfids.append(k)
 
     golden_sample_transients = s.get_transients(ztfids=golden_sample_ztfids)
 
