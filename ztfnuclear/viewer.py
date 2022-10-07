@@ -246,7 +246,7 @@ def flaring_page(ztfid):
 
     t = Transient(ztfid=ztfid)
 
-    axlims = t.plot(plot_png=True, wide=True)
+    # axlims = t.plot(plot_png=True, wide=True)
 
     base_dir = os.path.join(str(os.getenv("ZTFDATA")), "nuclear_sample")
     plot_file = os.path.join(base_dir, "plots", "lightcurves", "flux", f"{ztfid}.png")
@@ -255,7 +255,7 @@ def flaring_page(ztfid):
 
     base64_string = base64.b64encode(plot_data.read()).decode("ascii")
 
-    t.plot_irsa(plot_png=True, wide=True, axlims=axlims)
+    # t.plot_irsa(plot_png=True, wide=True, axlims=axlims)
 
     plot_file_irsa = os.path.join(
         base_dir, "plots", "lightcurves_irsa", "flux", f"{ztfid}.png"
