@@ -424,14 +424,19 @@ def list_golden():
     """
     s = NuclearSample()
     golden_sample_ztfids = []
+
+    # get all transients rated as interesting by at least one person
     interesting_ztfids = s.get_ratings(select="interesting")
 
+    # at least two persons must have rated the transient as interesting
     for k, v in interesting_ztfids.items():
         if len(v) > 1:
-            rating_sum = 0
+            rated_interesting = 0
             for entry in v.keys():
-                rating_sum += v[entry]
-            if rating_sum >= 6:
+                if v[entry] == 3:
+                    rated_interesting += 1
+
+            if rated_interesting >= 2:
                 golden_sample_ztfids.append(k)
 
     golden_sample_transients = s.get_transients(ztfids=golden_sample_ztfids)
