@@ -85,6 +85,7 @@ def baseline(
     zp_max_deviation_from_median: float = 0.5,
     reference_days_before_peak: Optional[float] = 100,
     pivot_zeropoint: float = 25,
+    plot: bool = True,
     plot_suffix: str = "pdf",
 ) -> pd.DataFrame:
     """
@@ -349,68 +350,70 @@ def baseline(
         f"{transient.ztfid}: Baseline correction done, {len(df)} entries remain."
     )
 
-    logger.info(f"{transient.ztfid}: Plotting baseline")
+    if plot:
 
-    color_dict = {"1": "green", "2": "red", "3": "orange"}
+        logger.info(f"{transient.ztfid}: Plotting baseline")
 
-    plot_dir = os.path.join(io.LOCALSOURCE_plots, "baseline")
+        color_dict = {"1": "green", "2": "red", "3": "orange"}
 
-    if not os.path.exists(plot_dir):
-        os.makedirs(plot_dir)
+        plot_dir = os.path.join(io.LOCALSOURCE_plots, "baseline")
 
-    fig, ax = plt.subplots()
-    y_max = -99
-    for key, binfo in fcqfid_dict.items():
-        if key == "t_peak":
-            continue
-        # if not 'which_baseline' in binfo or not binfo['which_baseline']:
-        #    continue
-        df_sub = df[((df.fcqfid == int(key)) & (df.n_baseline > 0))]
-        if df_sub.shape[0] == 0:
-            continue
+        if not os.path.exists(plot_dir):
+            os.makedirs(plot_dir)
 
-        if "flux_max" in binfo.keys() and binfo["flux_max"] > y_max:
-            y_max = binfo["flux_max"]
+        fig, ax = plt.subplots()
+        y_max = -99
+        for key, binfo in fcqfid_dict.items():
+            if key == "t_peak":
+                continue
+            # if not 'which_baseline' in binfo or not binfo['which_baseline']:
+            #    continue
+            df_sub = df[((df.fcqfid == int(key)) & (df.n_baseline > 0))]
+            if df_sub.shape[0] == 0:
+                continue
 
-        ax.errorbar(
-            df_sub.obsmjd,
-            df_sub.ampl_corr,
-            df_sub["ampl_err_corr"],
-            fmt="o",
-            mec=color_dict[key[-1]],
-            ecolor=color_dict[key[-1]],
-            mfc="None",
-            alpha=0.7,
-            ms=2,
-            elinewidth=0.8,
+            if "flux_max" in binfo.keys() and binfo["flux_max"] > y_max:
+                y_max = binfo["flux_max"]
+
+            ax.errorbar(
+                df_sub.obsmjd,
+                df_sub.ampl_corr,
+                df_sub["ampl_err_corr"],
+                fmt="o",
+                mec=color_dict[key[-1]],
+                ecolor=color_dict[key[-1]],
+                mfc="None",
+                alpha=0.7,
+                ms=2,
+                elinewidth=0.8,
+            )
+
+        if y_max == -99:
+            y_max = df.ampl_corr.max()
+
+        peak_times = df[(df["not_baseline"] == 1)].obsmjd
+
+        ax.axhline(y=0, color="0.7", ls="--")
+        ax.axvline(x=peak_times.min(), color="0.5", ls="--")
+        ax.axvline(x=peak_times.max(), color="0.5", ls="--")
+        ax.set_xlabel("Date (MJD)")
+        ax.set_ylabel(f"Flux (ZP = {pivot_zeropoint} mag)")
+
+        y_min = 10 ** ((pivot_zeropoint - 20) / 2.5)
+
+        ax.set_ylim([-y_min, y_max * 1.4])  # Bottom limit set based on sample runs
+
+        plt.tight_layout()
+        plt.savefig(
+            os.path.join(
+                plot_dir,
+                "fpbase_%s.%s" % (transient.ztfid, plot_suffix),
+            )
         )
-
-    if y_max == -99:
-        y_max = df.ampl_corr.max()
-
-    peak_times = df[(df["not_baseline"] == 1)].obsmjd
-
-    ax.axhline(y=0, color="0.7", ls="--")
-    ax.axvline(x=peak_times.min(), color="0.5", ls="--")
-    ax.axvline(x=peak_times.max(), color="0.5", ls="--")
-    ax.set_xlabel("Date (MJD)")
-    ax.set_ylabel(f"Flux (ZP = {pivot_zeropoint} mag)")
-
-    y_min = 10 ** ((pivot_zeropoint - 20) / 2.5)
-
-    ax.set_ylim([-y_min, y_max * 1.4])  # Bottom limit set based on sample runs
-
-    plt.tight_layout()
-    plt.savefig(
-        os.path.join(
-            plot_dir,
-            "fpbase_%s.%s" % (transient.ztfid, plot_suffix),
-        )
-    )
-    plt.close("fig")
-    plt.close("all")
-    del (fig, ax)
-    gc.collect()
+        plt.close("fig")
+        plt.close("all")
+        del (fig, ax)
+        gc.collect()
 
     # Add back zp correction (assumed to be used later)
     df["ampl"] /= df["ampl_zp_scale"]

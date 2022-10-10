@@ -451,6 +451,7 @@ class Transient(object):
         Obtain the baseline correction, create if not present
         """
         bl_file = os.path.join(io.LOCALSOURCE_baseline, self.ztfid + "_bl.csv")
+
         if os.path.isfile(bl_file):
             bl = pd.read_csv(bl_file)
             return bl
@@ -458,15 +459,33 @@ class Transient(object):
             self.logger.info(
                 f"{self.ztfid}: No baseline correction file, trying to apply baseline correction"
             )
-            bl, bl_info = baseline.baseline(transient=self)
+            bl, bl_info = baseline.baseline(transient=self, plot=False)
+
+            meta.update_transient(self.ztfid, data={"bl_info": bl_info})
+
             return bl
+
+    @cached_property
+    def baseline_info(self) -> dict:
+        """
+        Obtain the baseline correction metadata, create if not present
+        """
+        self.baseline
+
+        if "bl_info" in self.meta.keys():
+            return self.meta["bl_info"]
+        else:
+            return None
 
     def recreate_baseline(self):
         """
         Recreate the baseline
         """
-        bl, bl_info = baseline.baseline(transient=self, primary_grid_only=False)
+        bl, bl_info = baseline.baseline(transient=self, plot=False)
         self.baseline = bl
+        self.baseline_info = bl_info
+
+        meta.update_transient(self.ztfid, data={"bl_info": bl_info})
 
     @cached_property
     def raw_lc(self) -> pd.DataFrame:
