@@ -13,7 +13,7 @@ import pandas as pd  # type: ignore
 
 from ztfnuclear import io, baseline, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
-from ztfnuclear.plot import plot_lightcurve, plot_lightcurve_irsa
+from ztfnuclear.plot import plot_lightcurve, plot_lightcurve_irsa, plot_tde_fit
 from ztfnuclear.fritz import FritzAPI
 
 logger = logging.getLogger(__name__)
@@ -524,10 +524,10 @@ class Transient(object):
         """
         Get the TDE fit reduced chisq
         """
-        if "tde_fit_loose_bl" in self.meta.keys():
-            if self.meta["tde_fit_loose_bl"] != "failure":
-                chisq = self.meta["tde_fit_loose_bl"]["chisq"]
-                ndof = self.meta["tde_fit_loose_bl"]["ndof"]
+        if "tde_fit" in self.meta.keys():
+            if self.meta["tde_fit"] != "failure":
+                chisq = self.meta["tde_fit"]["chisq"]
+                ndof = self.meta["tde_fit"]["ndof"]
                 red_chisq = chisq / ndof
                 return red_chisq
         else:
@@ -939,18 +939,45 @@ class Transient(object):
         """
         from ztfnuclear import tde_fit
 
-        tde_fit.fit(df=self.baseline, ra=self.ra, dec=self.dec)
+        if len(self.baseline) > 0:
+            fitresult = tde_fit.fit(
+                df=self.baseline,
+                ra=self.ra,
+                dec=self.dec,
+                baseline_info=self.baseline_info,
+            )
+            meta.update_transient(self.ztfid, data={"tde_fit": fitresult})
+
+        else:
+            self.logger.info(
+                f"{self.ztfid}: No datapoints survived baseline correction, skipping plot"
+            )
 
     def plot_tde(self):
         """
         Plot the TDE fit result if present
         """
-        if "tde_fit_loose_bl" in self.meta.keys():
-            if self.meta["tde_fit_loose_bl"] == "failure":
-                return None
+        if "tde_fit" in self.meta.keys():
+            if self.meta["tde_fit"]["success"] == True:
+
+                if self.z is not None:
+                    if self.z_dist < 1:
+                        z = self.z
+                    else:
+                        z = None
+                else:
+                    z = None
+
+                plot_tde_fit(
+                    df=self.baseline,
+                    ztfid=self.ztfid,
+                    z=z,
+                    tns_name=self.tns_name,
+                    tde_params=self.meta["tde_fit"]["paramdict"],
+                )
+
             else:
-                tde_res = self.meta["tde_fit_loose_bl"]
-                print(tde_res)
+                return None
 
     def plot_irsa(
         self,

@@ -2,7 +2,7 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, warnings, time
+import os, warnings, time, logging
 import numpy as np
 import sncosmo  # type: ignore[import]
 import pandas as pd
@@ -13,6 +13,8 @@ import errno, os, backoff, copy
 import astropy.cosmology as cosmo
 from astropy.table import Table
 from typing import Literal, Sequence
+
+logger = logging.getLogger(__name__)
 
 
 class TDESource(sncosmo.Source):
@@ -215,10 +217,16 @@ class TDESource(sncosmo.Source):
         return model_flux
 
 
-def fit(df: pd.DataFrame, ra: float, dec: float):
+def fit(df: pd.DataFrame, ra: float, dec: float, baseline_info: dict):
     """
     Create TDE model.
     """
+    if "t_peak" in baseline_info.keys():
+        t_peak = baseline_info["t_peak"]
+
+    else:
+        logger.warn("No peak time in baseline correction, skipping plot")
+
     obsmjd = df.obsmjd.values
 
     ampl_column = "ampl_corr"
@@ -276,23 +284,87 @@ def fit(df: pd.DataFrame, ra: float, dec: float):
     fit_params = copy.deepcopy(sncosmo_model.param_names)
     fit_params.remove("mwebv")
     fit_params.remove("z")
+    fit_params.remove("mwr_v")
 
     default_param_vals = sncosmo_model.parameters
 
-    result, fitted_model = sncosmo.fit_lc(phot_tab, sncosmo_model, fit_params)
+    result, fitted_model = sncosmo.fit_lc(
+        phot_tab,
+        sncosmo_model,
+        fit_params,
+        bounds={
+            "t0": [t_peak - 15, t_peak + 15],
+            "temperature": [3.5, 5],
+            "risetime": [0, 10],
+            "decaytime": [0, 10],
+            "amplitude": [10, 50],
+        },
+    )
 
-    lol = sncosmo.plot_lc(phot_tab, model=fitted_model, errors=result.errors)
+    result["parameters"] = result["parameters"].tolist()
 
-    lol.savefig("test.png")
+    NoneType = type(None)
 
-    # bounds={"z": (0.3, 0.7)},  # parameters of model to vary
-    # bounds on parameters (if any)
+    if not isinstance(result["covariance"], NoneType):
+        result["covariance"] = result["covariance"].tolist()
+    else:
+        result["covariance"] = [None]
 
-    # # retry on with exponential backoff on "too many open files"
-    # self.process = backoff.on_exception(  # type: ignore[assignment]
-    #     backoff.expo,
-    #     OSError,
-    #     giveup=lambda exc: exc.errno != errno.EMFILE,
-    #     logger=self.logger,
-    #     max_time=300,
-    # )(self.process)
+    result.pop("data_mask")
+
+    # For filtering purposes we want a proper dict
+    result["paramdict"] = {}
+    for ix, pname in enumerate(result["param_names"]):
+        result["paramdict"][pname] = result["parameters"][ix]
+
+    result.pop("param_names")
+    result.pop("vparam_names")
+    result.pop("parameters")
+
+    plot = sncosmo.plot_lc(phot_tab, model=fitted_model, errors=result.errors)
+    plot.savefig("test.png")
+
+    return result
+
+    # testsource = TDESource(phase=phase, wave=wave)
+    # testmodel = sncosmo.Model(source=testsource)
+
+    # print(result.paramdict)
+
+    # testmodel = sncosmo.Model(
+    #     source=tde_source,
+    #     effects=[dust],
+    #     effect_names=["mw"],
+    #     effect_frames=["obs"],
+    # )
+
+    # testmodel.set(
+    #     z=0.0,
+    #     t0=58667.457413334996,
+    #     risetime=-9.353907955219253,
+    #     decaytime=1.4189022370025717,
+    #     temperature=3.9855297648445154,
+    #     amplitude=31.472917556951845,
+    #     mwebv=transient_mwebv,
+    # )
+
+    # lol1 = fitted_model.bandflux(
+    #     "ztfg",
+    #     [58668.0, t_peak - 10, t_peak - 5, t_peak, t_peak + 5],
+    #     zp=25,
+    #     zpsys="ab",
+    # )
+    # lol2 = testmodel.bandflux(
+    #     "ztfg",
+    #     [58668.0, t_peak - 10, t_peak - 5, t_peak, t_peak + 5],
+    #     zp=25,
+    #     zpsys="ab",
+    # )
+    # print(lol1)
+    # print(lol2)
+    # print(fitted_model)
+    # print(testmodel)
+
+    # lol = sncosmo.plot_lc(phot_tab, model=fitted_model, errors=result.errors)
+
+    # lol.savefig("test.png")

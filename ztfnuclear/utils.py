@@ -46,15 +46,19 @@ def is_tns_name(name) -> bool:
     return match
 
 
-def ztf_filterid_to_band(filterid: int, short: str = False):
+def ztf_filterid_to_band(filterid: int, short: bool = False, sncosmo: bool = False):
     """
     Get the band name associated with a ZTF filter id
     """
     bands = {1: "ZTF_g", 2: "ZTF_r", 3: "ZTF_i"}
+    sncosmo_bands = {1: "ztfg", 2: "ztfr", 3: "ztfi"}
+
     band = bands[filterid]
 
     if short:
         return band[4:]
+    elif sncosmo:
+        return sncosmo_bands[filterid]
     else:
         return band
 

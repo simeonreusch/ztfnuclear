@@ -607,7 +607,150 @@ def plot_lightcurve_irsa(
     plt.savefig(outfile)
 
 
-def plot_tde_fit(df: pd.DataFrame, ztfid: str, tde_params: dict):
+def plot_tde_fit(
+    df: pd.DataFrame,
+    ztfid: str,
+    tde_params: dict,
+    z: float = None,
+    tns_name: str = None,
+    snt_threshold=3.0,
+):
     """
     Plot the TDE fit result if present
     """
+    from ztfnuclear.tde_fit import TDESource
+    import sncosmo
+    from sfdmap import SFDMap  # type: ignore[import]
+
+    logger.debug("Plotting TDE fit lightcurve (in flux space)")
+
+    color_dict = {1: "green", 2: "red", 3: "orange"}
+    filtername_dict = {1: "ZTF g", 2: "ZTF r", 3: "ZTF i"}
+
+    plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "tde_fit")
+
+    if not os.path.exists(plot_dir):
+        os.makedirs(plot_dir)
+
+    figwidth = 8 / (GOLDEN_RATIO + 0.52)
+
+    fig, ax = plt.subplots(figsize=(8, figwidth), dpi=300)
+
+    # initialize the TDE source
+    phase = np.linspace(-50, 100, 10)
+    wave = np.linspace(1000, 10000, 5)
+    tde_source = TDESource(phase, wave, name="tde")
+
+    dust = sncosmo.models.CCM89Dust()
+    dustmap = SFDMap()
+
+    fitted_model = sncosmo.Model(
+        source=tde_source,
+        effects=[dust],
+        effect_names=["mw"],
+        effect_frames=["obs"],
+    )
+
+    fitted_model.update(tde_params)
+
+    for filterid in sorted(df["filterid"].unique()):
+        _df = df.query("filterid == @filterid")
+
+        bandname = utils.ztf_filterid_to_band(filterid, short=True)
+        bandname_sncosmo = utils.ztf_filterid_to_band(filterid, sncosmo=True)
+
+        ampl_column = "ampl_corr"
+        ampl_err_column = "ampl_err_corr"
+        if tns_name:
+            fig.suptitle(f"{ztfid} ({tns_name}) - baseline corrected", fontsize=14)
+        else:
+            fig.suptitle(f"{ztfid} - baseline corrected", fontsize=14)
+
+        obsmjd = _df.obsmjd.values
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=RuntimeWarning)
+            F0 = 10 ** (_df.magzp / 2.5)
+            F0_err = F0 / 2.5 * np.log(10) * _df.magzpunc
+            Fratio = _df[ampl_column] / F0
+            Fratio_err = np.sqrt(
+                (_df[ampl_err_column] / F0) ** 2
+                + (_df[ampl_column] * F0_err / F0**2) ** 2
+            )
+            abmag = -2.5 * np.log10(Fratio)
+            abmag_err = 2.5 / np.log(10) * Fratio_err / Fratio
+
+        if snt_threshold:
+            snt_limit = Fratio_err * snt_threshold
+            abmag = np.where(Fratio > snt_limit, abmag, np.nan)
+            abmag_err = np.where(Fratio > snt_limit, abmag_err, np.nan)
+            placeholder_obsmjd = obsmjd[np.argmin(abmag)]
+            obsmjd = np.where(abmag < 99, obsmjd, placeholder_obsmjd)
+
+        _df["flux_Jy"] = utils.abmag_to_flux_density(abmag)
+        _df["flux_Jy_err"] = utils.abmag_err_to_flux_density_err(
+            abmag=abmag, abmag_err=abmag_err
+        )
+
+        nu_fnu = utils.band_frequency(bandname) * _df["flux_Jy"] * 1e-23
+        nu_fnu_err = utils.band_frequency(bandname) * _df["flux_Jy_err"] * 1e-23
+
+        ax.set_yscale("log")
+
+        ms = 2
+
+        ax.errorbar(
+            _df.obsmjd,
+            nu_fnu,
+            nu_fnu_err,
+            fmt="o",
+            mec=color_dict[filterid],
+            ecolor=color_dict[filterid],
+            mfc="None",
+            alpha=0.7,
+            ms=ms,
+            elinewidth=0.5,
+            label=filtername_dict[filterid],
+        )
+
+        t0 = tde_params["t0"]
+        x_range = np.linspace(t0 - 50, t0 + 150, 200)
+        modelflux = (
+            fitted_model.bandflux(bandname_sncosmo, x_range, zp=25, zpsys="ab")
+            / 1e10
+            * 3631
+            * utils.band_frequency(bandname)
+            * 1e-23
+        )
+
+        ax.plot(x_range, modelflux, c=color_dict[filterid])
+
+    if z is not None:
+
+        from astropy.cosmology import FlatLambdaCDM
+
+        cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
+
+        lumidist = cosmo.luminosity_distance(z)
+        lumidist = lumidist.to(u.cm).value
+
+        lumi = lambda flux: flux * 4 * np.pi * lumidist**2
+        flux = lambda lumi: lumi / (4 * np.pi * lumidist**2)
+
+        ax2 = ax.secondary_yaxis("right", functions=(lumi, flux))
+
+        ax2.set_ylabel(r"$\nu$ L$_\nu$ (erg s$^{-1}$)", fontsize=12)
+
+    ax.set_xlabel("Date (MJD)", fontsize=12)
+    ax.set_ylabel(r"$\nu$ F$_\nu$ (erg s$^{-1}$ cm$^{-2}$)", fontsize=12)
+    ax.grid(which="both", b=True, axis="both", alpha=0.3)
+    plt.legend()
+
+    outfile = os.path.join(plot_dir, ztfid + ".png")
+
+    plt.tight_layout()
+
+    plt.savefig(outfile)
+    plt.close()
+
+    del fig, ax
