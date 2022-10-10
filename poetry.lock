@@ -591,6 +591,21 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
+name = "iminuit"
+version = "2.17.0"
+description = "Jupyter-friendly Python frontend for MINUIT2 in C++"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+numpy = "*"
+
+[package.extras]
+doc = ["ipykernel", "jupyter-client", "nbconvert", "nbformat", "nbsphinx", "sphinx (>=4.1,<5.2)", "sphinx-rtd-theme"]
+test = ["boost-histogram", "coverage", "cython", "ipywidgets", "jacobi", "jax", "jaxlib", "joblib", "matplotlib", "numba", "numba-stats", "pytest", "resample (>=1.5)", "scipy", "tabulate"]
+
+[[package]]
 name = "importlib-metadata"
 version = "4.12.0"
 description = "Read metadata from Python packages"
@@ -1520,7 +1535,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "07f05bce770e1c41c2d5b0ab62ecd3059693d07ea1d21c6b90cd114599d9b9ba"
+content-hash = "11cc727b7f07d25fd1d135effd2055981ab290b320a84e83dda102802365b249"
 
 [metadata.files]
 alabaster = [
@@ -1883,6 +1898,38 @@ imageio = [
 imagesize = [
     {file = "imagesize-1.4.1-py2.py3-none-any.whl", hash = "sha256:0d8d18d08f840c19d0ee7ca1fd82490fdc3729b7ac93f49870406ddde8ef8d8b"},
     {file = "imagesize-1.4.1.tar.gz", hash = "sha256:69150444affb9cb0d5cc5a92b3676f0b2fb7cd9ae39e947a5e11a36b4497cd4a"},
+]
+iminuit = [
+    {file = "iminuit-2.17.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:dbd9de74ba74f5ed9af9d81281b6321363cad38201feccbf88ab57af0b50e056"},
+    {file = "iminuit-2.17.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:69dfea25b1cf0ee12e8445714a00315269eacbd1e0428cc834fa5bf1d15ac446"},
+    {file = "iminuit-2.17.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e9a3647278ba706d35072845fa28b79a3d1db6338204cc74471ef14ff39b0a42"},
+    {file = "iminuit-2.17.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d27ad233760d7b3ec7b541506c03d5ee4f0190b81db81c4912cc13ab429410bc"},
+    {file = "iminuit-2.17.0-cp310-cp310-win_amd64.whl", hash = "sha256:d8b33d6b9129dba1499fdfd434234477a31fd11d6737e4378f1711ee2fb0d946"},
+    {file = "iminuit-2.17.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:a27f460c46837ebf65270ff5afadf742803ec234f46449f64cfe2e49a45d345d"},
+    {file = "iminuit-2.17.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1d154c29b9c647dc86be6201572beefd32bc56be3372b0906af13635819b25e1"},
+    {file = "iminuit-2.17.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fbc5f68ab007b18c0b6e689df86299f4dcd0f09507437d4fe80c5561dc87f096"},
+    {file = "iminuit-2.17.0-cp311-cp311-win_amd64.whl", hash = "sha256:d6747f00d3d85e76d2fbd26097ad13de2013750a80a1c110db01df31895f4a40"},
+    {file = "iminuit-2.17.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:9eb25746ac43c5e86126388b10858e8564f646b381496d2e5ae1495d127ae98a"},
+    {file = "iminuit-2.17.0-cp37-cp37m-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:bda4fa5bf21e1102f811f6e6af0e8e3c6741b817ec44b4874c5dc26eb26a306f"},
+    {file = "iminuit-2.17.0-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:dcab71cbb7784927375b86e22460cf705c3c2458efc62f99d29d5ef180eca8a3"},
+    {file = "iminuit-2.17.0-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2ffb5c145afc9076986fda2984c33f4097c8f2849336202b95f77f7a9a5fa0d2"},
+    {file = "iminuit-2.17.0-cp37-cp37m-win32.whl", hash = "sha256:1fea38c7e53a1882896c20a699d5f0c1f059b9112cabfff6ea58d851388526fa"},
+    {file = "iminuit-2.17.0-cp37-cp37m-win_amd64.whl", hash = "sha256:6aee2bc58e39ef8fa9b0b51c2481320a118b0f682237ab78e37e4cb148447763"},
+    {file = "iminuit-2.17.0-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:383155a6e29f63ef9946699b6bca3b538a4ab3a03aecd360302030dc774dfdbc"},
+    {file = "iminuit-2.17.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:24406e080460df3509aa76f04fc23f07a4d182b0aa1815e8124bdbf541fe770d"},
+    {file = "iminuit-2.17.0-cp38-cp38-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:e824472dd3e1a8aac351c18eb8da1517855a5c43b049acc8a5d5a26aae5ea35a"},
+    {file = "iminuit-2.17.0-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:105df5d93032a119a214c3dd579c2c9199232cb7caaad747672cbcedc64b430f"},
+    {file = "iminuit-2.17.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e7b2a7738cd9be0a15afa76aecc902e20cd7a9625db28bd77c8132614d7c6abf"},
+    {file = "iminuit-2.17.0-cp38-cp38-win32.whl", hash = "sha256:03a43932e7b59766c575c61f2d5a9da8d25f4d74f71142cf319ded5408426bec"},
+    {file = "iminuit-2.17.0-cp38-cp38-win_amd64.whl", hash = "sha256:359d75e20fbffa8e03d65ffd8797808661dbc52219aade7dc7f097b5a7d57fe8"},
+    {file = "iminuit-2.17.0-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:46b5c068ada4e2e08be1139a20115c51b73374e41dc2bad7add0fcaef0afc0be"},
+    {file = "iminuit-2.17.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:e94b0a3f03f31af18f8c6f165037575c52f0fc011facd55057e09e8918b5f6ac"},
+    {file = "iminuit-2.17.0-cp39-cp39-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:9a5b8ec2e00ce1d4d2aaa0f131693c80a27c7c14bed32f184520882062253911"},
+    {file = "iminuit-2.17.0-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:ced5326cba5c38a484d4f4eed086147c9bd6abcd228c456bb06d4c46564316a4"},
+    {file = "iminuit-2.17.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6966d5c6af3b351a7330567e0faae162289cde824118cb3ac02efc38dce0a240"},
+    {file = "iminuit-2.17.0-cp39-cp39-win32.whl", hash = "sha256:5ff863bbe4b82a6b6d69be3df7065e84c4197f23f2a121114a740f1cbef81676"},
+    {file = "iminuit-2.17.0-cp39-cp39-win_amd64.whl", hash = "sha256:9e88bf32b882abd4b5a67c8bfb09fc5a0388043b2d9ea39d401b8d30e32c6b6c"},
+    {file = "iminuit-2.17.0.tar.gz", hash = "sha256:75f4a8a2bad21fda7b6bd42df7ca04120fb24636ebf9b566d259b26f2044b1d0"},
 ]
 importlib-metadata = [
     {file = "importlib_metadata-4.12.0-py3-none-any.whl", hash = "sha256:7401a975809ea1fdc658c3aa4f78cc2195a0e019c5cbc4c06122884e9ae80c23"},
