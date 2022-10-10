@@ -194,12 +194,13 @@ def transient_page(ztfid):
 
     base64_string = base64.b64encode(plot_data.read()).decode("ascii")
 
-    if not os.path.isfile(plot_file):
-        t.plot_irsa(plot_png=True, wide=True, axlims=axlims)
-
     plot_file_irsa = os.path.join(
         base_dir, "plots", "lightcurves_irsa", "flux", f"{ztfid}.png"
     )
+
+    if not os.path.isfile(plot_file_irsa):
+        axlims = t.plot(plot_png=True, wide=True)
+        t.plot_irsa(plot_png=True, wide=True, axlims=axlims)
 
     if os.path.isfile(plot_file_irsa):
 
@@ -258,12 +259,13 @@ def flaring_page(ztfid):
 
     base64_string = base64.b64encode(plot_data.read()).decode("ascii")
 
-    if not os.path.isfile(plot_file):
-        t.plot_irsa(plot_png=True, wide=True, axlims=axlims)
-
     plot_file_irsa = os.path.join(
         base_dir, "plots", "lightcurves_irsa", "flux", f"{ztfid}.png"
     )
+
+    if not os.path.isfile(plot_file_irsa):
+        axlims = t.plot(plot_png=True, wide=True)
+        t.plot_irsa(plot_png=True, wide=True, axlims=axlims)
 
     if os.path.isfile(plot_file_irsa):
 
