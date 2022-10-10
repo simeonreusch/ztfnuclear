@@ -605,3 +605,9 @@ def plot_lightcurve_irsa(
         outfile = os.path.join(plot_dir, ztfid + ".pdf")
 
     plt.savefig(outfile)
+
+
+def plot_tde_fit(df: pd.DataFrame, ztfid: str, tde_params: dict):
+    """
+    Plot the TDE fit result if present
+    """

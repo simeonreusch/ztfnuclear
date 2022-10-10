@@ -914,6 +914,25 @@ class Transient(object):
 
         return axlims
 
+    def fit_tde(self):
+        """
+        Re-fit the transient TDE lightcurve
+        """
+        from ztfnuclear import tde_fit
+
+        tde_fit.fit(df=self.baseline, ra=self.ra, dec=self.dec)
+
+    def plot_tde(self):
+        """
+        Plot the TDE fit result if present
+        """
+        if "tde_fit_loose_bl" in self.meta.keys():
+            if self.meta["tde_fit_loose_bl"] == "failure":
+                return None
+            else:
+                tde_res = self.meta["tde_fit_loose_bl"]
+                print(tde_res)
+
     def plot_irsa(
         self,
         wide: bool = False,
