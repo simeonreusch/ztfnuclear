@@ -653,6 +653,9 @@ def plot_tde_fit(
 
     fitted_model.update(tde_params)
 
+    ylim_upper = 0
+    ylim_lower = 1
+
     for filterid in sorted(df["filterid"].unique()):
         _df = df.query("filterid == @filterid")
 
@@ -699,6 +702,15 @@ def plot_tde_fit(
 
         ms = 2
 
+        max_nufnu = np.max(nu_fnu)
+        min_nufnu = np.min(nu_fnu)
+
+        if max_nufnu > ylim_upper:
+            ylim_upper = max_nufnu
+
+        if min_nufnu < ylim_lower:
+            ylim_lower = min_nufnu
+
         ax.errorbar(
             _df.obsmjd,
             nu_fnu,
@@ -707,14 +719,14 @@ def plot_tde_fit(
             mec=color_dict[filterid],
             ecolor=color_dict[filterid],
             mfc="None",
-            alpha=0.7,
+            alpha=0.25,
             ms=ms,
             elinewidth=0.5,
             label=filtername_dict[filterid],
         )
 
         t0 = tde_params["t0"]
-        x_range = np.linspace(t0 - 50, t0 + 150, 200)
+        x_range = np.linspace(t0 - 100, t0 + 350, 200)
         modelflux = (
             fitted_model.bandflux(bandname_sncosmo, x_range, zp=25, zpsys="ab")
             / 1e10
@@ -745,6 +757,11 @@ def plot_tde_fit(
     ax.set_ylabel(r"$\nu$ F$_\nu$ (erg s$^{-1}$ cm$^{-2}$)", fontsize=12)
     ax.grid(which="both", b=True, axis="both", alpha=0.3)
     plt.legend()
+
+    ylim_upper = ylim_upper + ylim_upper * 0.2
+    ylim_lower = ylim_lower - ylim_lower * 0.2
+
+    ax.set_ylim([ylim_lower, ylim_upper])
 
     outfile = os.path.join(plot_dir, ztfid + ".png")
 

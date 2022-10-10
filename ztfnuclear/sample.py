@@ -538,7 +538,7 @@ class Transient(object):
         """
         Get the SALT fit reduced chisq
         """
-        if "tde_fit_loose_bl" in self.meta.keys():
+        if "salt_loose_bl" in self.meta.keys():
             if self.meta["salt_loose_bl"] != "failure":
                 chisq = self.meta["salt_loose_bl"]["chisq"]
                 ndof = self.meta["salt_loose_bl"]["ndof"]
@@ -571,7 +571,7 @@ class Transient(object):
         else:
             return None
 
-    @cached_property
+    @property
     def meta(self) -> Optional[dict]:
         """
         Read all metadata for the transient from the database
@@ -696,7 +696,7 @@ class Transient(object):
         Delete a comment matching to a timecode
         """
         all_comments = self.get_comments()
-        print(all_comments)
+
         if timestamp in all_comments.keys():
             del all_comments[timestamp]
 

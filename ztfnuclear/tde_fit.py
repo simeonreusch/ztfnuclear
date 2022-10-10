@@ -159,7 +159,6 @@ class TDESource(sncosmo.Source):
         b2 = 10**decaytime  # decay rate
         a2 = a1 * self._gauss(0, b1)
 
-        # print(phases)
         phases_rise = phases[(phases <= 0)]
         phases_decay = phases[(phases > 0)]
 
@@ -194,7 +193,6 @@ class TDESource(sncosmo.Source):
         temp = self._parameters[2]
 
         if np.ndim(phase) == 0:
-            # phase_iter = [phase]
             phase_iter = np.asarray(phase)
         else:
             phase_iter = phase
@@ -288,83 +286,43 @@ def fit(df: pd.DataFrame, ra: float, dec: float, baseline_info: dict):
 
     default_param_vals = sncosmo_model.parameters
 
-    result, fitted_model = sncosmo.fit_lc(
-        phot_tab,
-        sncosmo_model,
-        fit_params,
-        bounds={
-            "t0": [t_peak - 15, t_peak + 15],
-            "temperature": [3.5, 5],
-            "risetime": [0, 10],
-            "decaytime": [0, 10],
-            "amplitude": [10, 50],
-        },
-    )
+    try:
+        result, fitted_model = sncosmo.fit_lc(
+            phot_tab,
+            sncosmo_model,
+            fit_params,
+            bounds={
+                "t0": [t_peak - 30, t_peak + 30],
+                "temperature": [3.5, 5],
+                "risetime": [0, 10],
+                "decaytime": [0, 10],
+                "amplitude": [10, 50],
+            },
+        )
 
-    result["parameters"] = result["parameters"].tolist()
+        result["parameters"] = result["parameters"].tolist()
 
-    NoneType = type(None)
+        NoneType = type(None)
 
-    if not isinstance(result["covariance"], NoneType):
-        result["covariance"] = result["covariance"].tolist()
-    else:
-        result["covariance"] = [None]
+        if not isinstance(result["covariance"], NoneType):
+            result["covariance"] = result["covariance"].tolist()
+        else:
+            result["covariance"] = [None]
 
-    result.pop("data_mask")
+        result.pop("data_mask")
 
-    # For filtering purposes we want a proper dict
-    result["paramdict"] = {}
-    for ix, pname in enumerate(result["param_names"]):
-        result["paramdict"][pname] = result["parameters"][ix]
+        result["paramdict"] = {}
+        for ix, pname in enumerate(result["param_names"]):
+            result["paramdict"][pname] = result["parameters"][ix]
 
-    result.pop("param_names")
-    result.pop("vparam_names")
-    result.pop("parameters")
+        result.pop("param_names")
+        result.pop("vparam_names")
+        result.pop("parameters")
 
-    plot = sncosmo.plot_lc(phot_tab, model=fitted_model, errors=result.errors)
-    plot.savefig("test.png")
+        fig = sncosmo.plot_lc(data=phot_tab, model=fitted_model, zpsys="ab", zp=25)
+        fig.savefig("test.png")
 
-    return result
+        return result
 
-    # testsource = TDESource(phase=phase, wave=wave)
-    # testmodel = sncosmo.Model(source=testsource)
-
-    # print(result.paramdict)
-
-    # testmodel = sncosmo.Model(
-    #     source=tde_source,
-    #     effects=[dust],
-    #     effect_names=["mw"],
-    #     effect_frames=["obs"],
-    # )
-
-    # testmodel.set(
-    #     z=0.0,
-    #     t0=58667.457413334996,
-    #     risetime=-9.353907955219253,
-    #     decaytime=1.4189022370025717,
-    #     temperature=3.9855297648445154,
-    #     amplitude=31.472917556951845,
-    #     mwebv=transient_mwebv,
-    # )
-
-    # lol1 = fitted_model.bandflux(
-    #     "ztfg",
-    #     [58668.0, t_peak - 10, t_peak - 5, t_peak, t_peak + 5],
-    #     zp=25,
-    #     zpsys="ab",
-    # )
-    # lol2 = testmodel.bandflux(
-    #     "ztfg",
-    #     [58668.0, t_peak - 10, t_peak - 5, t_peak, t_peak + 5],
-    #     zp=25,
-    #     zpsys="ab",
-    # )
-    # print(lol1)
-    # print(lol2)
-    # print(fitted_model)
-    # print(testmodel)
-
-    # lol = sncosmo.plot_lc(phot_tab, model=fitted_model, errors=result.errors)
-
-    # lol.savefig("test.png")
+    except:
+        return {"success": False}
