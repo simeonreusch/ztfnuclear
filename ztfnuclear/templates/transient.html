@@ -194,9 +194,58 @@
   </div">
 
   {% if plot_irsa == True %}
+  <hr>
+  <h3 style="color:#787878;">
+    IRSA non-difference photometry
+  </h5>
   <br>
   <div class="row justify-content-md-center">
     <img src='data:image/png;base64,{{ lcplot_irsa }}' />
+  </div">
+  {% endif %}
+
+  {% if plot_tde_fit == True %}
+  <hr>
+  <h3 style="color:#787878;">
+    TDE fit result
+  </h5>
+  <br>
+  <div class="container">
+      <div class="row">
+        <div class="col">
+            <div class="row">
+                <h5 style="color:#787878;">
+                   reduced chisq: {{ "{:,.3f}".format(tde_fitres['chisq'] / tde_fitres['ndof']) }}
+                </h5>
+            </div>
+            <div class="row">
+                <h5 style="color:#787878;">
+                   t0: {{ "{:,.2f}".format(tde_fitres['paramdict']['t0']) }} (MJD)
+                </h5>
+            </div>
+            <div class="row">
+                <h5 style="color:#787878;">
+                   risetime: {{ "{:,.3f}".format(tde_fitres['paramdict']['risetime']) }}
+                </h5>
+            </div>
+        </div>
+        <div class="col">
+            <div class="row">
+                <h5 style="color:#787878;">
+                   decaytime: {{ "{:,.3f}".format(tde_fitres['paramdict']['decaytime']) }}
+                </h5>
+            </div>
+            <div class="row">
+                <h5 style="color:#787878;">
+                   temperature: {{ "{:,.3f}".format(tde_fitres['paramdict']['temperature']) }}
+                </h5>
+            </div>
+        </div>
+      </div>
+  </div>
+  <br>
+  <div class="row justify-content-md-center">
+    <img src='data:image/png;base64,{{ lcplot_tde_fit }}' />
   </div">
   {% endif %}
 

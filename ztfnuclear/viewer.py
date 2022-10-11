@@ -213,6 +213,26 @@ def transient_page(ztfid):
         plot_irsa = False
         base64_string_irsa = None
 
+    plot_file_tde_fit = os.path.join(
+        base_dir, "plots", "lightcurves", "tde_fit", f"{ztfid}.png"
+    )
+
+    # if not os.path.isfile(plot_file_tde_fit):
+    t.plot_tde()
+
+    if os.path.isfile(plot_file_tde_fit):
+        plot_data_tde_fit = open(plot_file_tde_fit, "rb")
+        base64_string_tde_fit = base64.b64encode(plot_data_tde_fit.read()).decode(
+            "ascii"
+        )
+        plot_tde_fit = True
+        tde_fitres = t.meta["tde_fit"]
+        print(tde_fitres)
+    else:
+        plot_tde_fit = False
+        base64_string_tde_fit = None
+        tde_fitres = None
+
     s = NuclearSample()
 
     previous_transient = s.previous_transient(ztfid)
@@ -227,6 +247,9 @@ def transient_page(ztfid):
         lcplot=base64_string,
         plot_irsa=plot_irsa,
         lcplot_irsa=base64_string_irsa,
+        plot_tde_fit=plot_tde_fit,
+        lcplot_tde_fit=base64_string_tde_fit,
+        tde_fitres=tde_fitres,
         previous_transient=previous_transient,
         next_transient=next_transient,
         flaring=False,
@@ -278,6 +301,26 @@ def flaring_page(ztfid):
         plot_irsa = False
         base64_string_irsa = None
 
+    plot_file_tde_fit = os.path.join(
+        base_dir, "plots", "lightcurves", "tde_fit", f"{ztfid}.png"
+    )
+
+    # if not os.path.isfile(plot_file_tde_fit):
+    t.plot_tde()
+
+    if os.path.isfile(plot_file_tde_fit):
+        plot_data_tde_fit = open(plot_file_tde_fit, "rb")
+        base64_string_tde_fit = base64.b64encode(plot_data_tde_fit.read()).decode(
+            "ascii"
+        )
+        plot_tde_fit = True
+        tde_fitres = t.meta["tde_fit"]
+        print(tde_fitres)
+    else:
+        plot_tde_fit = False
+        base64_string_tde_fit = None
+        tde_fitres = None
+
     s = NuclearSample()
 
     previous_transient = s.previous_transient(ztfid, flaring=True)
@@ -292,6 +335,9 @@ def flaring_page(ztfid):
         lcplot=base64_string,
         plot_irsa=plot_irsa,
         lcplot_irsa=base64_string_irsa,
+        plot_tde_fit=plot_tde_fit,
+        lcplot_tde_fit=base64_string_tde_fit,
+        tde_fitres=tde_fitres,
         previous_transient=previous_transient,
         next_transient=next_transient,
         flaring=True,

@@ -665,9 +665,9 @@ def plot_tde_fit(
         ampl_column = "ampl_corr"
         ampl_err_column = "ampl_err_corr"
         if tns_name:
-            fig.suptitle(f"{ztfid} ({tns_name}) - baseline corrected", fontsize=14)
+            fig.suptitle(f"{ztfid} ({tns_name}) - TDE-fit", fontsize=14)
         else:
-            fig.suptitle(f"{ztfid} - baseline corrected", fontsize=14)
+            fig.suptitle(f"{ztfid} - TDE-fit", fontsize=14)
 
         obsmjd = _df.obsmjd.values
 
