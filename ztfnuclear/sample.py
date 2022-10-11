@@ -525,11 +525,12 @@ class Transient(object):
         Get the TDE fit reduced chisq
         """
         if "tde_fit" in self.meta.keys():
-            if self.meta["tde_fit"] != "failure":
-                chisq = self.meta["tde_fit"]["chisq"]
-                ndof = self.meta["tde_fit"]["ndof"]
-                red_chisq = chisq / ndof
-                return red_chisq
+            if "success" in self.meta["tde_fit"].keys():
+                if self.meta["tde_fit"]["success"] != False:
+                    chisq = self.meta["tde_fit"]["chisq"]
+                    ndof = self.meta["tde_fit"]["ndof"]
+                    red_chisq = chisq / ndof
+                    return red_chisq
         else:
             return None
 
