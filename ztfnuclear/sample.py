@@ -934,7 +934,7 @@ class Transient(object):
 
         return axlims
 
-    def fit_tde(self):
+    def fit_tde(self, powerlaw=False, plateau=False):
         """
         Re-fit the transient TDE lightcurve
         """
@@ -946,6 +946,8 @@ class Transient(object):
                 ra=self.ra,
                 dec=self.dec,
                 baseline_info=self.baseline_info,
+                powerlaw=powerlaw,
+                plateau=plateau,
             )
             meta.update_transient(self.ztfid, data={"tde_fit": fitresult})
 

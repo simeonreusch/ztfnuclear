@@ -83,7 +83,7 @@ def baseline(
     primary_grid_only: bool = False,
     min_det_per_field_band: int = 10,
     zp_max_deviation_from_median: float = 0.5,
-    reference_days_before_peak: Optional[float] = 100,
+    reference_days_before_peak: Optional[float] = 50,
     pivot_zeropoint: float = 25,
     plot: bool = True,
     plot_suffix: str = "pdf",

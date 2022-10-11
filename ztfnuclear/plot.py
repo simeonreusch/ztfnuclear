@@ -618,7 +618,7 @@ def plot_tde_fit(
     """
     Plot the TDE fit result if present
     """
-    from ztfnuclear.tde_fit import TDESource
+    from ztfnuclear.tde_fit import TDESource_exp
     import sncosmo
     from sfdmap import SFDMap  # type: ignore[import]
 
@@ -639,7 +639,7 @@ def plot_tde_fit(
     # initialize the TDE source
     phase = np.linspace(-50, 100, 10)
     wave = np.linspace(1000, 10000, 5)
-    tde_source = TDESource(phase, wave, name="tde")
+    tde_source = TDESource_exp(phase, wave, name="tde")
 
     dust = sncosmo.models.CCM89Dust()
     dustmap = SFDMap()
