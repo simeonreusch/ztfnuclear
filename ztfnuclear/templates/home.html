@@ -28,10 +28,15 @@
 
 <br>
 
-   
-
+{% if user_rate_percentage != None %}
+{% if user_rate_percentage >= 100 %}
+<div class="d-grid gap-2 col-4 mx-auto">
+  <a class="btn btn-outline-secondary btn-lg" aria-current="page" href="{{ url_for('flaring_transient_random') }}">💥 Random IR flaring transient</a>
+</div>
+{% else %}
 <div class="d-grid gap-2 col-4 mx-auto">
   <a class="btn btn-outline-secondary btn-lg" aria-current="page" href="{{ url_for('flaring_transient_random') }}">💥 Random unrated IR flaring transient</a>
 </div>
-
+{% endif %}
+{% endif %}
 {% endblock %}
