@@ -513,21 +513,34 @@ class TDESource_pl_plateau(sncosmo.Source):
         ]
         phases_decay2 = phases_decay_full[phases_decay_full >= plateau_end]
 
+        print(len(phases))
+        print("--------------")
+
+        print(len(phases_rise))
+        print(len(phases_decay1))
+        print(len(phases_plateau))
+        print(len(phases_decay2))
+        print("-----------------")
+
         plateau_length = plateau_end - plateau_start
 
         vals_rise = a1 * self._gauss(phases_rise, b1)
         vals_decay1 = a2 * ((phases_decay1 + normalization) / normalization) ** alpha
-        print(vals_decay1)
-        vals_pleateau = [float(vals_decay1[-1:])] * len(phases_plateau)
+
+        if len(phases_plateau) > 0:
+            vals_plateau = [float(vals_decay1[-1:])] * len(phases_plateau)
+        else:
+            vals_plateau = []
+
+        print(vals_plateau)
+
         vals_decay2 = (
             a2
             * (((phases_decay2 - plateau_length) + normalization) / normalization)
             ** alpha
         )
 
-        returnvals = np.concatenate(
-            (vals_rise, vals_decay1, vals_pleateau, vals_decay2)
-        )
+        returnvals = np.concatenate((vals_rise, vals_decay1, vals_plateau, vals_decay2))
 
         return returnvals
 

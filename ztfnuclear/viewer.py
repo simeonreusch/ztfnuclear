@@ -169,7 +169,7 @@ def register():
     return render_template("register.html", title="Register", form=form)
 
 
-@app.route("/transients/<string:ztfid>")
+@app.route("/transient/<string:ztfid>")
 @login_required
 def transient_page(ztfid):
     """
@@ -372,7 +372,7 @@ def rate_transient(ztfid):
         #     origin = request.form["pinned"]
         #     # do stuff
 
-        if "transients" in origin:
+        if "transient" in origin:
             return redirect(url_for("transient_random"))
         elif "flaring" in origin:
             return redirect(url_for("flaring_transient_random"))
@@ -417,8 +417,17 @@ def transient_list():
     """
     Show a list of all the transients
     """
+
+    def pickled_generator(transient_list):
+        for t in transient_list:
+            yield t
+
+    from tqdm import tqdm
+    import pickle
+
     s = NuclearSample()
-    transients = s.get_transients()
+    transients = s.get_transients_pickled()
+
     return render_template("transient_list.html", transients=transients)
 
 

@@ -17,6 +17,9 @@ if os.getenv("ZTFDATA"):
 
     _SOURCEDIR = os.path.dirname(os.path.realpath(__file__))
     LOCALSOURCE = os.path.join(str(os.getenv("ZTFDATA")), "nuclear_sample")
+    LOCALSOURCE_pickle = os.path.join(
+        str(os.getenv("ZTFDATA")), "nuclear_sample", "FINAL_SAMPLE", "overview.pkl"
+    )
     LOCALSOURCE_dfs = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "data")
     LOCALSOURCE_irsa = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "irsa")
     LOCALSOURCE_fitres = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "fitres")

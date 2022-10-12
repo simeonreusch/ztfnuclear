@@ -2,7 +2,7 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, datetime, base64, time
+import os, logging, datetime, base64, time, pickle
 
 from functools import cached_property
 from typing import Optional, List
@@ -292,6 +292,19 @@ class NuclearSample(object):
                 t = Transient(ztfid)
                 yield t
 
+    def get_transients_pickled(self):
+        """
+        Read the pickled transient overview and return from that (for webpage performance reasons)
+        """
+        if not os.path.isfile(io.LOCALSOURCE_pickle):
+            raise FileError("You have to run self.generate_overview_pickled first")
+
+        with open(io.LOCALSOURCE_pickle, "rb") as f:
+            transients = pickle.load(f)
+
+        for t in transients:
+            yield t
+
     def get_flaring_transients(self, n: Optional[int] = None):
         """
         Loop over all infrared flaring transients in sample and return a Transient object
@@ -412,6 +425,28 @@ class NuclearSample(object):
                         final_ztfids.append(ztfid)
 
         self.info_db.update(data={"flaring": {"ztfids": final_ztfids}})
+
+    def generate_overview_pickled(self):
+        """
+        Pickle all transients with certain properties (to make webpage fast)
+        """
+        transients = self.get_transients()
+
+        self.logger.info("Pickling the transient overview")
+
+        transients_pickled = []
+        for t in tqdm(transients, total=len(self.ztfids)):
+            t.thumbnail
+            t.z
+            t.z_dist
+            t.tns_class
+            t.get_crossmatch_info(exclude=["WISE", "TNS"])
+            t.tde_res
+            t.salt_res
+            transients_pickled.append(t)
+
+        with open(io.LOCALSOURCE_pickle, "wb") as f:
+            pickle.dump(transients_pickled, f)
 
 
 class Transient(object):
