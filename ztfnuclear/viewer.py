@@ -368,10 +368,6 @@ def rate_transient(ztfid):
 
             t.set_rating(rating, username=username)
 
-        # elif input_key == "pinned":
-        #     origin = request.form["pinned"]
-        #     # do stuff
-
         if "transient" in origin:
             return redirect(url_for("transient_random"))
         elif "flaring" in origin:
@@ -417,14 +413,6 @@ def transient_list():
     """
     Show a list of all the transients
     """
-
-    def pickled_generator(transient_list):
-        for t in transient_list:
-            yield t
-
-    from tqdm import tqdm
-    import pickle
-
     s = NuclearSample()
     transients = s.get_transients_pickled()
 
@@ -439,7 +427,7 @@ def flaring_transient_list():
     """
     s = NuclearSample()
 
-    flaring_transients = s.get_flaring_transients()
+    flaring_transients = s.get_transients_pickled(flaring_only=True)
     return render_template("transient_list.html", transients=flaring_transients)
 
 

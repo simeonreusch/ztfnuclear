@@ -20,6 +20,12 @@ if os.getenv("ZTFDATA"):
     LOCALSOURCE_pickle = os.path.join(
         str(os.getenv("ZTFDATA")), "nuclear_sample", "FINAL_SAMPLE", "overview.pkl"
     )
+    LOCALSOURCE_pickle_flaring = os.path.join(
+        str(os.getenv("ZTFDATA")),
+        "nuclear_sample",
+        "FINAL_SAMPLE",
+        "overview_flaring.pkl",
+    )
     LOCALSOURCE_dfs = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "data")
     LOCALSOURCE_irsa = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "irsa")
     LOCALSOURCE_fitres = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "fitres")

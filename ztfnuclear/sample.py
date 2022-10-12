@@ -292,15 +292,27 @@ class NuclearSample(object):
                 t = Transient(ztfid)
                 yield t
 
-    def get_transients_pickled(self):
+    def get_transients_pickled(self, flaring_only: bool = False):
         """
         Read the pickled transient overview and return from that (for webpage performance reasons)
         """
-        if not os.path.isfile(io.LOCALSOURCE_pickle):
-            raise FileError("You have to run self.generate_overview_pickled first")
+        if flaring_only:
+            if not os.path.isfile(io.LOCALSOURCE_pickle_flaring):
+                raise FileExistsError(
+                    "You have to run self.generate_overview_pickled first"
+                )
+        else:
+            if not os.path.isfile(io.LOCALSOURCE_pickle):
+                raise FileExistsError(
+                    "You have to run self.generate_overview_pickled first"
+                )
 
-        with open(io.LOCALSOURCE_pickle, "rb") as f:
-            transients = pickle.load(f)
+        if flaring_only:
+            with open(io.LOCALSOURCE_pickle_flaring, "rb") as f:
+                transients = pickle.load(f)
+        else:
+            with open(io.LOCALSOURCE_pickle, "rb") as f:
+                transients = pickle.load(f)
 
         for t in transients:
             yield t
@@ -426,16 +438,29 @@ class NuclearSample(object):
 
         self.info_db.update(data={"flaring": {"ztfids": final_ztfids}})
 
-    def generate_overview_pickled(self):
+    def generate_overview_pickled(self, flaring_only: bool = False):
         """
         Pickle all transients with certain properties (to make webpage fast)
         """
-        transients = self.get_transients()
+        if flaring_only:
+            transients = self.get_flaring_transients()
+        else:
+            transients = self.get_transients()
 
-        self.logger.info("Pickling the transient overview")
+        if flaring_only:
+            self.logger.info("Pickling the flaring transient overview")
+        else:
+            self.logger.info("Pickling the transient overview")
 
         transients_pickled = []
-        for t in tqdm(transients, total=len(self.ztfids)):
+
+        if flaring_only:
+            flaring_ztfids = self.info_db.read()["flaring"]["ztfids"]
+            length = len(flaring_ztfids)
+        else:
+            length = len(self.ztfid)
+
+        for t in tqdm(transients, total=length):
             t.thumbnail
             t.meta
             t.fritz_class
@@ -447,8 +472,12 @@ class NuclearSample(object):
             t.salt_res
             transients_pickled.append(t)
 
-        with open(io.LOCALSOURCE_pickle, "wb") as f:
-            pickle.dump(transients_pickled, f)
+        if flaring_only:
+            with open(io.LOCALSOURCE_pickle_flaring, "wb") as f:
+                pickle.dump(transients_pickled, f)
+        else:
+            with open(io.LOCALSOURCE_pickle, "wb") as f:
+                pickle.dump(transients_pickled, f)
 
 
 class Transient(object):

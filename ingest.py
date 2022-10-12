@@ -17,7 +17,10 @@ logging.getLogger("ztfnuclear.sample").setLevel(logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-sample = NuclearSample()
+s = NuclearSample()
 wise = WISE()
-# sample.crossmatch(startindex=0)
-sample.fritz(startindex=0)
+s.crossmatch(startindex=0)
+s.fritz(startindex=0)
+
+s.generate_overview_pickled()
+s.generate_overview_pickled(flaring_only=True)
