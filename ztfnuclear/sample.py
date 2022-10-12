@@ -649,6 +649,18 @@ class Transient(object):
         else:
             return None
 
+    @cached_property
+    def z_precision(self) -> Optional[float]:
+        """
+        Get the estimated redshift precision based on Ampel T2DigestRedshift group
+        """
+        if "ampel_z" in self.meta.keys():
+            if "z_precision" in self.meta["ampel_z"].keys():
+                z_precision = self.meta["ampel_z"]["z_precision"]
+                return z_precision
+        else:
+            return None
+
     @property
     def meta(self) -> Optional[dict]:
         """
