@@ -437,10 +437,12 @@ class NuclearSample(object):
         transients_pickled = []
         for t in tqdm(transients, total=len(self.ztfids)):
             t.thumbnail
+            t.meta
+            t.fritz_class
             t.z
             t.z_dist
             t.tns_class
-            t.get_crossmatch_info(exclude=["WISE", "TNS"])
+            t.crossmatch_info
             t.tde_res
             t.salt_res
             transients_pickled.append(t)
@@ -551,6 +553,17 @@ class Transient(object):
             if "TNS" in self.meta["crossmatch"].keys():
                 if "type" in self.meta["crossmatch"]["TNS"].keys():
                     return self.meta["crossmatch"]["TNS"]["type"]
+        else:
+            return None
+
+    @cached_property
+    def fritz_class(self) -> Optional[str]:
+        """
+        Get the Fritz classification if one is present in metadata
+        """
+        if "fritz_class" in self.meta.keys():
+            fritz_class = self.meta["fritz_class"]
+            return fritz_class
         else:
             return None
 
@@ -774,7 +787,35 @@ class Transient(object):
 
         meta.update_transient(self.ztfid, data={"comments": comments_dict})
 
-    def get_crossmatch_info(self, exclude: list = ["WISE"]) -> Optional[str]:
+    @cached_property
+    def crossmatch_info(self) -> Optional[str]:
+        """
+        Read the crossmatch results from the DB and return a dict with found values
+        """
+        exclude_list = ["WISE", "TNS"]
+
+        xmatch = self.meta["crossmatch"]
+        message = ""
+        for key in xmatch.keys():
+            subdict = xmatch[key]
+            if len(subdict) > 0:
+                if (
+                    subdict is not None
+                    and key not in exclude_list
+                    and isinstance(subdict, dict)
+                ):
+                    message += key
+                    if "type" in subdict.keys():
+                        if key == "TNS" and subdict["type"] is not None:
+                            message += f" {subdict['type']}"
+                    if "dist" in subdict.keys():
+                        message += f" {subdict['dist']:.5f}  "
+        if len(message) == 0:
+            return None
+        else:
+            return message
+
+    def get_crossmatch_info(self, exclude: list = []) -> Optional[str]:
         """
         Read the crossmatch results from the DB and return a dict with found values
         """

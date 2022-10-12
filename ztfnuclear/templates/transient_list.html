@@ -43,15 +43,15 @@
                 {% else %}
                     <td>{{ transient.tns_class }}</td>
                 {% endif %}
-                {% if 'fritz_class' in transient.meta.keys() %}
-                    <td> {{ transient.meta['fritz_class'] }} </td>
-                {% else %}
+                {% if transient.fritz_class == None %}
                     <td> --- </td>
+                {% else %}
+                    <td>{{ transient.fritz_class }}</td>
                 {% endif %}
-                {% if transient.get_crossmatch_info(exclude=['WISE','TNS']) != None %}
-                    <td> {{ transient.get_crossmatch_info(exclude=['WISE','TNS']) }} </td>
-                {% else %}
+                {% if transient.crossmatch_info == None %}
                     <td> --- </td>
+                {% else %}
+                    <td>{{ transient.crossmatch_info }}</td>
                 {% endif %}
                 {% if transient.tde_res == None %}
                     <td> --- </td>
