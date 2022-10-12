@@ -844,7 +844,7 @@ class Transient(object):
         else:
             return message
 
-    def get_crossmatch_info(self, exclude: list = []) -> Optional[str]:
+    def get_crossmatch_info(self, exclude: list = ["WISE"]) -> Optional[str]:
         """
         Read the crossmatch results from the DB and return a dict with found values
         """
