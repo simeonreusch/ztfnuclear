@@ -53,10 +53,10 @@
                 {% else %}
                     <td>{{ transient.crossmatch_info }}</td>
                 {% endif %}
-                {% if transient.tde_res == None %}
+                {% if transient.tde_res_exp == None %}
                     <td> --- </td>
                 {% else %}
-                    <td>{{ "{:,.3f}".format(transient.tde_res) }}</td>
+                    <td>{{ "{:,.3f}".format(transient.tde_res_exp) }}</td>
                 {% endif %}
                 {% if transient.salt_res == None %}
                     <td> --- </td>

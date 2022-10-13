@@ -676,24 +676,38 @@ def fit(
 
     default_param_vals = sncosmo_model.parameters
 
-    # try:
-    if powerlaw:
-        if plateau:
-            result, fitted_model = sncosmo.fit_lc(
-                phot_tab,
-                sncosmo_model,
-                fit_params,
-                bounds={
-                    "t0": [t_peak - 30, t_peak + 30],
-                    "temperature": [3.5, 5],
-                    "risetime": [0, 1.5],
-                    "alpha": [-5, 0],
-                    "amplitude": [10, 50],
-                    "normalization": [0, 5],
-                    "plateaustart": [100, 1200],
-                    "plateauend": [100.000001, 1200.001],
-                },
-            )
+    try:
+        if powerlaw:
+            if plateau:
+                result, fitted_model = sncosmo.fit_lc(
+                    phot_tab,
+                    sncosmo_model,
+                    fit_params,
+                    bounds={
+                        "t0": [t_peak - 30, t_peak + 30],
+                        "temperature": [3.5, 5],
+                        "risetime": [0, 1.5],
+                        "alpha": [-5, 0],
+                        "amplitude": [10, 50],
+                        "normalization": [0, 5],
+                        "plateaustart": [100, 1200],
+                        "plateauend": [100.000001, 1200.001],
+                    },
+                )
+            else:
+                result, fitted_model = sncosmo.fit_lc(
+                    phot_tab,
+                    sncosmo_model,
+                    fit_params,
+                    bounds={
+                        "t0": [t_peak - 30, t_peak + 30],
+                        "temperature": [3.5, 5],
+                        "risetime": [0, 1.5],
+                        "alpha": [-5, 0],
+                        "amplitude": [10, 50],
+                        "normalization": [0, 3],
+                    },
+                )
         else:
             result, fitted_model = sncosmo.fit_lc(
                 phot_tab,
@@ -703,55 +717,41 @@ def fit(
                     "t0": [t_peak - 30, t_peak + 30],
                     "temperature": [3.5, 5],
                     "risetime": [0, 1.5],
-                    "alpha": [-5, 0],
+                    "decaytime": [0, 3],
                     "amplitude": [10, 50],
-                    "normalization": [0, 3],
                 },
             )
-    else:
-        result, fitted_model = sncosmo.fit_lc(
-            phot_tab,
-            sncosmo_model,
-            fit_params,
-            bounds={
-                "t0": [t_peak - 30, t_peak + 30],
-                "temperature": [3.5, 5],
-                "risetime": [0, 1.5],
-                "decaytime": [0, 3],
-                "amplitude": [10, 50],
-            },
-        )
 
-    result["parameters"] = result["parameters"].tolist()
+        result["parameters"] = result["parameters"].tolist()
 
-    NoneType = type(None)
+        NoneType = type(None)
 
-    if not isinstance(result["covariance"], NoneType):
-        result["covariance"] = result["covariance"].tolist()
-    else:
-        result["covariance"] = [None]
-
-    result.pop("data_mask")
-
-    result["paramdict"] = {}
-    for ix, pname in enumerate(result["param_names"]):
-        result["paramdict"][pname] = result["parameters"][ix]
-
-    result.pop("param_names")
-    result.pop("vparam_names")
-    result.pop("parameters")
-
-    fig = sncosmo.plot_lc(data=phot_tab, model=fitted_model, zpsys="ab", zp=25)
-
-    if powerlaw:
-        if plateau:
-            fig.savefig("test_pl_plateau.png")
+        if not isinstance(result["covariance"], NoneType):
+            result["covariance"] = result["covariance"].tolist()
         else:
-            fig.savefig("test_pl.png")
-    else:
-        fig.savefig("test_exp.png")
+            result["covariance"] = [None]
 
-    return result
+        result.pop("data_mask")
 
-    # except:
-    #     return {"success": False}
+        result["paramdict"] = {}
+        for ix, pname in enumerate(result["param_names"]):
+            result["paramdict"][pname] = result["parameters"][ix]
+
+        result.pop("param_names")
+        result.pop("vparam_names")
+        result.pop("parameters")
+
+        # fig = sncosmo.plot_lc(data=phot_tab, model=fitted_model, zpsys="ab", zp=25)
+
+        # if powerlaw:
+        #     if plateau:
+        #         fig.savefig("test_pl_plateau.png")
+        #     else:
+        #         fig.savefig("test_pl.png")
+        # else:
+        #     fig.savefig("test_exp.png")
+
+        return result
+
+    except:
+        return {"success": False}

@@ -124,9 +124,9 @@
             {% endif %}
         </div>
         <div class="row">
-            {% if transient.tde_res != None %}
+            {% if transient.tde_res_exp != None %}
                     <h5 style="color:#787878;">
-                      TDE fit red_chisq: {{ "{:,.3f}".format(transient.tde_res) }}
+                      TDE fit red_chisq: {{ "{:,.3f}".format(transient.tde_res_exp) }}
                     </h5>
             {% else %}
                     <h5 style="color:#C9C9C9;">

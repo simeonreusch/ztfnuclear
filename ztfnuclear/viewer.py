@@ -217,7 +217,6 @@ def transient_page(ztfid):
         base_dir, "plots", "lightcurves", "tde_fit", f"{ztfid}.png"
     )
 
-    # if not os.path.isfile(plot_file_tde_fit):
     t.plot_tde()
 
     if os.path.isfile(plot_file_tde_fit):
@@ -226,7 +225,7 @@ def transient_page(ztfid):
             "ascii"
         )
         plot_tde_fit = True
-        tde_fitres = t.meta["tde_fit"]
+        tde_fitres = t.meta["tde_fit_exp"]
         print(tde_fitres)
     else:
         plot_tde_fit = False

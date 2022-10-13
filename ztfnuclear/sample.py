@@ -60,19 +60,19 @@ class NuclearSample(object):
             )
             self.populate_db_from_dict(data=saltfit_res)
 
-        if not db_check["has_tdefit"]:
-            tdefit_res = io.parse_ampel_json(
-                filepath=os.path.join(io.LOCALSOURCE_fitres, "tdefit.json"),
-                parameter_name="tde_fit",
-            )
-            self.populate_db_from_dict(data=tdefit_res)
+        # if not db_check["has_tdefit"]:
+        #     tdefit_res = io.parse_ampel_json(
+        #         filepath=os.path.join(io.LOCALSOURCE_fitres, "tdefit.json"),
+        #         parameter_name="tde_fit_exp",
+        #     )
+        #     self.populate_db_from_dict(data=tdefit_res)
 
-        if not db_check["has_tdefit_loose_bl"]:
-            tdefit_res = io.parse_ampel_json(
-                filepath=os.path.join(io.LOCALSOURCE_fitres, "tdefit_loose_bl.json"),
-                parameter_name="tde_fit_loose_bl",
-            )
-            self.populate_db_from_dict(data=tdefit_res)
+        # if not db_check["has_tdefit_loose_bl"]:
+        #     tdefit_res = io.parse_ampel_json(
+        #         filepath=os.path.join(io.LOCALSOURCE_fitres, "tdefit_loose_bl.json"),
+        #         parameter_name="tde_fit_loose_bl",
+        #     )
+        #     self.populate_db_from_dict(data=tdefit_res)
 
         if not db_check["has_ampel_z"]:
             ampelz = io.parse_ampel_json(
@@ -468,7 +468,7 @@ class NuclearSample(object):
             t.z_dist
             t.tns_class
             t.crossmatch_info
-            t.tde_res
+            t.tde_res_exp
             t.salt_res
             transients_pickled.append(t)
 
@@ -597,15 +597,15 @@ class Transient(object):
             return None
 
     @cached_property
-    def tde_res(self) -> Optional[float]:
+    def tde_res_exp(self) -> Optional[float]:
         """
         Get the TDE fit reduced chisq
         """
-        if "tde_fit" in self.meta.keys():
-            if "success" in self.meta["tde_fit"].keys():
-                if self.meta["tde_fit"]["success"] != False:
-                    chisq = self.meta["tde_fit"]["chisq"]
-                    ndof = self.meta["tde_fit"]["ndof"]
+        if "tde_fit_exp" in self.meta.keys():
+            if "success" in self.meta["tde_fit_exp"].keys():
+                if self.meta["tde_fit_exp"]["success"] != False:
+                    chisq = self.meta["tde_fit_exp"]["chisq"]
+                    ndof = self.meta["tde_fit_exp"]["ndof"]
                     red_chisq = chisq / ndof
                     return red_chisq
         else:
@@ -1066,19 +1066,27 @@ class Transient(object):
                 powerlaw=powerlaw,
                 plateau=plateau,
             )
-            meta.update_transient(self.ztfid, data={"tde_fit": fitresult})
+            if powerlaw:
+                meta.update_transient(self.ztfid, data={"tde_fit_pl": fitresult})
+            else:
+                meta.update_transient(self.ztfid, data={"tde_fit_exp": fitresult})
 
         else:
             self.logger.info(
                 f"{self.ztfid}: No datapoints survived baseline correction, skipping plot"
             )
 
-    def plot_tde(self):
+    def plot_tde(self, powerlaw=False):
         """
         Plot the TDE fit result if present
         """
-        if "tde_fit" in self.meta.keys():
-            if self.meta["tde_fit"]["success"] == True:
+        if powerlaw:
+            keyword = "tde_fit_pl"
+        else:
+            keyword = "tde_fit_exp"
+
+        if keyword in self.meta.keys():
+            if self.meta[keyword]["success"] == True:
 
                 if self.z is not None:
                     if self.z_dist < 1:
@@ -1093,7 +1101,7 @@ class Transient(object):
                     ztfid=self.ztfid,
                     z=z,
                     tns_name=self.tns_name,
-                    tde_params=self.meta["tde_fit"]["paramdict"],
+                    tde_params=self.meta[keyword]["paramdict"],
                 )
 
             else:
