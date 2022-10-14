@@ -18,9 +18,9 @@ logger = logging.getLogger(__name__)
 
 
 s = NuclearSample()
-wise = WISE()
-s.crossmatch(startindex=0)
-s.fritz(startindex=0)
+# wise = WISE()
+# s.crossmatch(startindex=0)
+# s.fritz(startindex=0)
 
 s.generate_overview_pickled()
 s.generate_overview_pickled(flaring_only=True)

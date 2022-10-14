@@ -716,8 +716,10 @@ def fit(
                 bounds={
                     "t0": [t_peak - 30, t_peak + 30],
                     "temperature": [3.5, 5],
-                    "risetime": [0, 1.5],
-                    "decaytime": [0, 3],
+                    # "risetime": [0, 1.5],
+                    # "decaytime": [0, 3],
+                    "risetime": [0, 5],
+                    "decaytime": [0, 5],
                     "amplitude": [10, 50],
                 },
             )

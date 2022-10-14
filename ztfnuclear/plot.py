@@ -162,9 +162,9 @@ def plot_tde_risedecay():
     Plot the rise vs. fadetime of the TDE fit results
     """
     meta = MetadataDB()
-    res = meta.read_parameters(params=["tde_fit", "_id"])
+    res = meta.read_parameters(params=["tde_fit_exp", "_id"])
 
-    tde_res = res["tde_fit"]
+    tde_res = res["tde_fit_exp"]
     all_ztfids = res["_id"]
 
     risetimes = []

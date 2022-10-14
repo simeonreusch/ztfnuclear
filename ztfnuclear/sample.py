@@ -512,7 +512,7 @@ class Transient(object):
         return ids
 
     @cached_property
-    def baseline(self) -> pd.DataFrame:
+    def baseline(self) -> Optional[pd.DataFrame]:
         """
         Obtain the baseline correction, create if not present
         """
@@ -522,12 +522,13 @@ class Transient(object):
             bl = pd.read_csv(bl_file)
             return bl
         else:
-            self.logger.info(
-                f"{self.ztfid}: No baseline correction file, trying to apply baseline correction"
-            )
-            bl, bl_info = baseline.baseline(transient=self, plot=False)
+            # self.logger.info(
+            #     f"{self.ztfid}: No baseline correction file, trying to apply baseline correction"
+            # )
+            # bl, bl_info = baseline.baseline(transient=self, plot=False)
 
-            meta.update_transient(self.ztfid, data={"bl_info": bl_info})
+            # meta.update_transient(self.ztfid, data={"bl_info": bl_info})
+            bl = pd.DataFrame()
 
             return bl
 
