@@ -20,7 +20,7 @@ os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
 FIT_TYPE = "tde_fit_exp"
-RECREATE_BASELINE = True
+RECREATE_BASELINE = False
 STARTINDEX = 0
 
 
