@@ -21,6 +21,7 @@ os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
 FIT_TYPE = "tde_fit_exp"
 RECREATE_BASELINE = True
+STARTINDEX = 0
 
 
 def _tde_fitter(ztfid):
@@ -37,12 +38,10 @@ if __name__ == "__main__":
 
     logger.info(f"Running fits for {FIT_TYPE} in {nprocess} threads.")
 
-    startindex = 0
-
     with multiprocessing.Pool(nprocess) as p:
         for result in tqdm(
-            p.imap_unordered(_tde_fitter, s.ztfids[startindex:]),
-            total=len(s.ztfids[startindex:]),
+            p.imap_unordered(_tde_fitter, s.ztfids[STARTINDEX:]),
+            total=len(s.ztfids[STARTINDEX:]),
         ):
             a = 1
 
