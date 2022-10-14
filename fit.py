@@ -30,7 +30,7 @@ def _tde_fitter(ztfid):
         t.recreate_baseline()
     if FIT_TYPE == "tde_fit_exp":
         t.fit_tde()
-    elif FIT_TYPE = "tde_fit_pl":
+    elif FIT_TYPE == "tde_fit_pl":
         t.fit_tde(powerlaw=True)
 
 
