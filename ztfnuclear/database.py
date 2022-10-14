@@ -2,7 +2,7 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, collections, socket
+import os, logging, collections, socket, json
 from tqdm import tqdm  # type: ignore
 from typing import Union, Any, Sequence, Tuple, List, Optional
 from pymongo import MongoClient, UpdateOne, GEOSPHERE
@@ -90,6 +90,24 @@ class MetadataDB(object):
                 )
         self.coll.bulk_write(bulk_operations)
         self.logger.debug(f"Updated database for {len(ztfids)} ztfids")
+
+    def fitres_update_from_json(self, json_path: str, fitres_key: str):
+        """
+        Ingest the fitres json from another instance
+        """
+        with open(json_path) as f:
+            import_dict = json.load(f)
+
+        ztfids = import_dict["_id"]
+
+        fitres = import_dict[fitres_key]
+        fitres_full = []
+
+        for entry in fitres:
+            fitres_full.append({fitres_key: entry})
+
+        self.update_many(ztfids=ztfids, data=fitres_full)
+        self.logger.info(f"Updated db with fitresults from {json_path}")
 
     def delete_keys(self, keys: List[str]):
         """
