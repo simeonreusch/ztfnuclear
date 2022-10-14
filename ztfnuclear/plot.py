@@ -157,7 +157,7 @@ def plot_salt_tde_chisq():
     plt.close()
 
 
-def plot_tde_risedecay(fritz: bool = True):
+def plot_tde_risedecay(fritz: bool = True, flaring_only: bool = False):
     """
     Plot the rise vs. fadetime of the TDE fit results
     """
@@ -177,22 +177,42 @@ def plot_tde_risedecay(fritz: bool = True):
     fritz_class = []
     tns_class = []
 
+    info_db = SampleInfo()
+    flaring_subset = set(info_db.read()["flaring"]["ztfids"])
+
     for i, entry in enumerate(tde_res):
+        ztfid = all_ztfids[i]
         if entry:
             if "success" in entry.keys():
                 if entry["success"] == True:
-                    paramdict = entry["paramdict"]
-                    risetimes.append(paramdict["risetime"])
-                    decaytimes.append(paramdict["decaytime"])
-                    ztfids.append(all_ztfids[i])
-                    fritz_class.append(fritz_class_all[i])
-                    if "TNS" in crossmatch_all[i].keys():
-                        if "type" in crossmatch_all[i]["TNS"].keys():
-                            tns_class.append(crossmatch_all[i]["TNS"]["type"])
+                    if flaring_only:
+                        if ztfid in flaring_subset:
+                            paramdict = entry["paramdict"]
+                            risetimes.append(paramdict["risetime"])
+                            decaytimes.append(paramdict["decaytime"])
+                            ztfids.append(ztfid)
+                            fritz_class.append(fritz_class_all[i])
+                            if "TNS" in crossmatch_all[i].keys():
+                                if "type" in crossmatch_all[i]["TNS"].keys():
+                                    tns_class.append(crossmatch_all[i]["TNS"]["type"])
+                                else:
+                                    tns_class.append(None)
+                            else:
+                                tns_class.append(None)
+                    else:
+                        paramdict = entry["paramdict"]
+                        risetimes.append(paramdict["risetime"])
+                        decaytimes.append(paramdict["decaytime"])
+                        ztfids.append(ztfid)
+                        fritz_class.append(fritz_class_all[i])
+
+                        if "TNS" in crossmatch_all[i].keys():
+                            if "type" in crossmatch_all[i]["TNS"].keys():
+                                tns_class.append(crossmatch_all[i]["TNS"]["type"])
+                            else:
+                                tns_class.append(None)
                         else:
                             tns_class.append(None)
-                    else:
-                        tns_class.append(None)
 
     sample = pd.DataFrame()
     sample["ztfid"] = ztfids
@@ -200,6 +220,11 @@ def plot_tde_risedecay(fritz: bool = True):
     sample["decay"] = decaytimes
     sample["fritz_class"] = fritz_class
     sample["tns_class"] = tns_class
+
+    # jakob = sample.query("rise > 1 and decay < 1.3")
+    # jakob.to_csv("for_jakob.csv")
+
+    # quit()
 
     # sample.query("rise < 1.6 and rise > 1", inplace=True)
     # sample.query("decay < 2.3 and decay > 1", inplace=True)
@@ -309,10 +334,20 @@ def plot_tde_risedecay(fritz: bool = True):
     ax.set_xlim([0, 2.5])
     ax.set_ylim([0.25, 4])
 
-    if fritz:
-        outfile = os.path.join(io.LOCALSOURCE_plots, "tde_risedecay_fritz.pdf")
+    if flaring_only:
+        if fritz:
+            outfile = os.path.join(
+                io.LOCALSOURCE_plots, "tde_risedecay_fritz_flaring.pdf"
+            )
+        else:
+            outfile = os.path.join(
+                io.LOCALSOURCE_plots, "tde_risedecay_tns_flaring.pdf"
+            )
     else:
-        outfile = os.path.join(io.LOCALSOURCE_plots, "tde_risedecay_tns.pdf")
+        if fritz:
+            outfile = os.path.join(io.LOCALSOURCE_plots, "tde_risedecay_fritz.pdf")
+        else:
+            outfile = os.path.join(io.LOCALSOURCE_plots, "tde_risedecay_tns.pdf")
 
     plt.tight_layout()
 
@@ -329,84 +364,82 @@ def plot_tde_risedecay(fritz: bool = True):
             flaring_subset.append(ztfid)
 
 
-def plot_tde_risedecay_new():
-    """
-    Plot the rise vs. fadetime of the TDE fit results
-    """
-    from ztfnuclear.sample import NuclearSample
-    from tqdm import tqdm
+# def plot_tde_risedecay_new():
+#     """
+#     Plot the rise vs. fadetime of the TDE fit results
+#     """
+#     from ztfnuclear.sample import NuclearSample
+#     from tqdm import tqdm
 
-    s = NuclearSample()
+#     s = NuclearSample()
 
-    for t in tqdm(s.get_transients(), total=len(s.ztfids)):
-        if "tde_res" in t.meta.keys():
-            tde_res = t.meta["tde_res"]
+#     for t in tqdm(s.get_transients(), total=len(s.ztfids)):
+#         if "tde_res" in t.meta.keys():
+#             tde_res = t.meta["tde_res"]
 
-    quit()
+#     info_db = SampleInfo()
+#     flaring_ztfids = set(info_db.read()["flaring"]["ztfids"])
 
-    tde_res = res["tde_fit"]
-    all_ztfids = res["_id"]
+#     tde_res = res["tde_fit"]
+#     all_ztfids = res["_id"]
 
-    risetimes = []
-    decaytimes = []
-    ztfids = []
+#     risetimes = []
+#     decaytimes = []
+#     ztfids = []
 
-    # for i, entry in enumerate(tde_res):
-    #     if entry:
-    #         if entry != "failure":
-    #             if tde_res[i]:
-    #                 if tde_res[i] != "failure":
-    #                     if "paramdict" not in tde_res[i].keys():
-    #                     paramdict = tde_res[i]["paramdict"]
-    #                     risetimes.append(paramdict["risetime"])
-    #                     decaytimes.append(paramdict["decaytime"])
-    #                     ztfids.append(all_ztfids[i])
 
-    for i, entry in enumerate(tde_res):
-        if entry:
-            if "success" in entry.keys():
-                if entry["success"] == True:
-                    paramdict = entry["paramdict"]
-                    risetimes.append(paramdict["risetime"])
-                    decaytimes.append(paramdict["decaytime"])
-                    ztfids.append(all_ztfids[i])
+#     for i, entry in enumerate(tde_res):
+#         if entry:
+#             if "success" in entry.keys():
+#                 if entry["success"] == True:
+#                     if flaring_only:
+#                         if all_ztfids[i] in flaring_ztfids:
+#                             paramdict = entry["paramdict"]
+#                             risetimes.append(paramdict["risetime"])
+#                             decaytimes.append(paramdict["decaytime"])
+#                             ztfids.append(all_ztfids[i])
+#                     else:
+#                         paramdict = entry["paramdict"]
+#                         risetimes.append(paramdict["risetime"])
+#                         decaytimes.append(paramdict["decaytime"])
+#                         ztfids.append(all_ztfids[i])
 
-    sample = pd.DataFrame()
-    sample["ztfid"] = ztfids
-    sample["rise"] = risetimes
-    sample["decay"] = decaytimes
+#     sample = pd.DataFrame()
+#     sample["ztfid"] = ztfids
+#     sample["rise"] = risetimes
+#     sample["decay"] = decaytimes
 
-    # sample.query("rise < 1.6 and rise > 1", inplace=True)
-    # sample.query("decay < 2.3 and decay > 1", inplace=True)
+#     # sample.query("rise < 1.6 and rise > 1", inplace=True)
+#     # sample.query("decay < 2.3 and decay > 1", inplace=True)
 
-    fig, ax = plt.subplots(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
-    fig.suptitle(f"TDE fit rise- vs. decaytime", fontsize=14)
+#     fig, ax = plt.subplots(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
+#     fig.suptitle(f"TDE fit rise- vs. decaytime", fontsize=14)
 
-    ax.scatter(
-        sample.rise,
-        sample.decay,
-        marker=".",
-        s=2,
-    )
+#     ax.scatter(
+#         sample.rise,
+#         sample.decay,
+#         marker=".",
+#         s=2,
+#     )
 
-    ax.set_xlabel("Rise time")
-    ax.set_ylabel("Decay time")
+#     ax.set_xlabel("Rise time")
+#     ax.set_ylabel("Decay time")
 
-    # outfile_zoom = os.path.join(io.LOCALSOURCE_plots, "salt_vs_tde_chisq_zoom.pdf")
-    outfile = os.path.join(io.LOCALSOURCE_plots, "tde_risedecay.pdf")
-    plt.tight_layout()
+#     # outfile_zoom = os.path.join(io.LOCALSOURCE_plots, "salt_vs_tde_chisq_zoom.pdf")
+#     outfile = os.path.join(io.LOCALSOURCE_plots, "tde_risedecay.pdf")
+#     plt.tight_layout()
 
-    plt.savefig(outfile)
+#     plt.savefig(outfile)
 
-    plt.close()
+#     plt.close()
 
-    info_db = SampleInfo()
-    flaring_ztfids = set(info_db.read()["flaring"]["ztfids"])
+#     info_db = SampleInfo()
+#     flaring_ztfids = set(info_db.read()["flaring"]["ztfids"])
 
-    flaring_subset = []
-    for ztfid in sample.ztfid:
-        if ztfid in flaring_ztfids:
-            flaring_subset.append(ztfid)
+#     flaring_subset = []
+#     for ztfid in sample.ztfid:
+#         if ztfid in flaring_ztfids:
+#             flaring_subset.append(ztfid)
 
 
 def plot_ampelz():
