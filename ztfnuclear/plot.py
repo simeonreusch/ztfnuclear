@@ -162,14 +162,16 @@ def plot_tde_risedecay():
     Plot the rise vs. fadetime of the TDE fit results
     """
     meta = MetadataDB()
-    res = meta.read_parameters(params=["tde_fit_exp", "_id"])
+    res = meta.read_parameters(params=["tde_fit_exp", "_id", "fritz_class"])
 
     tde_res = res["tde_fit_exp"]
     all_ztfids = res["_id"]
+    fritz_class_all = res["fritz_class"]
 
     risetimes = []
     decaytimes = []
     ztfids = []
+    fritz_class = []
 
     for i, entry in enumerate(tde_res):
         if entry:
@@ -179,27 +181,45 @@ def plot_tde_risedecay():
                     risetimes.append(paramdict["risetime"])
                     decaytimes.append(paramdict["decaytime"])
                     ztfids.append(all_ztfids[i])
+                    fritz_class.append(fritz_class_all[i])
 
     sample = pd.DataFrame()
     sample["ztfid"] = ztfids
     sample["rise"] = risetimes
     sample["decay"] = decaytimes
+    sample["fritz_class"] = fritz_class
+
+    print(sample["fritz_class"].unique())
 
     # sample.query("rise < 1.6 and rise > 1", inplace=True)
     # sample.query("decay < 2.3 and decay > 1", inplace=True)
 
     fig, ax = plt.subplots(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
-    fig.suptitle(f"TDE fit rise- vs. decaytime ({len(sample)} objects)", fontsize=14)
-
-    ax.scatter(
-        sample.rise,
-        sample.decay,
-        marker=".",
-        s=2,
+    fig.suptitle(
+        f"TDE fit (exp. decay) rise- vs. decaytime ({len(sample)} objects)", fontsize=14
     )
+
+    sn_ia = ["Ia", "Ia-pec", "Ia-02cx", "Ia-91b", "Ia-18byg", "Ia-CSM", "Type I"]
+
+    _df = sample.query(
+        "fritz_class not in @sn_ia and fritz_class != 'Tidal Disruption Event'"
+    )
+
+    ax.scatter(_df.rise, _df.decay, marker=".", s=1, c="blue", alpha=0.7)
+
+    _df = sample.query("fritz_class == 'Tidal Disruption Event'")
+
+    ax.scatter(_df.rise, _df.decay, marker=".", s=8, c="red")
+
+    _df = sample.query("fritz_class in @sn_ia")
+
+    ax.scatter(_df.rise, _df.decay, marker=".", s=8, c="green")
 
     ax.set_xlabel("Rise time")
     ax.set_ylabel("Decay time")
+
+    ax.set_xlim([0, 2.5])
+    ax.set_ylim([0.25, 4])
 
     outfile = os.path.join(io.LOCALSOURCE_plots, "tde_risedecay.pdf")
     plt.tight_layout()

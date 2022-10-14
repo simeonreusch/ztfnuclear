@@ -702,10 +702,13 @@ def fit(
                     bounds={
                         "t0": [t_peak - 30, t_peak + 30],
                         "temperature": [3.5, 5],
-                        "risetime": [0, 1.5],
-                        "alpha": [-5, 0],
+                        # "risetime": [0, 1.5],
+                        "risetime": [0, 5],
+                        # "alpha": [-5, 0],
+                        "alpha": [-10, 2],
                         "amplitude": [10, 50],
-                        "normalization": [0, 3],
+                        # "normalization": [0, 3],
+                        "normalization": [0, 5],
                     },
                 )
         else:

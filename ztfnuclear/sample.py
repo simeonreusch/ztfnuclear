@@ -458,7 +458,7 @@ class NuclearSample(object):
             flaring_ztfids = self.info_db.read()["flaring"]["ztfids"]
             length = len(flaring_ztfids)
         else:
-            length = len(self.ztfid)
+            length = len(self.ztfids)
 
         for t in tqdm(transients, total=length):
             t.thumbnail
@@ -603,12 +603,13 @@ class Transient(object):
         Get the TDE fit reduced chisq
         """
         if "tde_fit_exp" in self.meta.keys():
-            if "success" in self.meta["tde_fit_exp"].keys():
-                if self.meta["tde_fit_exp"]["success"] != False:
-                    chisq = self.meta["tde_fit_exp"]["chisq"]
-                    ndof = self.meta["tde_fit_exp"]["ndof"]
-                    red_chisq = chisq / ndof
-                    return red_chisq
+            if self.meta["tde_fit_exp"] is not None:
+                if "success" in self.meta["tde_fit_exp"].keys():
+                    if self.meta["tde_fit_exp"]["success"] != False:
+                        chisq = self.meta["tde_fit_exp"]["chisq"]
+                        ndof = self.meta["tde_fit_exp"]["ndof"]
+                        red_chisq = chisq / ndof
+                        return red_chisq
         else:
             return None
 
