@@ -2,7 +2,7 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, collections
+import os, logging, collections, socket
 from tqdm import tqdm  # type: ignore
 from typing import Union, Any, Sequence, Tuple, List, Optional
 from pymongo import MongoClient, UpdateOne, GEOSPHERE
@@ -15,6 +15,12 @@ from ztfnuclear import io
 
 logging.getLogger("extcats.CatalogQuery").setLevel(logging.WARN)
 
+hostname = socket.gethostname()
+if hostname == "wgs33.zeuthen.desy.de":
+    MONGO_PORT = 27051
+else:
+    MONGO_PORT = 27017
+
 
 class SampleInfo(object):
     """
@@ -23,7 +29,7 @@ class SampleInfo(object):
 
     def __init__(self):
         super(SampleInfo, self).__init__()
-        mongo_client: MongoClient = MongoClient("localhost", 27017)
+        mongo_client: MongoClient = MongoClient("localhost", MONGO_PORT)
         self.logger = logging.getLogger(__name__)
         self.logger.debug("Established connection to Mongo DB")
         self.client = mongo_client
@@ -52,7 +58,7 @@ class MetadataDB(object):
 
     def __init__(self):
         super(MetadataDB, self).__init__()
-        mongo_client: MongoClient = MongoClient("localhost", 27017)
+        mongo_client: MongoClient = MongoClient("localhost", MONGO_PORT)
         self.logger = logging.getLogger(__name__)
         self.logger.debug("Established connection to Mongo DB")
         self.client = mongo_client
@@ -218,7 +224,7 @@ class WISE(object):
         """
         Test the connection to the database
         """
-        mongo_client: MongoClient = MongoClient("localhost", 27017)
+        mongo_client: MongoClient = MongoClient("localhost", MONGO_PORT)
         client = mongo_client
         db = client.allwise
         items_in_coll = db.command("collstats", "allwise")["count"]
