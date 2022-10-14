@@ -157,21 +157,25 @@ def plot_salt_tde_chisq():
     plt.close()
 
 
-def plot_tde_risedecay():
+def plot_tde_risedecay(fritz: bool = True):
     """
     Plot the rise vs. fadetime of the TDE fit results
     """
     meta = MetadataDB()
-    res = meta.read_parameters(params=["tde_fit_exp", "_id", "fritz_class"])
+    res = meta.read_parameters(
+        params=["tde_fit_exp", "_id", "fritz_class", "crossmatch"]
+    )
 
     tde_res = res["tde_fit_exp"]
     all_ztfids = res["_id"]
     fritz_class_all = res["fritz_class"]
+    crossmatch_all = res["crossmatch"]
 
     risetimes = []
     decaytimes = []
     ztfids = []
     fritz_class = []
+    tns_class = []
 
     for i, entry in enumerate(tde_res):
         if entry:
@@ -182,46 +186,134 @@ def plot_tde_risedecay():
                     decaytimes.append(paramdict["decaytime"])
                     ztfids.append(all_ztfids[i])
                     fritz_class.append(fritz_class_all[i])
+                    if "TNS" in crossmatch_all[i].keys():
+                        if "type" in crossmatch_all[i]["TNS"].keys():
+                            tns_class.append(crossmatch_all[i]["TNS"]["type"])
+                        else:
+                            tns_class.append(None)
+                    else:
+                        tns_class.append(None)
 
     sample = pd.DataFrame()
     sample["ztfid"] = ztfids
     sample["rise"] = risetimes
     sample["decay"] = decaytimes
     sample["fritz_class"] = fritz_class
-
-    print(sample["fritz_class"].unique())
+    sample["tns_class"] = tns_class
 
     # sample.query("rise < 1.6 and rise > 1", inplace=True)
     # sample.query("decay < 2.3 and decay > 1", inplace=True)
 
-    fig, ax = plt.subplots(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
+    fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
     fig.suptitle(
-        f"TDE fit (exp. decay) rise- vs. decaytime ({len(sample)} objects)", fontsize=14
+        f"TDE fit (exp. decay) rise- vs. decaytime ({len(sample)} transients)",
+        fontsize=14,
     )
 
-    sn_ia = ["Ia", "Ia-pec", "Ia-02cx", "Ia-91b", "Ia-18byg", "Ia-CSM", "Type I"]
+    fritz_sn_ia = [
+        "Ia",
+        "Ia-pec",
+        "Ia-02cx",
+        "Ia-91b",
+        "Ia-18byg",
+        "Ia-CSM",
+        "Type I",
+        "Ia-03fg",
+    ]
 
-    _df = sample.query(
-        "fritz_class not in @sn_ia and fritz_class != 'Tidal Disruption Event'"
-    )
+    tns_sn_ia = [
+        "SN Ia",
+        "SN Ia-91T-like",
+        "SN Ia-pec",
+        "SN Ia-CSM",
+        "SN Iax[02cx-like]",
+    ]
+    tns_sn_other = [
+        "SN II",
+        "SN IIn",
+        "SLSN-II",
+        "SN Ic",
+        "SLSN-I",
+        "SN IIP",
+        "SN Ib",
+        "SN Ic-BL",
+        "SN Ib/c",
+        "SN IIb",
+        "SN I",
+        "SN",
+        "SN Ibn",
+    ]
 
-    ax.scatter(_df.rise, _df.decay, marker=".", s=1, c="blue", alpha=0.7)
+    fritz_sn_other = [
+        "IIP",
+        "Type II",
+        "IIn",
+        "Supernova",
+        "Ic",
+        "Ic-SLSN",
+        "Ib",
+        "Ic-BL",
+        "SLSN I",
+        "Ib/c",
+        "IIb",
+        "II-norm",
+        "Ibn",
+    ]
 
-    _df = sample.query("fritz_class == 'Tidal Disruption Event'")
+    if fritz:
 
-    ax.scatter(_df.rise, _df.decay, marker=".", s=8, c="red")
+        _df = sample.query(
+            "fritz_class not in @fritz_sn_ia and fritz_class != 'Tidal Disruption Event' and fritz_class not in @fritz_sn_other"
+        )
 
-    _df = sample.query("fritz_class in @sn_ia")
+        ax.scatter(_df.rise, _df.decay, marker=".", s=1, c="blue", alpha=0.7)
 
-    ax.scatter(_df.rise, _df.decay, marker=".", s=8, c="green")
+        _df = sample.query("fritz_class == 'Tidal Disruption Event'")
 
-    ax.set_xlabel("Rise time")
-    ax.set_ylabel("Decay time")
+        ax.scatter(_df.rise, _df.decay, marker="*", s=10, c="red", label="TDE")
+
+        _df = sample.query("fritz_class in @fritz_sn_ia")
+
+        ax.scatter(_df.rise, _df.decay, marker=".", s=8, c="green", label="SN Ia")
+
+        _df = sample.query("fritz_class in @fritz_sn_other")
+
+        ax.scatter(_df.rise, _df.decay, marker=".", s=8, c="orange", label="SN other")
+        plt.legend(title="Fritz class.")
+
+    else:
+
+        _df = sample.query(
+            "tns_class not in @tns_sn_ia and tns_class != 'TDE' and tns_class not in @tns_sn_other"
+        )
+
+        ax.scatter(_df.rise, _df.decay, marker=".", s=1, c="blue", alpha=0.7)
+
+        _df = sample.query("tns_class == 'TDE'")
+
+        ax.scatter(_df.rise, _df.decay, marker="*", s=10, c="red", label="TDE")
+
+        _df = sample.query("tns_class in @tns_sn_ia")
+
+        ax.scatter(_df.rise, _df.decay, marker=".", s=8, c="green", label="SN Ia")
+
+        _df = sample.query("tns_class in @tns_sn_other")
+
+        ax.scatter(_df.rise, _df.decay, marker=".", s=8, c="orange", label="SN other")
+
+        plt.legend(title="TNS class.")
+
+    ax.set_xlabel("rise time (log day)")
+    ax.set_ylabel("decay time (log day)")
 
     ax.set_xlim([0, 2.5])
     ax.set_ylim([0.25, 4])
 
-    outfile = os.path.join(io.LOCALSOURCE_plots, "tde_risedecay.pdf")
+    if fritz:
+        outfile = os.path.join(io.LOCALSOURCE_plots, "tde_risedecay_fritz.pdf")
+    else:
+        outfile = os.path.join(io.LOCALSOURCE_plots, "tde_risedecay_tns.pdf")
+
     plt.tight_layout()
 
     plt.savefig(outfile)
