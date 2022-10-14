@@ -313,7 +313,7 @@ def flaring_page(ztfid):
             "ascii"
         )
         plot_tde_fit = True
-        tde_fitres = t.meta["tde_fit"]
+        tde_fitres = t.meta["tde_fit_exp"]
         print(tde_fitres)
     else:
         plot_tde_fit = False

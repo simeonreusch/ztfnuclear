@@ -91,6 +91,15 @@ class MetadataDB(object):
         self.coll.bulk_write(bulk_operations)
         self.logger.debug(f"Updated database for {len(ztfids)} ztfids")
 
+    def delete_keys(self, keys: List[str]):
+        """
+        Delete a key for all objects in the database
+        """
+        for key in keys:
+            self.coll.update_many({}, {"$unset": {key: 1}})
+
+        self.logger.info(f"Deleted keys {keys} for all transients in metadata db")
+
     def read_parameters(self, params: List[str]) -> dict:
         """
         Get all values for the parameters in the list
