@@ -233,9 +233,10 @@ class NuclearSample(object):
 
         else:
             for k, v in ratings.items():
-                for user in v.keys():
-                    if v[user] == rating_to_value[select]:
-                        returndict.update({k: v})
+                if v is not None:
+                    for user in v.keys():
+                        if v[user] == rating_to_value[select]:
+                            returndict.update({k: v})
 
         return returndict
 
