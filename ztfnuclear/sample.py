@@ -1103,23 +1103,24 @@ class Transient(object):
             keyword = "tde_fit_exp"
 
         if keyword in self.meta.keys():
-            if self.meta[keyword]["success"] == True:
+            if self.meta[keyword] is not None:
+                if "success" in self.meta[keyword].keys():
+                    if self.meta[keyword]["success"] == True:
+                        if self.z is not None:
+                            if self.z_dist < 1:
+                                z = self.z
+                            else:
+                                z = None
+                        else:
+                            z = None
 
-                if self.z is not None:
-                    if self.z_dist < 1:
-                        z = self.z
-                    else:
-                        z = None
-                else:
-                    z = None
-
-                plot_tde_fit(
-                    df=self.baseline,
-                    ztfid=self.ztfid,
-                    z=z,
-                    tns_name=self.tns_name,
-                    tde_params=self.meta[keyword]["paramdict"],
-                )
+                        plot_tde_fit(
+                            df=self.baseline,
+                            ztfid=self.ztfid,
+                            z=z,
+                            tns_name=self.tns_name,
+                            tde_params=self.meta[keyword]["paramdict"],
+                        )
 
             else:
                 return None
