@@ -723,8 +723,11 @@ class Transient(object):
         Read the rating from the DB (3: interesting, 2: maybe, 1: boring. If none is found, return 0)
         """
         if "rating" in self.meta.keys():
-            if username in self.meta["rating"].keys():
-                rating = int(self.meta["rating"][username])
+            if self.meta["rating"] is not None:
+                if username in self.meta["rating"].keys():
+                    rating = int(self.meta["rating"][username])
+                else:
+                    rating = 0
             else:
                 rating = 0
         else:
@@ -773,7 +776,10 @@ class Transient(object):
         Read the transient comments from the database
         """
         if "comments" in self.meta.keys():
-            return self.meta["comments"]
+            if self.meta["comments"] is not None:
+                return self.meta["comments"]
+            else:
+                return None
         else:
             return None
 
@@ -782,7 +788,10 @@ class Transient(object):
         Return number of comments for transient
         """
         if "comments" in self.meta.keys():
-            return len(self.meta["comments"])
+            if self.meta["comments"] is not None:
+                return len(self.meta["comments"])
+            else:
+                return None
         else:
             return 0
 
@@ -821,7 +830,10 @@ class Transient(object):
         Add a comment to the database
         """
         if "comments" in self.meta.keys():
-            comments_dict = self.meta["comments"]
+            if self.meta["comments"] is not None:
+                comments_dict = self.meta["comments"]
+            else:
+                comments_dict = {}
         else:
             comments_dict = {}
 
