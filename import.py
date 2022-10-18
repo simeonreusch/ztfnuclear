@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+# Author: Simeon Reusch (simeon.reusch@desy.de)
+# License: BSD-3-Clause
+
+import os, logging, re, json, argparse
+from ztfnuclear.database import MetadataDB
+
+meta = MetadataDB()
+
+if __name__ == "__main__":
+
+    logger = logging.getLogger(name=__name__)
+    parser = argparse.ArgumentParser(description="Import keys from json to MongoDB")
+
+    parser.add_argument(
+        "key_name",
+        type=str,
+        help="Provide a key of the database",
+    )
+
+    commandline_args = parser.parse_args()
+
+    json_path = commandline_args.key_name + ".json"
+
+    meta.key_update_from_json(json_path=json_path, mongo_key=commandline_args.key_name)
+    logger.info(f"Imported {json_path} to MongoDB")

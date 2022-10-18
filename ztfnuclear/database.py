@@ -91,7 +91,7 @@ class MetadataDB(object):
         self.coll.bulk_write(bulk_operations)
         self.logger.debug(f"Updated database for {len(ztfids)} ztfids")
 
-    def fitres_update_from_json(self, json_path: str, fitres_key: str):
+    def key_update_from_json(self, json_path: str, mongo_key: str):
         """
         Ingest the fitres json from another instance
         """
@@ -100,14 +100,14 @@ class MetadataDB(object):
 
         ztfids = import_dict["_id"]
 
-        fitres = import_dict[fitres_key]
-        fitres_full = []
+        content = import_dict[mongo_key]
+        content_full = []
 
-        for entry in fitres:
-            fitres_full.append({fitres_key: entry})
+        for entry in content:
+            content_full.append({mongo_key: entry})
 
-        self.update_many(ztfids=ztfids, data=fitres_full)
-        self.logger.info(f"Updated db with fitresults from {json_path}")
+        self.update_many(ztfids=ztfids, data=content_full)
+        self.logger.info(f"Updated db with key from {json_path}")
 
     def delete_keys(self, keys: List[str]):
         """
