@@ -836,11 +836,12 @@ def plot_tde_fit(
     z: float = None,
     tns_name: str = None,
     snt_threshold=3.0,
+    savepath: str = None,
 ):
     """
     Plot the TDE fit result if present
     """
-    from ztfnuclear.tde_fit import TDESource_exp
+    from ztfnuclear.tde_fit import TDESource_exp, TDESource_exp_flextemp
     import sncosmo
     from sfdmap import SFDMap  # type: ignore[import]
 
@@ -861,7 +862,13 @@ def plot_tde_fit(
     # initialize the TDE source
     phase = np.linspace(-50, 100, 10)
     wave = np.linspace(1000, 10000, 5)
-    tde_source = TDESource_exp(phase, wave, name="tde")
+
+    if "d_temp" in tde_params.keys():
+        flextemp = True
+        tde_source = TDESource_exp_flextemp(phase, wave, name="tde")
+    else:
+        flextemp = False
+        tde_source = TDESource_exp(phase, wave, name="tde")
 
     dust = sncosmo.models.CCM89Dust()
     dustmap = SFDMap()
@@ -949,6 +956,7 @@ def plot_tde_fit(
 
         t0 = tde_params["t0"]
         x_range = np.linspace(t0 - 100, t0 + 350, 200)
+
         modelflux = (
             fitted_model.bandflux(bandname_sncosmo, x_range, zp=25, zpsys="ab")
             / 1e10
@@ -985,7 +993,10 @@ def plot_tde_fit(
 
     ax.set_ylim([ylim_lower, ylim_upper])
 
-    outfile = os.path.join(plot_dir, ztfid + ".png")
+    if not savepath:
+        outfile = os.path.join(plot_dir, ztfid + ".png")
+    else:
+        outfile = savepath
 
     plt.tight_layout()
 
