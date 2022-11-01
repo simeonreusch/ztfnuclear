@@ -47,7 +47,9 @@ class TDESource_exp(sncosmo.Source):
         self._wave: np.ndarray = wave
 
         self.nu_kc: float = 3e8 / 4770e-10  # Reference wavelength used for K-correction
+        # self.z: float = 0.2
         self.z: float = 0.1
+        # self.z = 0.0512
 
         # Some constants
         self.sigma_SB: float = 5.6704e-5  # Stefan-Boltzmann constant (erg/s/cm^2/K^4)
@@ -602,8 +604,7 @@ class TDESource_exp_flextemp(sncosmo.Source):
         self,
         phase: np.ndarray,
         wave: np.ndarray,
-        # add redshift as parameter
-        name: str = "TDE_exp",
+        name: str = "TDE_exp_flextemp",
         version: str = "1.0",
     ) -> None:
 
@@ -612,24 +613,16 @@ class TDESource_exp_flextemp(sncosmo.Source):
         self._phase: np.ndarray = phase
         self._wave: np.ndarray = wave
 
-        self.nu_kc: float = 3e8 / 4770e-10  # Reference wavelength used for K-correction
-        self.z: float = 0.1
-
         # Some constants
         self.sigma_SB: float = 5.6704e-5  # Stefan-Boltzmann constant (erg/s/cm^2/K^4)
         self.c: float = 2.9979e10  # Speed of light (cm/s)
         self.h: float = 6.6261e-27  # Planck's constant (erg s)
         self.k: float = 1.3806e-16  # Boltzman's constant (erg/K)
         self.h_over_k: float = self.h / self.k
-        self.lumdis: float = float(
-            cosmo.FlatLambdaCDM(H0=70, Om0=0.3).luminosity_distance(self.z).value
-            * 1e6
-            * 3.08568e18
-        )
 
         # Fit parameters
-        # defaults - peaktime = 0, rise=0.85 / decay=1.5 / T=4.5 / peakflux = 32 / d_temp = 10
-        self._parameters: np.ndarray = np.array([0.85, 1.5, 4.5, 32, 1100])
+        # defaults - peaktime = 0 (days), rise=0.85 (log days) / decay=1.5 (log days) / T=4.5 (log K) / peakflux = 1e-16 / d_temp = 10 K/day
+        self._parameters: np.ndarray = np.array([0.85, 1.5, 4.5, 1e-16, 10])
 
     @staticmethod
     def _wl_to_nu(self, wl: np.ndarray) -> np.ndarray:
@@ -642,65 +635,29 @@ class TDESource_exp_flextemp(sncosmo.Source):
         return nu
 
     @staticmethod
-    def _Planck_old(self, nu: float, T: np.ndarray) -> Union[np.float64, np.ndarray]:
-        """
-        Calculate the spectral radiance of a blackbody
-        :nu: np.ndarray, array containing frequencies in Hz
-        :T: np.ndarray, array containing temperatures in K
-        """
-        bb = (
-            2
-            * self.h
-            / self.c**2
-            * nu**3
-            / (np.exp(self.h * nu / (self.k * T)) - 1)
-        )
-        return bb
-
-    @staticmethod
     def _Planck(self, nu: np.ndarray, T: np.ndarray) -> Union[np.float64, np.ndarray]:
         """
         Calculate the spectral radiance of a blackbody
         :nu: np.ndarray, array containing frequencies in Hz
         :T: np.ndarray, array containing temperatures in K
         """
+        prefactor = np.array(2 * self.h / self.c**2 * nu**3)
+        prefactor = np.tile(prefactor, (len(T), 1)).transpose()
 
         exponential_term = np.outer((self.h * nu), 1 / (self.k * T))
-
-        prefactor = np.array(2 * self.h / self.c**2 * nu**3)
-
-        prefactor = np.tile(prefactor, (len(T), 1)).transpose()
 
         bb = prefactor * 1 / (np.exp(exponential_term) - 1)
 
         return bb
 
     @staticmethod
-    def _cc_bol_old(self, nu: Union[float, np.ndarray], T: float):
-        return self._Planck_old(self, nu, T) * nu / (self.sigma_SB * T**4 / np.pi)
-
-    @staticmethod
-    def _cc_bol(self, nu: Union[float, np.ndarray], T: float):
+    def _cc_bol(self, nu: Union[float, np.ndarray], T: np.ndarray):
         bb = self._Planck(self, nu, T)
         bol_corr = np.tile(nu, (len(T), 1)).transpose() / (
             self.sigma_SB * T**4 / np.pi
         )
-        return bb * bol_corr
 
-    @staticmethod
-    def _get_kc(self, nu: np.ndarray, T: Union[float, np.float64] = None) -> np.ndarray:
-        """
-        Calculate a k-correction for each wavelength
-        """
-        if T is None:
-            T = self._parameters[2]
-        T = 10**T
-        kc = (
-            (np.exp(self.h_over_k * self.nu_kc / T) - 1)
-            / (np.exp(self.h_over_k * nu / T) - 1)
-            * (nu / self.nu_kc) ** 4
-        )
-        return kc
+        return bb * bol_corr
 
     @staticmethod
     def _gauss(x: float, sigma: Union[float, np.float64]) -> Union[float, np.float64]:
@@ -717,39 +674,22 @@ class TDESource_exp_flextemp(sncosmo.Source):
         temp = self._parameters[2]
         peakflux = self._parameters[3]
 
-        a1 = (
-            10**peakflux
-        )  # luminosity/flux at peak (this can be bolometric or L(nu_kc) depending on the setting)
-        b1 = 10**risetime  # rise rate
-        b2 = 10**decaytime  # decay rate
+        # Gaussian rise
+        a1 = peakflux
+        b1 = 10**risetime
+        b2 = 10**decaytime
         a2 = a1 * self._gauss(0, b1)
 
         phases_rise = phases[(phases <= 0)]
         phases_decay = phases[(phases > 0)]
 
         vals_rise = a1 * self._gauss(phases_rise, b1)
+        # exponential decay
         vals_decay = a2 * np.exp(-(phases_decay) / b2)
 
         returnvals = np.concatenate((vals_rise, vals_decay))
 
         return returnvals
-
-    @staticmethod
-    def _lum2flux(
-        L: np.ndarray,
-        cm: float,
-        nu: np.ndarray,
-    ):
-        """
-        erg/s to Jansky
-        >> flux = lum2flux(L, z, nu=1.4e9) # in Jy
-        input:
-         - L: luminosity in erg/s
-         - cm: luminosity distance in cm
-
-        note, no K-correction
-        """
-        return L / (nu * 4 * np.pi * cm**2) * 1e23
 
     def _temp_evolution(self, phase: np.ndarray) -> np.ndarray:
         """
@@ -760,15 +700,13 @@ class TDESource_exp_flextemp(sncosmo.Source):
 
         phase_clip = np.clip(
             phase, -30, 365
-        )  # stop temperature evolition at -30 and +365 days
+        )  # stop temperature evolution at -30 and +365 days
 
         t_evo = (10**temp) + (phase_clip * d_temp)
 
         t_evo_clip = np.clip(
-            t_evo, 1e3, 1e5
+            t_evo, 1e-10, 1e6
         )  # clip temperatures outside 1000 and 100,000 K
-
-        print(t_evo_clip)
 
         return t_evo_clip
 
@@ -776,7 +714,6 @@ class TDESource_exp_flextemp(sncosmo.Source):
         """
         Calculate the model flux for given wavelengths and phases
         """
-        temp = self._parameters[2]
         t_evo = self._temp_evolution(phase=phase)
 
         if np.ndim(phase) == 0:
@@ -784,30 +721,13 @@ class TDESource_exp_flextemp(sncosmo.Source):
         else:
             phase_iter = phase
 
-        model_flux = np.empty((len(phase_iter), len(wave)))
-
         nu = self._wl_to_nu(self, wave)
-        nu_z = nu * (1 + self.z)
-        kc = self._get_kc(self, nu)
 
-        # now t is an array, that's why we do all this
-        # matrix gymnastics
-
-        cc_bol = self._cc_bol_old(self, T=t_evo, nu=self.nu_kc)
-
-        cc = self._cc_bol(self, T=t_evo, nu=nu * (1 + self.z))
-
-        luminosity = 1 / (nu_z * 4 * np.pi * self.lumdis**2) * 1e23 * (1 + self.z)
-
-        models = self._gauss_exp(self, phases=phase_iter)
-
-        models = np.tile(models, (len(nu), 1))
-        luminosity = np.tile(luminosity, (len(t_evo), 1)).transpose()
-        cc_bol = np.tile(cc_bol, (len(nu), 1))
-        kc = np.tile(kc, (len(t_evo), 1)).transpose()
-
-        corrected_models = (models * kc) / cc_bol * cc
-        model_flux = (corrected_models * luminosity).transpose()
+        # now t is an array, that's why we do all this matrix gymnastics
+        bb = self._cc_bol(self, T=t_evo, nu=nu)
+        rise_decay = self._gauss_exp(self, phases=phase_iter)
+        rise_decay = np.tile(rise_decay, (len(nu), 1))
+        model_flux = (rise_decay * bb).transpose()
 
         return model_flux
 
@@ -944,11 +864,11 @@ def fit(
                 fit_params,
                 bounds={
                     "t0": [t_peak - 30, t_peak + 30],
-                    "temperature": [3.5, 5],
+                    "temperature": [3.5, 10],
                     "risetime": [0, 5],
                     "decaytime": [0, 5],
-                    "amplitude": [10, 50],
-                    "d_temp": [-200, 200],
+                    # "amplitude": [10, 50],
+                    "d_temp": [-500, 500],
                 },
             )
         else:
@@ -961,7 +881,7 @@ def fit(
                     "temperature": [3.5, 5],
                     "risetime": [0, 5],
                     "decaytime": [0, 5],
-                    "amplitude": [10, 50],
+                    # "amplitude": [10, 50],
                 },
             )
 
@@ -984,15 +904,15 @@ def fit(
     result.pop("vparam_names")
     result.pop("parameters")
 
-    # fig = sncosmo.plot_lc(data=phot_tab, model=fitted_model, zpsys="ab", zp=25)
+    fig = sncosmo.plot_lc(data=phot_tab, model=fitted_model, zpsys="ab", zp=25)
 
-    # if powerlaw:
-    #     if plateau:
-    #         fig.savefig("test_pl_plateau.png")
-    #     else:
-    #         fig.savefig("test_pl.png")
-    # else:
-    #     fig.savefig("test_exp.png")
+    if powerlaw:
+        if plateau:
+            fig.savefig("test_pl_plateau.png")
+        else:
+            fig.savefig("test_pl.png")
+    else:
+        fig.savefig("test_exp.png")
 
     print(result)
 
