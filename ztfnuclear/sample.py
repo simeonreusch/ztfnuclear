@@ -942,6 +942,7 @@ class Transient(object):
     def plot(
         self,
         force_baseline_correction: bool = False,
+        plot_raw: bool = False,
         magplot: bool = False,
         include_wise: bool = True,
         wise_baseline_correction: bool = True,
@@ -1040,7 +1041,7 @@ class Transient(object):
         if force_baseline_correction:
             df_to_plot = self.baseline
         else:
-            if len(self.baseline) == 0:
+            if len(self.baseline) == 0 or plot_raw:
                 df_to_plot = self.raw_lc
             else:
                 df_to_plot = self.baseline
@@ -1068,7 +1069,7 @@ class Transient(object):
 
         return axlims
 
-    def fit_tde(self, powerlaw=False, plateau=False):
+    def fit_tde(self, powerlaw: bool = False, plateau: bool = False):
         """
         Re-fit the transient TDE lightcurve
         """
@@ -1082,6 +1083,7 @@ class Transient(object):
                 baseline_info=self.baseline_info,
                 powerlaw=powerlaw,
                 plateau=plateau,
+                ztfid=self.ztfid,
             )
             if powerlaw:
                 meta.update_transient(self.ztfid, data={"tde_fit_pl": fitresult})

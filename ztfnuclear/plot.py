@@ -221,14 +221,6 @@ def plot_tde_risedecay(fritz: bool = True, flaring_only: bool = False):
     sample["fritz_class"] = fritz_class
     sample["tns_class"] = tns_class
 
-    # jakob = sample.query("rise > 1 and decay < 1.3")
-    # jakob.to_csv("for_jakob.csv")
-
-    # quit()
-
-    # sample.query("rise < 1.6 and rise > 1", inplace=True)
-    # sample.query("decay < 2.3 and decay > 1", inplace=True)
-
     fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
     fig.suptitle(
         f"TDE fit (exp. decay) rise- vs. decaytime ({len(sample)} transients)",
@@ -841,7 +833,7 @@ def plot_tde_fit(
     """
     Plot the TDE fit result if present
     """
-    from ztfnuclear.tde_fit import TDESource_exp, TDESource_exp_flextemp
+    from ztfnuclear.tde_fit import TDESource_exp
     import sncosmo
     from sfdmap import SFDMap  # type: ignore[import]
 
@@ -863,12 +855,7 @@ def plot_tde_fit(
     phase = np.linspace(-50, 100, 10)
     wave = np.linspace(1000, 10000, 5)
 
-    if "d_temp" in tde_params.keys():
-        flextemp = True
-        tde_source = TDESource_exp_flextemp(phase, wave, name="tde")
-    else:
-        flextemp = False
-        tde_source = TDESource_exp(phase, wave, name="tde")
+    tde_source = TDESource_exp(phase, wave, name="tde")
 
     dust = sncosmo.models.CCM89Dust()
     dustmap = SFDMap()
@@ -955,7 +942,7 @@ def plot_tde_fit(
         )
 
         t0 = tde_params["t0"]
-        x_range = np.linspace(t0 - 100, t0 + 350, 200)
+        x_range = np.linspace(t0 - 100, t0 + 600, 200)
 
         modelflux = (
             fitted_model.bandflux(bandname_sncosmo, x_range, zp=25, zpsys="ab")
