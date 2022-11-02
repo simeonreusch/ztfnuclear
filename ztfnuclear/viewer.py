@@ -226,7 +226,6 @@ def transient_page(ztfid):
         )
         plot_tde_fit = True
         tde_fitres = t.meta["tde_fit_exp"]
-        print(tde_fitres)
     else:
         plot_tde_fit = False
         base64_string_tde_fit = None
@@ -314,7 +313,6 @@ def flaring_page(ztfid):
         )
         plot_tde_fit = True
         tde_fitres = t.meta["tde_fit_exp"]
-        print(tde_fitres)
     else:
         plot_tde_fit = False
         base64_string_tde_fit = None

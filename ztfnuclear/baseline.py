@@ -173,16 +173,11 @@ def baseline(
         pull_series = fcqf_df.ampl / fcqf_df["ampl.err"]
 
         roll_med = pull_series.rolling(window, center=True).median().values
-        # roll_mean = pull_series.rolling(window, center=True).mean().values
 
-        # roll_med = fcqf_df.ampl.rolling(window, center=True).median().values
-
-        roll_avg = roll_med
-        # test = fcqf_df.ampl.values
         # Only use medians with a min nbr of values (otherwise we get edge results)
-        t_max = fcqf_df.obsmjd.values[np.argmax(roll_avg)]
+        t_max = fcqf_df.obsmjd.values[np.argmax(roll_med)]
         #        flux_max = np.max(roll_avg)
-        flux_max = fcqf_df.ampl.values[np.argmax(roll_avg)]
+        flux_max = fcqf_df.ampl.values[np.argmax(roll_med)]
         flux_scatt = median_abs_deviation(fcqf_df.ampl.values, scale="normal")
         peak_snr = flux_max / flux_scatt
         if (peak_snr > min_peak_snr) and (ufid < 10000000):

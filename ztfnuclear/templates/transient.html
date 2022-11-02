@@ -240,6 +240,11 @@
                    temperature: {{ "{:,.0f}".format(10**tde_fitres['paramdict']['temperature']) }} K
                 </h5>
             </div>
+            <div class="row">
+                <h5 style="color:#787878;">
+                   temp. decay: {{ "{:,.0f}".format(tde_fitres['paramdict']['d_temp']) }} K/day for {{ "{:,.0f}".format(tde_fitres['paramdict']['plateaustart']) }} days
+                </h5>
+            </div>
         </div>
       </div>
   </div>
