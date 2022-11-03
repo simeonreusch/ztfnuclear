@@ -1095,7 +1095,9 @@ class Transient(object):
                 f"{self.ztfid}: No datapoints survived baseline correction, skipping plot"
             )
 
-    def plot_tde(self, powerlaw=False):
+    def plot_tde(
+        self, powerlaw: bool = False, debug: bool = False, params: dict = None
+    ):
         """
         Plot the TDE fit result if present
         """
@@ -1104,8 +1106,13 @@ class Transient(object):
         else:
             keyword = "tde_fit_exp"
 
+        if debug:
+            savepath = "/Users/simeon/Desktop/flextemp_test/"
+        else:
+            savepath = None
+
         if keyword in self.meta.keys():
-            if self.meta[keyword] is not None:
+            if self.meta[keyword] is not None and params is None:
                 if "success" in self.meta[keyword].keys():
                     if self.meta[keyword]["success"] == True:
                         if self.z is not None:
@@ -1122,7 +1129,18 @@ class Transient(object):
                             z=z,
                             tns_name=self.tns_name,
                             tde_params=self.meta[keyword]["paramdict"],
+                            savepath=savepath,
                         )
+
+            elif params:
+                plot_tde_fit(
+                    df=self.baseline,
+                    ztfid=self.ztfid,
+                    z=None,
+                    tns_name=self.tns_name,
+                    tde_params=params,
+                    savepath=savepath,
+                )
 
             else:
                 return None

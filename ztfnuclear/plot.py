@@ -157,55 +157,73 @@ def plot_salt_tde_chisq():
     plt.close()
 
 
-def plot_tde_risedecay(fritz: bool = True, flaring_only: bool = False):
+def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     """
     Plot the rise vs. fadetime of the TDE fit results
     """
     meta = MetadataDB()
     res = meta.read_parameters(
-        params=["tde_fit_exp", "_id", "fritz_class", "crossmatch"]
+        params=["tde_fit_exp", "_id", "fritz_class", "crossmatch", "WISE_bayesian"]
     )
 
     tde_res = res["tde_fit_exp"]
     all_ztfids = res["_id"]
     fritz_class_all = res["fritz_class"]
     crossmatch_all = res["crossmatch"]
+    wise_bayesian = res["WISE_bayesian"]
 
     risetimes = []
     decaytimes = []
+    temperatures = []
+    d_temps = []
+    red_chisqs = []
     ztfids = []
     fritz_class = []
     tns_class = []
+    wise_strength1 = []
+    wise_strength2 = []
 
     info_db = SampleInfo()
-    flaring_subset = set(info_db.read()["flaring"]["ztfids"])
+
+    if flaring_only:
+        selected_subset = set(info_db.read()["flaring"]["ztfids"])
+    else:
+        selected_subset = set(info_db.read()["all"]["ztfids"])
+
+    has_wise = []
+    for i, entry in enumerate(wise_bayesian):
+        if entry is not None:
+            if entry["bayesian"] is not None:
+                if (
+                    "Wise_W1" in entry["bayesian"].keys()
+                    and "Wise_W2" in entry["bayesian"].keys()
+                ):
+                    has_wise.append(all_ztfids[i])
+
+    selected_subset = set(has_wise)
 
     for i, entry in enumerate(tde_res):
         ztfid = all_ztfids[i]
         if entry:
             if "success" in entry.keys():
                 if entry["success"] == True:
-                    if flaring_only:
-                        if ztfid in flaring_subset:
-                            paramdict = entry["paramdict"]
-                            risetimes.append(paramdict["risetime"])
-                            decaytimes.append(paramdict["decaytime"])
-                            ztfids.append(ztfid)
-                            fritz_class.append(fritz_class_all[i])
-                            if "TNS" in crossmatch_all[i].keys():
-                                if "type" in crossmatch_all[i]["TNS"].keys():
-                                    tns_class.append(crossmatch_all[i]["TNS"]["type"])
-                                else:
-                                    tns_class.append(None)
-                            else:
-                                tns_class.append(None)
-                    else:
+                    chisq = entry["chisq"]
+                    ndof = entry["ndof"]
+                    red_chisq = chisq / ndof
+                    if ztfid in selected_subset:
                         paramdict = entry["paramdict"]
+                        wise_dict = wise_bayesian[i]["bayesian"]
+                        wise_w1 = wise_dict["Wise_W1"]
+                        wise_w2 = wise_dict["Wise_W2"]
+                        wise_strength1.append(wise_w1["strength_sjoert"][0])
+                        wise_strength2.append(wise_w2["strength_sjoert"][0])
                         risetimes.append(paramdict["risetime"])
                         decaytimes.append(paramdict["decaytime"])
+                        temperatures.append(paramdict["temperature"])
+                        d_temps.append(paramdict["d_temp"])
+                        red_chisqs.append(red_chisq)
                         ztfids.append(ztfid)
                         fritz_class.append(fritz_class_all[i])
-
                         if "TNS" in crossmatch_all[i].keys():
                             if "type" in crossmatch_all[i]["TNS"].keys():
                                 tns_class.append(crossmatch_all[i]["TNS"]["type"])
@@ -218,14 +236,29 @@ def plot_tde_risedecay(fritz: bool = True, flaring_only: bool = False):
     sample["ztfid"] = ztfids
     sample["rise"] = risetimes
     sample["decay"] = decaytimes
+    sample["temp"] = temperatures
+    sample["d_temp"] = d_temps
     sample["fritz_class"] = fritz_class
     sample["tns_class"] = tns_class
+    sample["red_chisq"] = red_chisqs
+    sample["w1_dustecho_strength"] = wise_strength1
+    sample["w2_dustecho_strength"] = wise_strength2
+
+    sample.query(
+        "temp <  9 and w1_dustecho_strength < 1000 and w2_dustecho_strength < 50000",
+        inplace=True,
+    )
+
+    x_values = "temp"
+    y_values = "w1_dustecho_strength"
 
     fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
     fig.suptitle(
-        f"TDE fit (exp. decay) rise- vs. decaytime ({len(sample)} transients)",
+        f"TDE fit {x_values} vs. {y_values} ({len(sample)} transients)",
         fontsize=14,
     )
+    # ax.set_xscale("log")
+    ax.set_yscale("log")
 
     fritz_sn_ia = [
         "Ia",
@@ -279,23 +312,34 @@ def plot_tde_risedecay(fritz: bool = True, flaring_only: bool = False):
 
     if fritz:
 
+        # print(sample)
+        # sample = sample.query("d_temp > 0")
+        # sample = sample.query("red_chisq < 5")
+        # sample = sample.query("decay > 4.98")
+        bla = sample.query("fritz_class == 'Tidal Disruption Event'")
+        # print(bla)
         _df = sample.query(
             "fritz_class not in @fritz_sn_ia and fritz_class != 'Tidal Disruption Event' and fritz_class not in @fritz_sn_other"
         )
 
-        ax.scatter(_df.rise, _df.decay, marker=".", s=1, c="blue", alpha=0.7)
+        ax.scatter(_df[x_values], _df[y_values], marker=".", s=1, c="blue", alpha=0.7)
 
         _df = sample.query("fritz_class == 'Tidal Disruption Event'")
 
-        ax.scatter(_df.rise, _df.decay, marker="*", s=10, c="red", label="TDE")
+        ax.scatter(_df[x_values], _df[y_values], marker="*", s=10, c="red", label="TDE")
 
         _df = sample.query("fritz_class in @fritz_sn_ia")
 
-        ax.scatter(_df.rise, _df.decay, marker=".", s=8, c="green", label="SN Ia")
+        ax.scatter(
+            _df[x_values], _df[y_values], marker=".", s=8, c="green", label="SN Ia"
+        )
 
         _df = sample.query("fritz_class in @fritz_sn_other")
 
-        ax.scatter(_df.rise, _df.decay, marker=".", s=8, c="orange", label="SN other")
+        ax.scatter(
+            _df[x_values], _df[y_values], marker=".", s=8, c="orange", label="SN other"
+        )
+
         plt.legend(title="Fritz class.")
 
     else:
@@ -320,118 +364,36 @@ def plot_tde_risedecay(fritz: bool = True, flaring_only: bool = False):
 
         plt.legend(title="TNS class.")
 
-    ax.set_xlabel("rise time (log day)")
-    ax.set_ylabel("decay time (log day)")
+    ax.set_xlabel(f"{x_values}")
+    ax.set_ylabel(f"{y_values}")
 
-    ax.set_xlim([0, 2.5])
-    ax.set_ylim([0.25, 4])
+    # ax.set_xlim([0, 2.5])
+    # ax.set_ylim([0.25, 4])
 
     if flaring_only:
         if fritz:
             outfile = os.path.join(
-                io.LOCALSOURCE_plots, "tde_risedecay_fritz_flaring.pdf"
+                io.LOCALSOURCE_plots, f"tde_{x_values}_{y_values}_fritz_flaring.pdf"
             )
         else:
             outfile = os.path.join(
-                io.LOCALSOURCE_plots, "tde_risedecay_tns_flaring.pdf"
+                io.LOCALSOURCE_plots, f"tde_{x_values}_{y_values}_tns_flaring.pdf"
             )
     else:
         if fritz:
-            outfile = os.path.join(io.LOCALSOURCE_plots, "tde_risedecay_fritz.pdf")
+            outfile = os.path.join(
+                io.LOCALSOURCE_plots, f"tde_{x_values}_{y_values}_fritz.pdf"
+            )
         else:
-            outfile = os.path.join(io.LOCALSOURCE_plots, "tde_risedecay_tns.pdf")
+            outfile = os.path.join(
+                io.LOCALSOURCE_plots, f"tde_{x_values}_{y_values}_tns.pdf"
+            )
 
     plt.tight_layout()
 
     plt.savefig(outfile)
 
     plt.close()
-
-    info_db = SampleInfo()
-    flaring_ztfids = set(info_db.read()["flaring"]["ztfids"])
-
-    flaring_subset = []
-    for ztfid in sample.ztfid:
-        if ztfid in flaring_ztfids:
-            flaring_subset.append(ztfid)
-
-
-# def plot_tde_risedecay_new():
-#     """
-#     Plot the rise vs. fadetime of the TDE fit results
-#     """
-#     from ztfnuclear.sample import NuclearSample
-#     from tqdm import tqdm
-
-#     s = NuclearSample()
-
-#     for t in tqdm(s.get_transients(), total=len(s.ztfids)):
-#         if "tde_res" in t.meta.keys():
-#             tde_res = t.meta["tde_res"]
-
-#     info_db = SampleInfo()
-#     flaring_ztfids = set(info_db.read()["flaring"]["ztfids"])
-
-#     tde_res = res["tde_fit"]
-#     all_ztfids = res["_id"]
-
-#     risetimes = []
-#     decaytimes = []
-#     ztfids = []
-
-
-#     for i, entry in enumerate(tde_res):
-#         if entry:
-#             if "success" in entry.keys():
-#                 if entry["success"] == True:
-#                     if flaring_only:
-#                         if all_ztfids[i] in flaring_ztfids:
-#                             paramdict = entry["paramdict"]
-#                             risetimes.append(paramdict["risetime"])
-#                             decaytimes.append(paramdict["decaytime"])
-#                             ztfids.append(all_ztfids[i])
-#                     else:
-#                         paramdict = entry["paramdict"]
-#                         risetimes.append(paramdict["risetime"])
-#                         decaytimes.append(paramdict["decaytime"])
-#                         ztfids.append(all_ztfids[i])
-
-#     sample = pd.DataFrame()
-#     sample["ztfid"] = ztfids
-#     sample["rise"] = risetimes
-#     sample["decay"] = decaytimes
-
-#     # sample.query("rise < 1.6 and rise > 1", inplace=True)
-#     # sample.query("decay < 2.3 and decay > 1", inplace=True)
-
-#     fig, ax = plt.subplots(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
-#     fig.suptitle(f"TDE fit rise- vs. decaytime", fontsize=14)
-
-#     ax.scatter(
-#         sample.rise,
-#         sample.decay,
-#         marker=".",
-#         s=2,
-#     )
-
-#     ax.set_xlabel("Rise time")
-#     ax.set_ylabel("Decay time")
-
-#     # outfile_zoom = os.path.join(io.LOCALSOURCE_plots, "salt_vs_tde_chisq_zoom.pdf")
-#     outfile = os.path.join(io.LOCALSOURCE_plots, "tde_risedecay.pdf")
-#     plt.tight_layout()
-
-#     plt.savefig(outfile)
-
-#     plt.close()
-
-#     info_db = SampleInfo()
-#     flaring_ztfids = set(info_db.read()["flaring"]["ztfids"])
-
-#     flaring_subset = []
-#     for ztfid in sample.ztfid:
-#         if ztfid in flaring_ztfids:
-#             flaring_subset.append(ztfid)
 
 
 def plot_ampelz():
@@ -833,7 +795,7 @@ def plot_tde_fit(
     """
     Plot the TDE fit result if present
     """
-    from ztfnuclear.tde_fit import TDESource_exp
+    from ztfnuclear.tde_fit import TDESource_exp_flextemp
     import sncosmo
     from sfdmap import SFDMap  # type: ignore[import]
 
@@ -855,7 +817,7 @@ def plot_tde_fit(
     phase = np.linspace(-50, 100, 10)
     wave = np.linspace(1000, 10000, 5)
 
-    tde_source = TDESource_exp(phase, wave, name="tde")
+    tde_source = TDESource_exp_flextemp(phase, wave, name="tde")
 
     dust = sncosmo.models.CCM89Dust()
     dustmap = SFDMap()
@@ -983,7 +945,7 @@ def plot_tde_fit(
     if not savepath:
         outfile = os.path.join(plot_dir, ztfid + ".png")
     else:
-        outfile = savepath
+        outfile = os.path.join(savepath, ztfid + ".png")
 
     plt.tight_layout()
 
