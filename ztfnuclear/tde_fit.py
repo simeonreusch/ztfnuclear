@@ -859,7 +859,6 @@ def fit(
     phot_tab.sort("mjd")
 
     phase = np.linspace(-50, 100, 10)
-    # phase = np.linspace(-50, 1000, 10)
     wave = np.linspace(1000, 10000, 5)
 
     tde_source = TDESource_exp_simple(
@@ -886,88 +885,92 @@ def fit(
 
     default_param_vals = sncosmo_model.parameters
 
-    result, fitted_model = sncosmo.fit_lc(
-        phot_tab,
-        sncosmo_model,
-        fit_params,
-        bounds={
-            "t0": [t_peak - 30, t_peak + 30],
-            "temperature": [3.5, 5],
-            "risetime": [0, 5],
-            "decaytime": [0, 5],
-        },
-    )
-    params = result["parameters"]
-    t0 = params[1]
-    priors = params[2:-2]
-    priors = np.append(priors, [0, 365])
+    try:
+        result, fitted_model = sncosmo.fit_lc(
+            phot_tab,
+            sncosmo_model,
+            fit_params,
+            bounds={
+                "t0": [t_peak - 30, t_peak + 30],
+                "temperature": [3.5, 5],
+                "risetime": [0, 5],
+                "decaytime": [0, 5],
+            },
+        )
+        params = result["parameters"]
+        t0 = params[1]
+        priors = params[2:-2]
+        priors = np.append(priors, [0, 365])
 
-    tde_source = TDESource_exp_flextemp(
-        phase,
-        wave,
-        name="tde",
-        priors=None,
-    )
+        tde_source = TDESource_exp_flextemp(
+            phase,
+            wave,
+            name="tde",
+            priors=None,
+        )
 
-    sncosmo_model = sncosmo.Model(
-        source=tde_source, effects=[dust], effect_names=["mw"], effect_frames=["obs"]
-    )
+        sncosmo_model = sncosmo.Model(
+            source=tde_source,
+            effects=[dust],
+            effect_names=["mw"],
+            effect_frames=["obs"],
+        )
 
-    sncosmo_model.set(mwebv=transient_mwebv)
-    # sncosmo_model.set(z=0.0222)
+        sncosmo_model.set(mwebv=transient_mwebv)
+        # sncosmo_model.set(z=0.0222)
 
-    fit_params = copy.deepcopy(sncosmo_model.param_names)
-    fit_params.remove("mwebv")
-    fit_params.remove("mwr_v")
-    fit_params.remove("z")  # let's not fit z here
+        fit_params = copy.deepcopy(sncosmo_model.param_names)
+        fit_params.remove("mwebv")
+        fit_params.remove("mwr_v")
+        fit_params.remove("z")  # let's not fit z here
 
-    default_param_vals = sncosmo_model.parameters
+        default_param_vals = sncosmo_model.parameters
 
-    result, fitted_model = sncosmo.fit_lc(
-        phot_tab,
-        sncosmo_model,
-        fit_params,
-        bounds={
-            "t0": [t0 - 30, t0 + 30],
-            "temperature": [3.5, 5],
-            "risetime": [0.1, 5],
-            "decaytime": [0, 5],
-            "d_temp": [-1000, 1000],
-            "plateaustart": [100, 1200],
-        },
-    )
+        result, fitted_model = sncosmo.fit_lc(
+            phot_tab,
+            sncosmo_model,
+            fit_params,
+            bounds={
+                "t0": [t0 - 30, t0 + 30],
+                "temperature": [3.5, 5],
+                "risetime": [0.1, 5],
+                "decaytime": [0, 5],
+                "d_temp": [-1000, 1000],
+                "plateaustart": [100, 1200],
+            },
+        )
 
-    result["parameters"] = result["parameters"].tolist()
+        result["parameters"] = result["parameters"].tolist()
 
-    NoneType = type(None)
+        NoneType = type(None)
 
-    if not isinstance(result["covariance"], NoneType):
-        result["covariance"] = result["covariance"].tolist()
-    else:
-        result["covariance"] = [None]
+        if not isinstance(result["covariance"], NoneType):
+            result["covariance"] = result["covariance"].tolist()
+        else:
+            result["covariance"] = [None]
 
-    result.pop("data_mask")
+        result.pop("data_mask")
 
-    result["paramdict"] = {}
-    for ix, pname in enumerate(result["param_names"]):
-        result["paramdict"][pname] = result["parameters"][ix]
+        result["paramdict"] = {}
+        for ix, pname in enumerate(result["param_names"]):
+            result["paramdict"][pname] = result["parameters"][ix]
 
-    result.pop("param_names")
-    result.pop("vparam_names")
-    result.pop("parameters")
+        result.pop("param_names")
+        result.pop("vparam_names")
+        result.pop("parameters")
 
-    # fig = sncosmo.plot_lc(data=phot_tab, model=fitted_model, zpsys="ab", zp=25)
+        # fig = sncosmo.plot_lc(data=phot_tab, model=fitted_model, zpsys="ab", zp=25)
 
-    # if powerlaw:
-    #     if plateau:
-    #         fig.savefig("test_pl_plateau.png")
-    #     else:
-    #         fig.savefig("test_pl.png")
-    # else:
-    #     fig.savefig(f"/Users/simeon/Desktop/flextemp_test/diagnostic/{ztfid}.png")
+        # if powerlaw:
+        #     if plateau:
+        #         fig.savefig("test_pl_plateau.png")
+        #     else:
+        #         fig.savefig("test_pl.png")
+        # else:
+        #     fig.savefig(f"/Users/simeon/Desktop/flextemp_test/diagnostic/{ztfid}.png")
 
-    print(result)
-    return result
+        print(result)
+        return result
 
-    # except:
-    #     return {"success": False}
+    except:
+        return {"success": False}
