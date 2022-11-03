@@ -163,7 +163,6 @@ class TDESource_exp_simple(sncosmo.Source):
         model_flux = (rise_decay * bb_lam).transpose()
 
         model_flux_cgi = model_flux.to(u.erg / u.s / u.cm**2 / u.AA)
-        print(np.max(model_flux_cgi))
 
         return model_flux_cgi
 
@@ -217,8 +216,6 @@ class TDESource_exp_flextemp(sncosmo.Source):
             )
         else:
             self._parameters = priors
-
-        print(self.parameters)
 
     @staticmethod
     def _wl_to_nu(self, wl: np.ndarray) -> np.ndarray:
@@ -421,7 +418,6 @@ class TDESource_exp_flextemp(sncosmo.Source):
         # model_flux = (rise_decay * bb_nu).transpose() * conversion_factor_nu_lam
 
         model_flux_cgi = model_flux.to(u.erg / u.s / u.cm**2 / u.AA)
-        print(np.max(model_flux_cgi))
 
         return model_flux_cgi
 
@@ -969,7 +965,6 @@ def fit(
         # else:
         #     fig.savefig(f"/Users/simeon/Desktop/flextemp_test/diagnostic/{ztfid}.png")
 
-        print(result)
         return result
 
     except:
