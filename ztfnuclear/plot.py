@@ -804,7 +804,7 @@ def plot_tde_fit(
     """
     Plot the TDE fit result if present
     """
-    from ztfnuclear.tde_fit import TDESource_exp_flextemp
+    from ztfnuclear.tde_fit import TDESource_exp_flextemp, TDESource_pl_flextemp
     import sncosmo
     from sfdmap import SFDMap  # type: ignore[import]
 
@@ -826,7 +826,10 @@ def plot_tde_fit(
     phase = np.linspace(-50, 100, 10)
     wave = np.linspace(1000, 10000, 5)
 
-    tde_source = TDESource_exp_flextemp(phase, wave, name="tde")
+    if "alpha" in tde_params.keys():
+        tde_source = TDESource_pl_flextemp(phase, wave, name="tde")
+    else:
+        tde_source = TDESource_exp_flextemp(phase, wave, name="tde")
 
     dust = sncosmo.models.CCM89Dust()
     dustmap = SFDMap()
