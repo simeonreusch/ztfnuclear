@@ -48,17 +48,7 @@ class TDESource_exp_simple(sncosmo.Source):
         self._phase: np.ndarray = phase
         self._wave: np.ndarray = wave
 
-        self._parameters: np.ndarray = np.array([1.584, 2.278, 3.998, 1e-10])
-
-    @staticmethod
-    def _wl_to_nu(self, wl: np.ndarray) -> np.ndarray:
-        """
-        Convert wavelength in Angstrom to frequency in Hz
-
-        """
-        nu = 2.9979e18 / wl
-
-        return nu
+        self._parameters: np.ndarray = np.array([1.584, 2.278, 3.998, 1e-25])
 
     @staticmethod
     def _planck_lam(
@@ -89,7 +79,6 @@ class TDESource_exp_simple(sncosmo.Source):
     @staticmethod
     def _cc_bol_lam(self, wave: Union[float, np.ndarray], T: np.ndarray):
         bb = self._planck_lam(self, wave, T)
-        wave = (wave * u.AA).to(u.m)
         # bol_corr = np.tile(nu, (len(T), 1)).transpose() / (sigma_SB * T**4 / np.pi)
         # bol_corr_dimless = np.tile(nu.value, (len(T), 1)).transpose() / (
         #     sigma_SB.value * T.value**4 / np.pi
@@ -101,7 +90,7 @@ class TDESource_exp_simple(sncosmo.Source):
         #     / (T**4 * c.sigma_sb.value)
         # )
 
-        bb = bb * 4 * np.pi * u.sr  # * bol_corr_dimless2
+        bb = bb * u.sr  # * bol_corr_dimless2
 
         return bb
 
@@ -120,6 +109,8 @@ class TDESource_exp_simple(sncosmo.Source):
         temp = self._parameters[2]
         peakflux = self._parameters[3]
         # plateau_start = self.parameters[5]
+
+        print(peakflux)
 
         # Gaussian rise
         a1 = peakflux
@@ -163,8 +154,6 @@ class TDESource_exp_simple(sncosmo.Source):
             phase_iter = np.asarray(phase)
         else:
             phase_iter = phase
-
-        nu = self._wl_to_nu(self, wave)
 
         bb_lam = self._cc_bol_lam(self, T=t_evo, wave=wave)
 
@@ -367,7 +356,7 @@ class TDESource_exp_flextemp(sncosmo.Source):
         t_evo = (10**temp) + (phase_clip * d_temp)
 
         t_evo_clip = np.clip(
-            t_evo, 1e-10, 1e6
+            t_evo, 1e3, 1e6
         )  # clip temperatures outside 1000 and 100,000 K
 
         return t_evo_clip
@@ -934,6 +923,7 @@ def fit(
     plateau: bool = True,
     ztfid: str = None,
     simplefit_only: bool = False,
+    debug: bool = False,
 ):
     """
     Fit TDE model
@@ -1042,6 +1032,17 @@ def fit(
         fit_params,
         bounds=bounds,
     )
+
+    if debug:
+        fig = sncosmo.plot_lc(
+            data=phot_tab, model=fitted_model_simple, zpsys="ab", zp=25
+        )
+        outpath = "/Users/simeon/Desktop/flextemp_test/diagnostic"
+        if powerlaw:
+            fig.savefig(os.path.join(outpath, f"{ztfid}_pl.png"))
+        else:
+            fig.savefig(os.path.join(outpath, f"{ztfid}_exp.png"))
+
     result["parameters"] = result["parameters"].tolist()
 
     NoneType = type(None)
@@ -1097,6 +1098,9 @@ def fit(
         fit_params.remove("mwr_v")
         fit_params.remove("z")  # let's not fit z here
 
+        # fit_params.remove("decaytime")
+        # sncosmo_model.set(decaytime=1.8756)
+
         default_param_vals = sncosmo_model.parameters
 
         result, fitted_model = sncosmo.fit_lc(
@@ -1132,15 +1136,13 @@ def fit(
         result.pop("vparam_names")
         result.pop("parameters")
 
-        # fig = sncosmo.plot_lc(data=phot_tab, model=fitted_model, zpsys="ab", zp=25)
-
-        # if powerlaw:
-        #     if plateau:
-        #         fig.savefig("test_pl_plateau.png")
-        #     else:
-        #         fig.savefig("test_pl.png")
-        # else:
-        #     fig.savefig(f"/Users/simeon/Desktop/flextemp_test/diagnostic/{ztfid}.png")
+        if debug:
+            fig = sncosmo.plot_lc(data=phot_tab, model=fitted_model, zpsys="ab", zp=25)
+            outpath = "/Users/simeon/Desktop/flextemp_test/diagnostic"
+            if powerlaw:
+                fig.savefig(os.path.join(outpath, f"{ztfid}_pl_flextemp.png"))
+            else:
+                fig.savefig(os.path.join(outpath, f"{ztfid}_exp_flextemp.png"))
 
         print(result["paramdict"])
         return result

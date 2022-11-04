@@ -1074,6 +1074,7 @@ class Transient(object):
         powerlaw: bool = False,
         plateau: bool = False,
         simplefit_only: bool = False,
+        debug: bool = False,
     ):
         """
         Re-fit the transient TDE lightcurve
@@ -1090,6 +1091,7 @@ class Transient(object):
                 plateau=plateau,
                 ztfid=self.ztfid,
                 simplefit_only=simplefit_only,
+                debug=debug,
             )
             if powerlaw:
                 meta.update_transient(self.ztfid, data={"tde_fit_pl": fitresult})

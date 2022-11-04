@@ -177,6 +177,7 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     temperatures = []
     d_temps = []
     red_chisqs = []
+    plateaustarts = []
     ztfids = []
     fritz_class = []
     tns_class = []
@@ -221,6 +222,7 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
                         decaytimes.append(paramdict["decaytime"])
                         temperatures.append(paramdict["temperature"])
                         d_temps.append(paramdict["d_temp"])
+                        plateaustarts.append(paramdict["plateaustart"])
                         red_chisqs.append(red_chisq)
                         ztfids.append(ztfid)
                         fritz_class.append(fritz_class_all[i])
@@ -241,24 +243,31 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     sample["fritz_class"] = fritz_class
     sample["tns_class"] = tns_class
     sample["red_chisq"] = red_chisqs
+    sample["d_temp_length"] = plateaustarts
+    sample["total_d_temp"] = np.asarray(plateaustarts) * np.asarray(d_temps)
     sample["w1_dustecho_strength"] = wise_strength1
     sample["w2_dustecho_strength"] = wise_strength2
 
-    sample.query(
-        "temp <  9 and w1_dustecho_strength < 1000 and w2_dustecho_strength < 50000",
-        inplace=True,
-    )
+    # sample.query(
+    #     "temp <  9 and w1_dustecho_strength < 1000 and w2_dustecho_strength < 50000",
+    #     inplace=True,
+    # )
+    # sample.query("decay>4.9 and fritz_class == 'Tidal Disruption Event'", inplace=True)
+    # print(sample.ztfid)
 
     x_values = "temp"
-    y_values = "w1_dustecho_strength"
+    y_values = "rise"
 
     fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
     fig.suptitle(
         f"TDE fit {x_values} vs. {y_values} ({len(sample)} transients)",
         fontsize=14,
     )
+    # ax.set_xlim([0, 3])
     # ax.set_xscale("log")
-    ax.set_yscale("log")
+    # ax.set_yscale("log")
+    # ax.set_ylim([-500, 500])
+    # ax.set_ylim([-0.4e6, 0.4e6])
 
     fritz_sn_ia = [
         "Ia",
