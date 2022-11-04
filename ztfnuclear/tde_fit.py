@@ -79,18 +79,7 @@ class TDESource_exp_simple(sncosmo.Source):
     @staticmethod
     def _cc_bol_lam(self, wave: Union[float, np.ndarray], T: np.ndarray):
         bb = self._planck_lam(self, wave, T)
-        # bol_corr = np.tile(nu, (len(T), 1)).transpose() / (sigma_SB * T**4 / np.pi)
-        # bol_corr_dimless = np.tile(nu.value, (len(T), 1)).transpose() / (
-        #     sigma_SB.value * T.value**4 / np.pi
-        # )
-        # bol_corr_dimless = 1 / (T**4 * c.sigma_sb.value)
-        # bol_corr_dimless2 = (
-        #     c.c.value
-        #     * np.tile(1 / wave.value**2, (len(T), 1)).transpose()
-        #     / (T**4 * c.sigma_sb.value)
-        # )
-
-        bb = bb * u.sr  # * bol_corr_dimless2
+        bb = bb * u.sr
 
         return bb
 
@@ -108,9 +97,6 @@ class TDESource_exp_simple(sncosmo.Source):
         decaytime = self._parameters[1]
         temp = self._parameters[2]
         peakflux = self._parameters[3]
-        # plateau_start = self.parameters[5]
-
-        print(peakflux)
 
         # Gaussian rise
         a1 = peakflux
@@ -279,19 +265,11 @@ class TDESource_exp_flextemp(sncosmo.Source):
     @staticmethod
     def _cc_bol_nu(self, nu: Union[float, np.ndarray], T: np.ndarray):
         bb = self._planck_nu(self, nu, T)
-        bb = bb * u.sr
 
-        nu = nu * u.Hz
-        T = T * u.K
+        peak_temp = 10 ** self._parameters[2]
+        bol_corr = peak_temp**4 / T**4
 
-        # sigma_SB = 5.6704e-8 * u.W / u.m**2 / u.K**4
-
-        # bol_corr = np.tile(nu, (len(T), 1)).transpose() / (sigma_SB * T**4 / np.pi)
-        # bol_corr_dimless = np.tile(nu.value, (len(T), 1)).transpose() / (
-        #     sigma_SB.value * T.value**4 / np.pi
-        # )
-
-        # bol_corr_new = 1 / u.sr
+        bb = bb * u.sr * bol_corr
 
         return bb
 
@@ -299,10 +277,10 @@ class TDESource_exp_flextemp(sncosmo.Source):
     def _cc_bol_lam(self, wave: Union[float, np.ndarray], T: np.ndarray):
         bb = self._planck_lam(self, wave, T)
 
-        peak_temp = self._parameters[2]
+        peak_temp = 10 ** self._parameters[2]
         bol_corr = peak_temp**4 / T**4
 
-        bb = bb * u.sr * bol_corr  # * bol_corr_dimless2
+        bb = bb * u.sr * bol_corr
 
         return bb
 
@@ -516,8 +494,6 @@ class TDESource_pl_simple(sncosmo.Source):
         model_flux = (rise_decay * bb_lam).transpose()
 
         model_flux_cgi = model_flux.to(u.erg / u.s / u.cm**2 / u.AA)
-
-        print(np.max(model_flux_cgi))
 
         return model_flux_cgi
 
