@@ -178,6 +178,7 @@ class TDESource_exp_flextemp(sncosmo.Source):
         name: str = "TDE_exp_flextemp",
         version: str = "1.0",
         priors: np.ndarray = None,
+        debug: bool = None,
     ) -> None:
 
         self.name: str = name
@@ -191,6 +192,10 @@ class TDESource_exp_flextemp(sncosmo.Source):
             )
         else:
             self._parameters = priors
+
+        if debug:
+            print("flextemp fit priors:")
+            print(self._parameters)
 
     @staticmethod
     def _planck_nu(
@@ -493,6 +498,7 @@ class TDESource_pl_flextemp(sncosmo.Source):
         name: str = "TDE_pl_flextemp",
         version: str = "1.0",
         priors: np.ndarray = None,
+        debug: bool = None,
     ) -> None:
 
         self.name: str = name
@@ -506,6 +512,10 @@ class TDESource_pl_flextemp(sncosmo.Source):
             )
         else:
             self._parameters = priors
+
+        if debug:
+            print("flextemp fit priors:")
+            print(self._parameters)
 
     @staticmethod
     def _planck_lam(
@@ -582,8 +592,8 @@ class TDESource_pl_flextemp(sncosmo.Source):
         Create an array with a linear temperature evolution
         """
         temp = self._parameters[2]
-        d_temp = self.parameters[4]
-        plateau_start = self.parameters[5]
+        d_temp = self.parameters[5]
+        plateau_start = self.parameters[6]
 
         phase_clip = np.clip(
             phase, -30, plateau_start
@@ -642,6 +652,9 @@ def fit(
 
     ampl_column = "ampl_corr"
     ampl_err_column = "ampl_err_corr"
+
+    # df["phase"] = df.obsmjd - t_peak
+    # df.query("phase < 365", inplace=True)
 
     obsmjd = df.obsmjd.values
 
@@ -718,7 +731,7 @@ def fit(
                 "t0": [t_peak - 30, t_peak + 30],
                 "temperature": [3.5, 5],
                 "risetime": [0, 5],
-                "alpha": [-5, 0],
+                "alpha": [-15, 0],
                 "normalization": [0, 5],
             }
 
@@ -765,6 +778,9 @@ def fit(
         result.pop("param_names")
         result.pop("vparam_names")
 
+        if debug:
+            print(result["paramdict"])
+
         if simplefit_only:
             result.pop("parameters")
 
@@ -802,18 +818,12 @@ def fit(
 
             if not powerlaw:
                 tde_source_flextemp = TDESource_exp_flextemp(
-                    phase,
-                    wave,
-                    name="tde",
-                    priors=priors,
+                    phase, wave, name="tde", priors=priors, debug=debug
                 )
 
             else:
                 tde_source_flextemp = TDESource_pl_flextemp(
-                    phase,
-                    wave,
-                    name="tde",
-                    priors=priors,
+                    phase, wave, name="tde", priors=priors, debug=debug
                 )
 
             sncosmo_model_flextemp = sncosmo.Model(
@@ -866,6 +876,9 @@ def fit(
             result.pop("vparam_names")
             result.pop("parameters")
 
+            if "Hesse" in result["message"]:
+                result["success"] = True
+
             if debug:
                 fig = sncosmo.plot_lc(
                     data=phot_tab, model=fitted_model, zpsys="ab", zp=25
@@ -876,7 +889,8 @@ def fit(
                 else:
                     fig.savefig(os.path.join(outpath, f"{ztfid}_exp_flextemp.png"))
 
-            print(result["paramdict"])
+                print(result)
+
             return result
 
     except:

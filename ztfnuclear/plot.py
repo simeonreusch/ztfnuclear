@@ -954,10 +954,15 @@ def plot_tde_fit(
 
     ax.set_ylim([ylim_lower, ylim_upper])
 
-    if not savepath:
-        outfile = os.path.join(plot_dir, ztfid + ".png")
+    if "alpha" in tde_params.keys():
+        suffix = "_pl"
     else:
-        outfile = os.path.join(savepath, ztfid + ".png")
+        suffix = "_exp"
+
+    if not savepath:
+        outfile = os.path.join(plot_dir, ztfid + suffix + ".png")
+    else:
+        outfile = os.path.join(savepath, ztfid + suffix + ".png")
 
     plt.tight_layout()
 
