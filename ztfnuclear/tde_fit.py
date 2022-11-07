@@ -656,7 +656,7 @@ def fit(
     df["phase"] = df.obsmjd - t_peak
     df.query("phase < 365 and phase > -30", inplace=True)
 
-    if len(df < 10):
+    if len(df) < 10:
         logger.warn("Too little datapoints, skipping fit")
         return {"success": False}
 
