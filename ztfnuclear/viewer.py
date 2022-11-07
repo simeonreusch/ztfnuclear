@@ -214,7 +214,7 @@ def transient_page(ztfid):
         base64_string_irsa = None
 
     plot_file_tde_fit = os.path.join(
-        base_dir, "plots", "lightcurves", "tde_fit", f"{ztfid}.png"
+        base_dir, "plots", "lightcurves", "tde_fit", f"{ztfid}_exp.png"
     )
 
     success = t.plot_tde()

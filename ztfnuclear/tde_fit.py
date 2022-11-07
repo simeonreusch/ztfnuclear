@@ -399,7 +399,7 @@ class TDESource_pl_simple(sncosmo.Source):
     @staticmethod
     def _cc_bol_lam(self, wave: Union[float, np.ndarray], T: np.ndarray):
         bb = self._planck_lam(self, wave, T)
-        bb = bb * 4 * np.pi * u.sr  # * bol_corr_dimless2
+        bb = bb * u.sr  # * bol_corr_dimless2
 
         return bb
 
@@ -707,6 +707,7 @@ def fit(
     dust = sncosmo.models.CCM89Dust()
     dustmap = SFDMap()
     transient_mwebv = dustmap.ebv((ra, dec))
+    transient_mwebv = 0
 
     sncosmo_model_simple = sncosmo.Model(
         source=tde_source_simple,

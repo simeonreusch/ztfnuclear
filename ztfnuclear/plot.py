@@ -305,9 +305,13 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     # sample.query("decay>4.9 and fritz_class == 'Tidal Disruption Event'", inplace=True)
     # sample.query("decay>4.9 and fritz_class in @fritz_sn_ia", inplace=True)
     # sample.query("temp > 4.92 and fritz_class in @fritz_sn_ia", inplace=True)
-    # sample.query("temp>4.9 and fritz_class == 'Tidal Disruption Event'", inplace=True)
+    sample.query("temp>4.92 and fritz_class == 'Tidal Disruption Event'", inplace=True)
     # print(sample.ztfid)
     # print(len(sample))
+    # quit()
+
+    print(sample)
+    quit()
     # quit()
 
     x_values = "temp"
@@ -931,7 +935,7 @@ def plot_tde_fit(
             * 1e-23
         )
 
-        ax.plot(x_range, modelflux, c=color_dict[filterid])
+        ax.plot(x_range, modelflux, c=color_dict[filterid], alpha=0.8)
 
     if z is not None:
 
