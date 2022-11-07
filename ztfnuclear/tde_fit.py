@@ -707,7 +707,7 @@ def fit(
     dust = sncosmo.models.CCM89Dust()
     dustmap = SFDMap()
     transient_mwebv = dustmap.ebv((ra, dec))
-    transient_mwebv = 0
+    # transient_mwebv = 0
 
     sncosmo_model_simple = sncosmo.Model(
         source=tde_source_simple,
@@ -835,15 +835,16 @@ def fit(
             )
 
             sncosmo_model_flextemp.set(mwebv=transient_mwebv)
-            # sncosmo_model.set(z=0.0222)
 
             fit_params = copy.deepcopy(sncosmo_model_flextemp.param_names)
             fit_params.remove("mwebv")
             fit_params.remove("mwr_v")
             fit_params.remove("z")  # let's not fit z here
 
-            # fit_params.remove("decaytime")
-            # sncosmo_model.set(decaytime=1.8756)
+            # if pdict["risetime"] < 2:
+            # lol = 1
+            # fit_params.remove("risetime")
+            # sncosmo_model_flextemp.set(risetime=pdict["risetime"])
 
             default_param_vals = sncosmo_model_flextemp.parameters
 

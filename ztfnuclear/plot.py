@@ -305,17 +305,18 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     # sample.query("decay>4.9 and fritz_class == 'Tidal Disruption Event'", inplace=True)
     # sample.query("decay>4.9 and fritz_class in @fritz_sn_ia", inplace=True)
     # sample.query("temp > 4.92 and fritz_class in @fritz_sn_ia", inplace=True)
-    sample.query("temp>4.92 and fritz_class == 'Tidal Disruption Event'", inplace=True)
+    # sample.query("temp>4.92 and fritz_class == 'Tidal Disruption Event'", inplace=True)
     # print(sample.ztfid)
-    # print(len(sample))
-    # quit()
-
+    sample.query("rise<0.0002 and fritz_class in @fritz_sn_other", inplace=True)
     print(sample)
-    quit()
     # quit()
 
-    x_values = "temp"
-    y_values = "d_temp"
+    # print(sample)
+    # quit()
+    # quit()
+
+    x_values = "rise"
+    y_values = "decay"
 
     fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
     fig.suptitle(
