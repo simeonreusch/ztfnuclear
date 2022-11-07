@@ -217,9 +217,9 @@ def transient_page(ztfid):
         base_dir, "plots", "lightcurves", "tde_fit", f"{ztfid}.png"
     )
 
-    t.plot_tde()
+    success = t.plot_tde()
 
-    if os.path.isfile(plot_file_tde_fit):
+    if success and os.path.isfile(plot_file_tde_fit):
         plot_data_tde_fit = open(plot_file_tde_fit, "rb")
         base64_string_tde_fit = base64.b64encode(plot_data_tde_fit.read()).decode(
             "ascii"

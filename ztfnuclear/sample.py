@@ -1105,7 +1105,7 @@ class Transient(object):
 
     def plot_tde(
         self, powerlaw: bool = False, debug: bool = False, params: dict = None
-    ):
+    ) -> bool:
         """
         Plot the TDE fit result if present
         """
@@ -1118,6 +1118,8 @@ class Transient(object):
             savepath = "/Users/simeon/Desktop/flextemp_test/"
         else:
             savepath = None
+
+        success = False
 
         if keyword in self.meta.keys():
             if self.meta[keyword] is not None and params is None:
@@ -1140,6 +1142,8 @@ class Transient(object):
                             savepath=savepath,
                         )
 
+                        success = True
+
             elif params:
                 plot_tde_fit(
                     df=self.baseline,
@@ -1150,8 +1154,9 @@ class Transient(object):
                     savepath=savepath,
                 )
 
-            else:
-                return None
+                success = True
+
+        return success
 
     def plot_irsa(
         self,

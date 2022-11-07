@@ -653,8 +653,8 @@ def fit(
     ampl_column = "ampl_corr"
     ampl_err_column = "ampl_err_corr"
 
-    # df["phase"] = df.obsmjd - t_peak
-    # df.query("phase < 365", inplace=True)
+    df["phase"] = df.obsmjd - t_peak
+    df.query("phase < 365 and phase > -30", inplace=True)
 
     obsmjd = df.obsmjd.values
 
@@ -729,7 +729,7 @@ def fit(
         if powerlaw:
             bounds_simple = {
                 "t0": [t_peak - 30, t_peak + 30],
-                "temperature": [3.5, 5],
+                "temperature": [3.5, 5.0],
                 "risetime": [0, 5],
                 "alpha": [-15, 0],
                 "normalization": [0, 5],
@@ -738,7 +738,7 @@ def fit(
         else:
             bounds_simple = {
                 "t0": [t_peak - 30, t_peak + 30],
-                "temperature": [3.5, 5],
+                "temperature": [3.5, 5.0],
                 "risetime": [0, 5],
                 "decaytime": [0, 5],
             }
@@ -876,8 +876,8 @@ def fit(
             result.pop("vparam_names")
             result.pop("parameters")
 
-            if "Hesse" in result["message"]:
-                result["success"] = True
+            # if "Hesse" in result["message"]:
+            #     result["success"] = True
 
             if debug:
                 fig = sncosmo.plot_lc(

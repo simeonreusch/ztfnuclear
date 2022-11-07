@@ -21,6 +21,56 @@ GOLDEN_RATIO = 1.62
 
 logger = logging.getLogger(__name__)
 
+fritz_sn_ia = [
+    "Ia",
+    "Ia-pec",
+    "Ia-02cx",
+    "Ia-91b",
+    "Ia-18byg",
+    "Ia-CSM",
+    "Type I",
+    "Ia-03fg",
+]
+
+tns_sn_ia = [
+    "SN Ia",
+    "SN Ia-91T-like",
+    "SN Ia-pec",
+    "SN Ia-CSM",
+    "SN Iax[02cx-like]",
+]
+tns_sn_other = [
+    "SN II",
+    "SN IIn",
+    "SLSN-II",
+    "SN Ic",
+    "SLSN-I",
+    "SN IIP",
+    "SN Ib",
+    "SN Ic-BL",
+    "SN Ib/c",
+    "SN IIb",
+    "SN I",
+    "SN",
+    "SN Ibn",
+]
+
+fritz_sn_other = [
+    "IIP",
+    "Type II",
+    "IIn",
+    "Supernova",
+    "Ic",
+    "Ic-SLSN",
+    "Ib",
+    "Ic-BL",
+    "SLSN I",
+    "Ib/c",
+    "IIb",
+    "II-norm",
+    "Ibn",
+]
+
 
 def plot_location():
     """Plot the sky location of all transients"""
@@ -253,10 +303,15 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     #     inplace=True,
     # )
     # sample.query("decay>4.9 and fritz_class == 'Tidal Disruption Event'", inplace=True)
+    # sample.query("decay>4.9 and fritz_class in @fritz_sn_ia", inplace=True)
+    # sample.query("temp > 4.92 and fritz_class in @fritz_sn_ia", inplace=True)
+    # sample.query("temp>4.9 and fritz_class == 'Tidal Disruption Event'", inplace=True)
     # print(sample.ztfid)
+    # print(len(sample))
+    # quit()
 
     x_values = "temp"
-    y_values = "rise"
+    y_values = "d_temp"
 
     fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
     fig.suptitle(
@@ -268,56 +323,6 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     # ax.set_yscale("log")
     # ax.set_ylim([-500, 500])
     # ax.set_ylim([-0.4e6, 0.4e6])
-
-    fritz_sn_ia = [
-        "Ia",
-        "Ia-pec",
-        "Ia-02cx",
-        "Ia-91b",
-        "Ia-18byg",
-        "Ia-CSM",
-        "Type I",
-        "Ia-03fg",
-    ]
-
-    tns_sn_ia = [
-        "SN Ia",
-        "SN Ia-91T-like",
-        "SN Ia-pec",
-        "SN Ia-CSM",
-        "SN Iax[02cx-like]",
-    ]
-    tns_sn_other = [
-        "SN II",
-        "SN IIn",
-        "SLSN-II",
-        "SN Ic",
-        "SLSN-I",
-        "SN IIP",
-        "SN Ib",
-        "SN Ic-BL",
-        "SN Ib/c",
-        "SN IIb",
-        "SN I",
-        "SN",
-        "SN Ibn",
-    ]
-
-    fritz_sn_other = [
-        "IIP",
-        "Type II",
-        "IIn",
-        "Supernova",
-        "Ic",
-        "Ic-SLSN",
-        "Ib",
-        "Ic-BL",
-        "SLSN I",
-        "Ib/c",
-        "IIb",
-        "II-norm",
-        "Ibn",
-    ]
 
     if fritz:
 
@@ -909,7 +914,7 @@ def plot_tde_fit(
             mec=color_dict[filterid],
             ecolor=color_dict[filterid],
             mfc="None",
-            alpha=0.25,
+            alpha=1,
             ms=ms,
             elinewidth=0.5,
             label=filtername_dict[filterid],
