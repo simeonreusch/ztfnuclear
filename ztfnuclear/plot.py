@@ -307,12 +307,17 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     # sample.query("temp > 4.92 and fritz_class in @fritz_sn_ia", inplace=True)
     # sample.query("temp>4.92 and fritz_class == 'Tidal Disruption Event'", inplace=True)
     # print(sample.ztfid)
-    sample.query("rise<0.0002 and fritz_class in @fritz_sn_other", inplace=True)
-    print(sample)
-    # quit()
-
+    # sample.query("rise<0.0002 and fritz_class in @fritz_sn_other", inplace=True)
     # print(sample)
     # quit()
+
+    tde_selection = "temp > 3.9 and temp < 4.5 and d_temp < 350 and d_temp > -350 and rise>1 and rise<2.0 and decay>0.8 and decay<3.5"
+
+    # sample.query(tde_selection, inplace=True)
+
+    # sample.query("w1_dustecho_strength>5 and w2_dustecho_strength>5", inplace=True)
+
+    # print(sample.query("red_chisq < 1.5"))
     # quit()
 
     x_values = "rise"
@@ -323,29 +328,17 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
         f"TDE fit {x_values} vs. {y_values} ({len(sample)} transients)",
         fontsize=14,
     )
-    # ax.set_xlim([0, 3])
-    # ax.set_xscale("log")
-    # ax.set_yscale("log")
-    # ax.set_ylim([-500, 500])
-    # ax.set_ylim([-0.4e6, 0.4e6])
+
+    # ax.set_xlim([0.8, 2])
+    # ax.set_ylim([0.8, 3.5])
 
     if fritz:
 
-        # print(sample)
-        # sample = sample.query("d_temp > 0")
-        # sample = sample.query("red_chisq < 5")
-        # sample = sample.query("decay > 4.98")
-        bla = sample.query("fritz_class == 'Tidal Disruption Event'")
-        # print(bla)
         _df = sample.query(
             "fritz_class not in @fritz_sn_ia and fritz_class != 'Tidal Disruption Event' and fritz_class not in @fritz_sn_other"
         )
 
         ax.scatter(_df[x_values], _df[y_values], marker=".", s=1, c="blue", alpha=0.7)
-
-        _df = sample.query("fritz_class == 'Tidal Disruption Event'")
-
-        ax.scatter(_df[x_values], _df[y_values], marker="*", s=10, c="red", label="TDE")
 
         _df = sample.query("fritz_class in @fritz_sn_ia")
 
@@ -358,6 +351,10 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
         ax.scatter(
             _df[x_values], _df[y_values], marker=".", s=8, c="orange", label="SN other"
         )
+
+        _df = sample.query("fritz_class == 'Tidal Disruption Event'")
+
+        ax.scatter(_df[x_values], _df[y_values], marker="*", s=10, c="red", label="TDE")
 
         plt.legend(title="Fritz class.")
 
@@ -385,9 +382,6 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
 
     ax.set_xlabel(f"{x_values}")
     ax.set_ylabel(f"{y_values}")
-
-    # ax.set_xlim([0, 2.5])
-    # ax.set_ylim([0.25, 4])
 
     if flaring_only:
         if fritz:

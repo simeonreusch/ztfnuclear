@@ -656,6 +656,10 @@ def fit(
     df["phase"] = df.obsmjd - t_peak
     df.query("phase < 365 and phase > -30", inplace=True)
 
+    if len(df < 10):
+        logger.warn("Too little datapoints, skipping fit")
+        return {"success": False}
+
     obsmjd = df.obsmjd.values
 
     with warnings.catch_warnings():
@@ -707,7 +711,6 @@ def fit(
     dust = sncosmo.models.CCM89Dust()
     dustmap = SFDMap()
     transient_mwebv = dustmap.ebv((ra, dec))
-    # transient_mwebv = 0
 
     sncosmo_model_simple = sncosmo.Model(
         source=tde_source_simple,
@@ -717,7 +720,6 @@ def fit(
     )
 
     sncosmo_model_simple.set(mwebv=transient_mwebv)
-    # sncosmo_model.set(z=0.0222)
 
     fit_params = copy.deepcopy(sncosmo_model_simple.param_names)
     fit_params.remove("mwebv")
