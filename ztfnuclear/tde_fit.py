@@ -654,7 +654,7 @@ def fit(
     ampl_err_column = "ampl_err_corr"
 
     df["phase"] = df.obsmjd - t_peak
-    # df.query("phase < 365 and phase > -30", inplace=True)
+    # df.query("phase < 365 and phase > -30", inplace=True) -> leads to erroneous risetime for some TDEs
 
     if len(df.query("phase < 365 and phase > -30")) < 10:
         logger.warn(
