@@ -71,6 +71,13 @@ fritz_sn_other = [
     "Ibn",
 ]
 
+axislabels = {
+    "temp": "Temperature (log K)",
+    "d_temp": "Temperature change (K)",
+    "rise": "Rise time (log day)",
+    "decay": "Decay time (log day)",
+}
+
 
 def plot_location():
     """Plot the sky location of all transients"""
@@ -298,6 +305,8 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     sample["w1_dustecho_strength"] = wise_strength1
     sample["w2_dustecho_strength"] = wise_strength2
 
+    tde_selection = "temp > 3.9 and temp < 4.5 and d_temp < 350 and d_temp > -350 and rise>1 and rise<2.0 and decay>0.8 and decay<3.5"
+
     # sample.query(
     #     "temp <  9 and w1_dustecho_strength < 1000 and w2_dustecho_strength < 50000",
     #     inplace=True,
@@ -307,11 +316,9 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     # sample.query("temp > 4.92 and fritz_class in @fritz_sn_ia", inplace=True)
     # sample.query("temp>4.92 and fritz_class == 'Tidal Disruption Event'", inplace=True)
     # print(sample.ztfid)
-    # sample.query("rise<0.0002 and fritz_class in @fritz_sn_other", inplace=True)
-    # print(sample)
+    sample.query("rise>4.9 and fritz_class == 'Tidal Disruption Event'", inplace=True)
+    print(sample)
     # quit()
-
-    tde_selection = "temp > 3.9 and temp < 4.5 and d_temp < 350 and d_temp > -350 and rise>1 and rise<2.0 and decay>0.8 and decay<3.5"
 
     # sample.query(tde_selection, inplace=True)
 
@@ -380,8 +387,8 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
 
         plt.legend(title="TNS class.")
 
-    ax.set_xlabel(f"{x_values}")
-    ax.set_ylabel(f"{y_values}")
+    ax.set_xlabel(axislabels[x_values])
+    ax.set_ylabel(axislabels[y_values])
 
     if flaring_only:
         if fritz:

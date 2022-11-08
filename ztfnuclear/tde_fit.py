@@ -654,10 +654,12 @@ def fit(
     ampl_err_column = "ampl_err_corr"
 
     df["phase"] = df.obsmjd - t_peak
-    df.query("phase < 365 and phase > -30", inplace=True)
+    # df.query("phase < 365 and phase > -30", inplace=True)
 
-    if len(df) < 10:
-        logger.warn("Too little datapoints, skipping fit")
+    if len(df.query("phase < 365 and phase > -30")) < 10:
+        logger.warn(
+            "Too little datapoints within the year around peak (-30, +365), skipping fit"
+        )
         return {"success": False}
 
     obsmjd = df.obsmjd.values
