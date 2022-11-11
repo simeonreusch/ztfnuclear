@@ -254,7 +254,7 @@ class TDESource_exp_flextemp(sncosmo.Source):
         peak_temp = 10 ** self._parameters[2]
         bol_corr = peak_temp**4 / T**4
 
-        bb = bb * u.sr * bol_corr
+        bb = bb * u.sr  # * bol_corr
 
         return bb
 
@@ -652,6 +652,10 @@ def fit(
 
     ampl_column = "ampl_corr"
     ampl_err_column = "ampl_err_corr"
+
+    df.query("ampl_corr != -9552.183861545716", inplace=True)
+    # print(min(df[ampl_column]))
+    # quit()
 
     df["phase"] = df.obsmjd - t_peak
     # df.query("phase < 365 and phase > -30", inplace=True) -> leads to erroneous risetime for some TDEs
