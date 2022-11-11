@@ -307,9 +307,11 @@ class TDESource_exp_flextemp(sncosmo.Source):
 
         t_evo = (10**temp) + (phase_clip * d_temp)
 
-        t_evo_clip = np.clip(
-            t_evo, 1e3, 1e6
-        )  # clip temperatures outside 1000 and 100,000 K
+        # okay we could try the following:
+        # t_evo_clip = np.clip(t_evo, 10**temp - 10000, 10**temp + 10000)
+
+        # clip temperatures outside 1000 and 100,000 K
+        t_evo_clip = np.clip(t_evo, 1e3, 1e6)
 
         return t_evo_clip
 
@@ -652,10 +654,6 @@ def fit(
 
     ampl_column = "ampl_corr"
     ampl_err_column = "ampl_err_corr"
-
-    df.query("ampl_corr != -9552.183861545716", inplace=True)
-    # print(min(df[ampl_column]))
-    # quit()
 
     df["phase"] = df.obsmjd - t_peak
     # df.query("phase < 365 and phase > -30", inplace=True) -> leads to erroneous risetime for some TDEs
