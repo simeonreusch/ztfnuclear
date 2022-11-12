@@ -254,7 +254,7 @@ class TDESource_exp_flextemp(sncosmo.Source):
         peak_temp = 10 ** self._parameters[2]
         bol_corr = peak_temp**4 / T**4
 
-        bb = bb * u.sr  # * bol_corr
+        bb = bb * u.sr * bol_corr
 
         return bb
 
@@ -302,16 +302,19 @@ class TDESource_exp_flextemp(sncosmo.Source):
         plateau_start = self.parameters[5]
 
         phase_clip = np.clip(
-            phase, -30, plateau_start
+            phase, -0.01, plateau_start
         )  # stop temperature evolution at -30 and +365 days
 
         t_evo = (10**temp) + (phase_clip * d_temp)
 
         # okay we could try the following:
-        # t_evo_clip = np.clip(t_evo, 10**temp - 10000, 10**temp + 10000)
+        temp_max_delta = 15000
+        t_evo_clip = np.clip(
+            t_evo, 10**temp - temp_max_delta, 10**temp + temp_max_delta
+        )
 
         # clip temperatures outside 1000 and 100,000 K
-        t_evo_clip = np.clip(t_evo, 1e3, 1e6)
+        # t_evo_clip = np.clip(t_evo, 1e3, 1e6)
 
         return t_evo_clip
 
