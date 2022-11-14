@@ -220,20 +220,38 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     """
     meta = MetadataDB()
     res = meta.read_parameters(
-        params=["tde_fit_exp", "_id", "fritz_class", "crossmatch", "WISE_bayesian"]
+        params=[
+            "tde_fit_exp",
+            "_id",
+            "fritz_class",
+            "crossmatch",
+            "WISE_bayesian",
+            "salt_loose_bl",
+        ]
     )
+
+    def snia_diag_cut(x):
+        return 3.34 - 2.2 * x
+
+    def aggressive_snia_diag_cut(x):
+        return 3.57 - 2.29 * x
+
+    # def dist_to_snia(rise, decay):
 
     tde_res = res["tde_fit_exp"]
     all_ztfids = res["_id"]
     fritz_class_all = res["fritz_class"]
     crossmatch_all = res["crossmatch"]
     wise_bayesian = res["WISE_bayesian"]
+    salt = res["salt_loose_bl"]
 
     risetimes = []
     decaytimes = []
     temperatures = []
     d_temps = []
     red_chisqs = []
+    chisqs = []
+    salt_red_chisqs = []
     plateaustarts = []
     ztfids = []
     fritz_class = []
@@ -259,6 +277,7 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
                     has_wise.append(all_ztfids[i])
 
     selected_subset = set(has_wise)
+    selected_subset = set(all_ztfids)
 
     for i, entry in enumerate(tde_res):
         ztfid = all_ztfids[i]
@@ -267,14 +286,21 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
                 if entry["success"] == True:
                     chisq = entry["chisq"]
                     ndof = entry["ndof"]
+                    chisqs.append(chisq)
                     red_chisq = chisq / ndof
                     if ztfid in selected_subset:
                         paramdict = entry["paramdict"]
-                        wise_dict = wise_bayesian[i]["bayesian"]
-                        wise_w1 = wise_dict["Wise_W1"]
-                        wise_w2 = wise_dict["Wise_W2"]
-                        wise_strength1.append(wise_w1["strength_sjoert"][0])
-                        wise_strength2.append(wise_w2["strength_sjoert"][0])
+                        salt_res = salt[i]
+                        if salt_res != "failure" and salt_res != None:
+                            salt_red_chisq = salt_res["chisq"] / salt_res["ndof"]
+                            salt_red_chisqs.append(salt_red_chisq)
+                        else:
+                            salt_red_chisqs.append(99999)
+                        # wise_dict = wise_bayesian[i]["bayesian"]
+                        # wise_w1 = wise_dict["Wise_W1"]
+                        # wise_w2 = wise_dict["Wise_W2"]
+                        # wise_strength1.append(wise_w1["strength_sjoert"][0])
+                        # wise_strength2.append(wise_w2["strength_sjoert"][0])
                         risetimes.append(paramdict["risetime"])
                         decaytimes.append(paramdict["decaytime"])
                         temperatures.append(paramdict["temperature"])
@@ -300,44 +326,41 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     sample["fritz_class"] = fritz_class
     sample["tns_class"] = tns_class
     sample["red_chisq"] = red_chisqs
+    sample["chisq"] = chisqs
+    sample["salt_red_chisq"] = salt_red_chisqs
     sample["d_temp_length"] = plateaustarts
     sample["total_d_temp"] = np.asarray(plateaustarts) * np.asarray(d_temps)
-    sample["w1_dustecho_strength"] = wise_strength1
-    sample["w2_dustecho_strength"] = wise_strength2
+    # sample["snia_cut"] = aggressive_snia_diag_cut(np.asarray(risetimes))
+
+    # sample.to_csv("test.csv")
+    # sample["w1_dustecho_strength"] = wise_strength1
+    # sample["w2_dustecho_strength"] = wise_strength2
 
     tde_selection = "temp > 3.9 and temp < 4.5 and d_temp < 350 and d_temp > -350 and rise>1 and rise<2.0 and decay>0.8 and decay<3.5"
-
-    # sample.query(
-    #     "temp <  9 and w1_dustecho_strength < 1000 and w2_dustecho_strength < 50000",
-    #     inplace=True,
-    # )
-    # sample.query("decay>4.9 and fritz_class == 'Tidal Disruption Event'", inplace=True)
-    # sample.query("decay>4.9 and fritz_class in @fritz_sn_ia", inplace=True)
-    # sample.query("temp > 4.92 and fritz_class in @fritz_sn_ia", inplace=True)
-    # sample.query("temp>4.92 and fritz_class == 'Tidal Disruption Event'", inplace=True)
-    # print(sample.ztfid)
-    sample.query("rise>4.9 and fritz_class == 'Tidal Disruption Event'", inplace=True)
-    print(sample)
-    # quit()
+    tde_selection = "decay>0.9 and decay<3.05 and  rise>0.7 and rise<1.91 and temp > 3.9 and temp<4.45 and d_temp < 100 and d_temp>-300 and red_chisq < 10 and red_chisq < salt_red_chisq"
 
     # sample.query(tde_selection, inplace=True)
+    # sample.query("snia_cut < decay", inplace=True)
 
-    # sample.query("w1_dustecho_strength>5 and w2_dustecho_strength>5", inplace=True)
+    # print(
+    #     sample.query("fritz_class == 'Tidal Disruption Event'").sort_values(
+    #         by="red_chisq"
+    #     )[["ztfid", "red_chisq"]]
+    # )
+    # print(
+    #     sample.query(
+    #         "rise > 0.85 and rise < 0.92 and fritz_class == 'Tidal Disruption Event'"
+    #     )
+    # )
 
-    # print(sample.query("red_chisq < 1.5"))
-    # quit()
-
-    x_values = "rise"
-    y_values = "decay"
+    x_values = "temp"
+    y_values = "d_temp"
 
     fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
     fig.suptitle(
         f"TDE fit {x_values} vs. {y_values} ({len(sample)} transients)",
         fontsize=14,
     )
-
-    # ax.set_xlim([0.8, 2])
-    # ax.set_ylim([0.8, 3.5])
 
     if fritz:
 
@@ -389,6 +412,11 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
 
     ax.set_xlabel(axislabels[x_values])
     ax.set_ylabel(axislabels[y_values])
+
+    x = np.arange(0.75, 1.08, 0.01)
+    y = aggressive_snia_diag_cut(x)
+
+    # ax.plot(x, y)
 
     if flaring_only:
         if fritz:

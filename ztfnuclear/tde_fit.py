@@ -254,7 +254,7 @@ class TDESource_exp_flextemp(sncosmo.Source):
         peak_temp = 10 ** self._parameters[2]
         bol_corr = peak_temp**4 / T**4
 
-        bb = bb * u.sr  # * bol_corr
+        bb = bb * u.sr * bol_corr
 
         return bb
 
@@ -404,7 +404,7 @@ class TDESource_pl_simple(sncosmo.Source):
     @staticmethod
     def _cc_bol_lam(self, wave: Union[float, np.ndarray], T: np.ndarray):
         bb = self._planck_lam(self, wave, T)
-        bb = bb * u.sr  # * bol_corr_dimless2
+        bb = bb * u.sr
 
         return bb
 

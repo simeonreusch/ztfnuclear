@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
-import os, logging, re, json, multiprocessing
+import os, logging, re, json, multiprocessing, argparse
 import pandas as pd
 import matplotlib
 from tqdm import tqdm
@@ -21,7 +21,7 @@ os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
 FIT_TYPE = "tde_fit_exp"
 RECREATE_BASELINE = False
-STARTINDEX = 0
+DEBUG = False
 
 
 def _tde_fitter(ztfid):
@@ -29,21 +29,58 @@ def _tde_fitter(ztfid):
     if RECREATE_BASELINE:
         t.recreate_baseline()
     if FIT_TYPE == "tde_fit_exp":
-        t.fit_tde()
+        t.fit_tde(debug=DEBUG)
+        if DEBUG:
+            t.plot_tde(debug=DEBUG)
     elif FIT_TYPE == "tde_fit_pl":
-        t.fit_tde(powerlaw=True)
+        t.fit_tde(powerlaw=True, debug=DEBUG)
 
 
 if __name__ == "__main__":
 
     logger = logging.getLogger(__name__)
+    parser = argparse.ArgumentParser(description="Fit TDE lightcurves")
+    parser.add_argument(
+        "-tde",
+        "--tde",
+        action="store_true",
+        help="Fit certified TDEs only.",
+    )
+    # parser.add_argument(
+    #     "-debug",
+    #     "--debug",
+    #     action="store_true",
+    #     help="Debug mode",
+    # )
 
     logger.info(f"Running fits for {FIT_TYPE} in {nprocess} threads.")
 
+    commandline_args = parser.parse_args()
+    tde_only = commandline_args.tde
+    # debug = commandline_args.debug
+
+    if tde_only:
+        res = meta.read_parameters(
+            params=[
+                "_id",
+                "fritz_class",
+            ]
+        )
+        fritz_class_all = res["fritz_class"]
+        tdes = []
+
+        for i, entry in enumerate(fritz_class_all):
+            if entry == "Tidal Disruption Event":
+                tdes.append(res["_id"][i])
+
+        ztfids = tdes
+    else:
+        ztfids = s.ztfids
+
     with multiprocessing.Pool(nprocess) as p:
         for result in tqdm(
-            p.imap_unordered(_tde_fitter, s.ztfids[STARTINDEX:]),
-            total=len(s.ztfids[STARTINDEX:]),
+            p.imap_unordered(_tde_fitter, ztfids),
+            total=len(ztfids),
         ):
             a = 1
 
