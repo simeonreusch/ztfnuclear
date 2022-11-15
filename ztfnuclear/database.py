@@ -50,6 +50,20 @@ class SampleInfo(object):
         info = self.coll.find_one({"_id": "sample"})
         return info
 
+    def read_collection(self, collection_name: str) -> list:
+        """
+        Read a collection of ztfids from db
+        """
+        info = self.read()
+        return info[collection_name]
+
+    def ingest_ztfid_collection(self, ztfids: list, collection_name: str):
+        """
+        Save a list of ztfids as belonging to a selection
+        """
+        data = {collection_name: list(ztfids)}
+        self.update(data=data)
+
 
 class MetadataDB(object):
     """

@@ -490,6 +490,21 @@ def list_golden():
     return render_template("transient_list.html", transients=golden_sample_transients)
 
 
+@app.route("/tdeselection")
+@login_required
+def list_tde_selection():
+    """
+    List all the transients passing the TDE selection cuts
+    """
+    s = NuclearSample()
+
+    tde_selection = info_db.read_collection(collection_name="tde_selection")
+
+    tde_selection_transients = s.get_transients(ztfids=tde_selection)
+
+    return render_template("transient_list.html", transients=tde_selection_transients)
+
+
 @app.route("/random")
 @login_required
 def transient_random():

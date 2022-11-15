@@ -234,7 +234,7 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
         return 3.34 - 2.2 * x
 
     def aggressive_snia_diag_cut(x):
-        return 3.57 - 2.29 * x
+        return 3.55 - 2.29 * x
 
     # def dist_to_snia(rise, decay):
 
@@ -330,31 +330,31 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     sample["salt_red_chisq"] = salt_red_chisqs
     sample["d_temp_length"] = plateaustarts
     sample["total_d_temp"] = np.asarray(plateaustarts) * np.asarray(d_temps)
-    # sample["snia_cut"] = aggressive_snia_diag_cut(np.asarray(risetimes))
+    sample["snia_cut"] = aggressive_snia_diag_cut(np.asarray(risetimes))
 
     # sample.to_csv("test.csv")
     # sample["w1_dustecho_strength"] = wise_strength1
     # sample["w2_dustecho_strength"] = wise_strength2
 
-    tde_selection = "temp > 3.9 and temp < 4.5 and d_temp < 350 and d_temp > -350 and rise>1 and rise<2.0 and decay>0.8 and decay<3.5"
     tde_selection = "decay>0.9 and decay<3.05 and  rise>0.7 and rise<1.91 and temp > 3.9 and temp<4.45 and d_temp < 100 and d_temp>-300 and red_chisq < 10 and red_chisq < salt_red_chisq"
 
-    # sample.query(tde_selection, inplace=True)
-    # sample.query("snia_cut < decay", inplace=True)
+    # that's the one for dtemp = 15k, evolution from peak, no bolcorr
+    tde_selection = "temp > 3.93 and temp < 4.37 and d_temp>-150 and d_temp < 70 and decay>1 and decay < 3.1 and rise >0.78 and rise<2.05 and red_chisq < salt_red_chisq"
 
-    # print(
-    #     sample.query("fritz_class == 'Tidal Disruption Event'").sort_values(
-    #         by="red_chisq"
-    #     )[["ztfid", "red_chisq"]]
-    # )
-    # print(
-    #     sample.query(
-    #         "rise > 0.85 and rise < 0.92 and fritz_class == 'Tidal Disruption Event'"
-    #     )
-    # )
+    # that's the one for dtemp = 15k, evolution from peak, bolcorr
+    tde_selection = "temp > 3.93 and temp < 4.38 and d_temp>-90 and d_temp < 140 and rise>0.85 and rise<2.05 and decay>1.1 and decay<3 and red_chisq<6 and red_chisq < salt_red_chisq"
 
-    x_values = "temp"
-    y_values = "d_temp"
+    sample.query(tde_selection, inplace=True)
+    sample.query("snia_cut < decay", inplace=True)
+
+    print(
+        sample.query("fritz_class == 'Tidal Disruption Event'").sort_values(by="rise")[
+            ["ztfid", "rise"]
+        ]
+    )
+
+    x_values = "rise"
+    y_values = "decay"
 
     fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
     fig.suptitle(
@@ -416,7 +416,7 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     x = np.arange(0.75, 1.08, 0.01)
     y = aggressive_snia_diag_cut(x)
 
-    # ax.plot(x, y)
+    ax.plot(x, y)
 
     if flaring_only:
         if fritz:
@@ -442,6 +442,10 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     plt.savefig(outfile)
 
     plt.close()
+
+    info_db.ingest_ztfid_collection(
+        ztfids=sample.ztfid.values, collection_name="tde_selection"
+    )
 
 
 def plot_ampelz():
