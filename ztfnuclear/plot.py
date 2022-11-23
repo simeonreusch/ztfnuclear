@@ -76,6 +76,8 @@ axislabels = {
     "d_temp": "Temperature change (K)",
     "rise": "Rise time (log day)",
     "decay": "Decay time (log day)",
+    "wise_w1w2": "Wise W1-W2",
+    "wise_w2w3": "Wise W2-W3",
 }
 
 
@@ -218,6 +220,9 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     """
     Plot the rise vs. fadetime of the TDE fit results
     """
+    cut = True
+    ingest = True
+
     meta = MetadataDB()
     res = meta.read_parameters(
         params=[
@@ -227,6 +232,7 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
             "crossmatch",
             "WISE_bayesian",
             "salt_loose_bl",
+            "ZTF_bayesian",
         ]
     )
 
@@ -236,14 +242,13 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     def aggressive_snia_diag_cut(x):
         return 3.55 - 2.29 * x
 
-    # def dist_to_snia(rise, decay):
-
     tde_res = res["tde_fit_exp"]
     all_ztfids = res["_id"]
     fritz_class_all = res["fritz_class"]
     crossmatch_all = res["crossmatch"]
     wise_bayesian = res["WISE_bayesian"]
     salt = res["salt_loose_bl"]
+    ztf_bayesian = res["ZTF_bayesian"]
 
     risetimes = []
     decaytimes = []
@@ -251,6 +256,8 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     d_temps = []
     red_chisqs = []
     chisqs = []
+    wise_w1w2 = []
+    wise_w2w3 = []
     salt_red_chisqs = []
     plateaustarts = []
     ztfids = []
@@ -258,6 +265,8 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     tns_class = []
     wise_strength1 = []
     wise_strength2 = []
+    overlapping_regions = []
+    milliquas = []
 
     info_db = SampleInfo()
 
@@ -276,7 +285,7 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
                 ):
                     has_wise.append(all_ztfids[i])
 
-    selected_subset = set(has_wise)
+    # selected_subset = set(has_wise)
     selected_subset = set(all_ztfids)
 
     for i, entry in enumerate(tde_res):
@@ -308,14 +317,37 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
                         plateaustarts.append(paramdict["plateaustart"])
                         red_chisqs.append(red_chisq)
                         ztfids.append(ztfid)
+                        if ztf_bayesian[i] == None:
+                            overlapping_regions.append(-99)
+                        else:
+                            overlapping_regions.append(
+                                ztf_bayesian[i]["bayesian"]["overlapping_regions_count"]
+                            )
                         fritz_class.append(fritz_class_all[i])
+
+                        _tns_class = None
                         if "TNS" in crossmatch_all[i].keys():
                             if "type" in crossmatch_all[i]["TNS"].keys():
-                                tns_class.append(crossmatch_all[i]["TNS"]["type"])
-                            else:
-                                tns_class.append(None)
-                        else:
-                            tns_class.append(None)
+                                _tns_class = crossmatch_all[i]["TNS"]["type"]
+                        tns_class.append(_tns_class)
+
+                        _milliquas_class = "noclass"
+                        if "Milliquas" in crossmatch_all[i].keys():
+                            if "type" in crossmatch_all[i]["Milliquas"].keys():
+                                _milliquas_class = crossmatch_all[i]["Milliquas"][
+                                    "type"
+                                ]
+                        milliquas.append(_milliquas_class)
+
+                        _w1w2 = 999
+                        _w2w3 = 999
+                        if "WISE_cat" in crossmatch_all[i].keys():
+                            if wise := crossmatch_all[i]["WISE_cat"]:
+                                _w1w2 = wise["Mag_W1"] - wise["Mag_W2"]
+                                _w2w3 = wise["Mag_W2"] - wise["Mag_W3"]
+
+                        wise_w1w2.append(_w1w2)
+                        wise_w2w3.append(_w2w3)
 
     sample = pd.DataFrame()
     sample["ztfid"] = ztfids
@@ -326,32 +358,33 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     sample["fritz_class"] = fritz_class
     sample["tns_class"] = tns_class
     sample["red_chisq"] = red_chisqs
+    sample["wise_w1w2"] = wise_w1w2
+    sample["wise_w2w3"] = wise_w2w3
     sample["chisq"] = chisqs
     sample["salt_red_chisq"] = salt_red_chisqs
     sample["d_temp_length"] = plateaustarts
+    sample["milliquas"] = milliquas
+    sample["overlapping_regions"] = overlapping_regions
     sample["total_d_temp"] = np.asarray(plateaustarts) * np.asarray(d_temps)
     sample["snia_cut"] = aggressive_snia_diag_cut(np.asarray(risetimes))
 
-    # sample.to_csv("test.csv")
-    # sample["w1_dustecho_strength"] = wise_strength1
-    # sample["w2_dustecho_strength"] = wise_strength2
-
-    tde_selection = "decay>0.9 and decay<3.05 and  rise>0.7 and rise<1.91 and temp > 3.9 and temp<4.45 and d_temp < 100 and d_temp>-300 and red_chisq < 10 and red_chisq < salt_red_chisq"
-
-    # that's the one for dtemp = 15k, evolution from peak, no bolcorr
-    tde_selection = "temp > 3.93 and temp < 4.37 and d_temp>-150 and d_temp < 70 and decay>1 and decay < 3.1 and rise >0.78 and rise<2.05 and red_chisq < salt_red_chisq"
+    wise_cut1 = "wise_w1w2 < 0.3 or wise_w1w2>1.8"
+    wise_cut2 = "wise_w2w3 < 1.5 or wise_w1w2>3.5"
 
     # that's the one for dtemp = 15k, evolution from peak, bolcorr
-    tde_selection = "temp > 3.93 and temp < 4.38 and d_temp>-90 and d_temp < 140 and rise>0.85 and rise<2.05 and decay>1.1 and decay<3 and red_chisq<6 and red_chisq < salt_red_chisq"
+    tde_selection_finetuned = "temp > 3.93 and temp < 4.38 and d_temp>-90 and d_temp < 140 and rise>0.85 and rise<2.05 and decay>1.1 and decay<3 and red_chisq<6 and red_chisq < salt_red_chisq"
 
-    sample.query(tde_selection, inplace=True)
-    sample.query("snia_cut < decay", inplace=True)
+    tde_selection = "temp > 3.9 and temp < 4.4 and d_temp>-100 and d_temp < 150 and rise>0.8 and rise<2.05 and decay>1.1 and decay<3 and red_chisq<6 and red_chisq < salt_red_chisq"
 
-    print(
-        sample.query("fritz_class == 'Tidal Disruption Event'").sort_values(by="rise")[
-            ["ztfid", "rise"]
-        ]
-    )
+    # RERUN OVERLAPPING REGION FOR EVERYTHING
+    if cut:
+        sample.query(tde_selection, inplace=True)
+        sample.query("snia_cut < decay", inplace=True)
+        sample.query("overlapping_regions == 1", inplace=True)
+        sample.query("milliquas == 'noclass'", inplace=True)
+        # sample.query(wise_cut1, inplace=True)
+        # sample.query(wise_cut2, inplace=True)
+        sample.query("wise_w1w2 < 0.4 and wise_w2w3 < 900", inplace=True)
 
     x_values = "rise"
     y_values = "decay"
@@ -368,25 +401,50 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
             "fritz_class not in @fritz_sn_ia and fritz_class != 'Tidal Disruption Event' and fritz_class not in @fritz_sn_other"
         )
 
-        ax.scatter(_df[x_values], _df[y_values], marker=".", s=1, c="blue", alpha=0.7)
+        ax.scatter(
+            _df[x_values],
+            _df[y_values],
+            marker=".",
+            s=1,
+            c="blue",
+            alpha=0.7,
+            label=f"Unclass. ({len(_df[x_values])})",
+        )
 
         _df = sample.query("fritz_class in @fritz_sn_ia")
 
         ax.scatter(
-            _df[x_values], _df[y_values], marker=".", s=8, c="green", label="SN Ia"
+            _df[x_values],
+            _df[y_values],
+            marker=".",
+            s=8,
+            c="green",
+            label=f"SN Ia ({len(_df[x_values])})",
         )
 
         _df = sample.query("fritz_class in @fritz_sn_other")
 
         ax.scatter(
-            _df[x_values], _df[y_values], marker=".", s=8, c="orange", label="SN other"
+            _df[x_values],
+            _df[y_values],
+            marker=".",
+            s=8,
+            c="orange",
+            label=f"SN other ({len(_df[x_values])})",
         )
 
         _df = sample.query("fritz_class == 'Tidal Disruption Event'")
 
-        ax.scatter(_df[x_values], _df[y_values], marker="*", s=10, c="red", label="TDE")
+        ax.scatter(
+            _df[x_values],
+            _df[y_values],
+            marker="*",
+            s=10,
+            c="red",
+            label=f"TDE ({len(_df[x_values])})",
+        )
 
-        plt.legend(title="Fritz class.")
+        plt.legend(title="Fritz classification")
 
     else:
 
@@ -416,7 +474,8 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     x = np.arange(0.75, 1.08, 0.01)
     y = aggressive_snia_diag_cut(x)
 
-    ax.plot(x, y)
+    # if cut:
+    # ax.plot(x, y)
 
     if flaring_only:
         if fritz:
@@ -443,9 +502,13 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
 
     plt.close()
 
-    info_db.ingest_ztfid_collection(
-        ztfids=sample.ztfid.values, collection_name="tde_selection"
-    )
+    if ingest:
+
+        info_db.ingest_ztfid_collection(
+            ztfids=sample.ztfid.values, collection_name="tde_selection"
+        )
+
+    # sample.query("fritz_class == 'Tidal Disruption Event'").to_csv("tde_verified.csv")
 
 
 def plot_ampelz():

@@ -208,8 +208,42 @@ def query_tns(
         dist_arcsec = res["dist_arcsec"]
 
         return {"TNS": {"name": full_name, "type": classification, "dist": dist_arcsec}}
-    else:
-        return {"TNS": {}}
+
+    return {"TNS": {}}
+
+
+def query_wise_cat(
+    ra_deg: float, dec_deg: float, searchradius_arcsec: float = 1.5
+) -> Optional[dict]:
+    """
+    Query the AMPEL-hosted WISE catalogue
+    """
+    logger.debug("Querying WISE catalogue")
+
+    res = ampel_api_catalog(
+        catalog="WISE",
+        catalog_type="catsHTM",
+        ra_deg=ra_deg,
+        dec_deg=dec_deg,
+        search_radius_arcsec=searchradius_arcsec,
+        search_type="nearest",
+    )
+    if res:
+        final_res = (
+            {"WISE_cat": res["body"]} if "body" in res.keys() else {"WISE_cat": {}}
+        )
+        import numpy as np
+
+        if final_res["WISE_cat"]:
+            final_res["WISE_cat"].update(
+                {
+                    "RA": np.degrees(final_res["WISE_cat"]["RA"]),
+                    "Dec": np.degrees(final_res["WISE_cat"]["Dec"]),
+                }
+            )
+            return final_res
+
+    return {"WISE_cat": {}}
 
 
 def query_wise(

@@ -60,20 +60,6 @@ class NuclearSample(object):
             )
             self.populate_db_from_dict(data=saltfit_res)
 
-        # if not db_check["has_tdefit"]:
-        #     tdefit_res = io.parse_ampel_json(
-        #         filepath=os.path.join(io.LOCALSOURCE_fitres, "tdefit.json"),
-        #         parameter_name="tde_fit_exp",
-        #     )
-        #     self.populate_db_from_dict(data=tdefit_res)
-
-        # if not db_check["has_tdefit_loose_bl"]:
-        #     tdefit_res = io.parse_ampel_json(
-        #         filepath=os.path.join(io.LOCALSOURCE_fitres, "tdefit_loose_bl.json"),
-        #         parameter_name="tde_fit_loose_bl",
-        #     )
-        #     self.populate_db_from_dict(data=tdefit_res)
-
         if not db_check["has_ampel_z"]:
             ampelz = io.parse_ampel_json(
                 filepath=os.path.join(io.LOCALSOURCE_ampelz),
@@ -151,7 +137,9 @@ class NuclearSample(object):
     def crossmatch(self, startindex: int = 0):
         """Crossmatch the full sample"""
         self.logger.info("Crossmatching the full sample")
-        for i, ztfid in tqdm(enumerate(self.ztfids[startindex:])):
+        for i, ztfid in tqdm(
+            enumerate(self.ztfids[startindex:]), total=len(self.ztfids[startindex:])
+        ):
             self.logger.debug(f"{ztfid}: Crossmatching")
             self.logger.debug(f"Transient {i+startindex} of {len(self.ztfids)}")
             t = Transient(ztfid)
@@ -909,24 +897,37 @@ class Transient(object):
             query_gaia,
             query_wise,
             query_tns,
+            query_wise_cat,
         )
 
         results = {}
 
         crts_res = query_crts(ra_deg=self.ra, dec_deg=self.dec)
+        wise_cat_res = query_wise_cat(ra_deg=self.ra, dec_deg=self.dec)
         millliquas_res = query_milliquas(ra_deg=self.ra, dec_deg=self.dec)
         sdss_res = query_sdss(ra_deg=self.ra, dec_deg=self.dec)
         gaia_res = query_gaia(ra_deg=self.ra, dec_deg=self.dec)
         wise_res = query_wise(ra_deg=self.ra, dec_deg=self.dec)
         tns_res = query_tns(ra_deg=self.ra, dec_deg=self.dec)
 
-        for res in [crts_res, millliquas_res, sdss_res, gaia_res, wise_res, tns_res]:
+        for res in [
+            crts_res,
+            wise_cat_res,
+            millliquas_res,
+            sdss_res,
+            gaia_res,
+            wise_res,
+            tns_res,
+        ]:
             results.update(res)
 
         self.crossmatch = {"crossmatch": results}
         if "name" in self.crossmatch["crossmatch"]["TNS"].keys():
             tns_name = self.crossmatch["crossmatch"]["TNS"]["name"]
             meta.update_transient(ztfid=self.ztfid, data={"TNS_name": tns_name})
+
+        print(self.crossmatch)
+        quit()
 
         meta.update_transient(ztfid=self.ztfid, data=self.crossmatch)
 

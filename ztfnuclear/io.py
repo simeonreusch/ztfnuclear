@@ -326,6 +326,14 @@ def parse_ampel_json(filepath: str, parameter_name: str) -> dict:
                             "There is something wrong with your mongo export file."
                         )
 
+                elif parameter_name == "ztf_bayesian":
+                    unit = entry["unit"]
+
+                    if unit == "T2BayesianBlocks":
+                        resultdict.update({ztfid: {"ZTF_bayesian": {"bayesian": body}}})
+                    elif unit == "T2DustEchoEval":
+                        resultdict[ztfid]["ZTF_bayesian"].update({"dustecho": body})
+
                 else:
                     raise ValueError("Parameter_name is not know")
 
