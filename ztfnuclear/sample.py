@@ -838,7 +838,7 @@ class Transient(object):
         """
         Read the crossmatch results from the DB and return a dict with found values
         """
-        exclude_list = ["WISE", "TNS"]
+        exclude_list = ["WISE", "TNS", "WISE_cat"]
 
         xmatch = self.meta["crossmatch"]
         message = ""
@@ -925,9 +925,6 @@ class Transient(object):
         if "name" in self.crossmatch["crossmatch"]["TNS"].keys():
             tns_name = self.crossmatch["crossmatch"]["TNS"]["name"]
             meta.update_transient(ztfid=self.ztfid, data={"TNS_name": tns_name})
-
-        print(self.crossmatch)
-        quit()
 
         meta.update_transient(ztfid=self.ztfid, data=self.crossmatch)
 
