@@ -32,6 +32,7 @@ lmfit = "^1.0.3"
 sncosmo = "^2.9.0"
 sfdmap = "^0.1.1"
 iminuit = "^2.17.0"
+seaborn = "^0.12.1"
 
 [tool.poetry.dev-dependencies]
 coveralls = "^3.3.1"
