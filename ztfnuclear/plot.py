@@ -254,8 +254,7 @@ def get_tde_selection(
     sample["total_d_temp"] = np.asarray(plateaustarts) * np.asarray(d_temps)
     sample["snia_cut"] = aggressive_snia_diag_cut(np.asarray(risetimes))
 
-    wise_cut1 = "wise_w1w2 < 0.3 or wise_w1w2>1.8"
-    wise_cut2 = "wise_w2w3 < 1.5 or wise_w1w2>3.5"
+    wise_cut = "(wise_w1w2<0.3 or wise_w1w2>1.8) or (wise_w2w3 <1.5 or wise_w2w3>3.5)"
 
     boundary_cut = "rise>0.1 and rise < 3 and decay > 0.1 and decay<4 and wise_w2w3 < 900 and wise_w1w2 < 900"
 
@@ -271,9 +270,12 @@ def get_tde_selection(
             sample.query("snia_cut < decay", inplace=True)
             sample.query("overlapping_regions == 1", inplace=True)
             sample.query("milliquas == 'noclass'", inplace=True)
-            sample.query("wise_w1w2 < 0.4 and wise_w2w3 < 900", inplace=True)
+            sample.query(wise_cut, inplace=True)
         if cut == "boundary":
             sample.query(boundary_cut, inplace=True)
+        if cut == "wise":
+            sample.query(boundary_cut, inplace=True)
+            sample.query(wise_cut, inplace=True)
 
     def simple_class(row):
         """Add simple classification labels"""
@@ -1081,13 +1083,14 @@ def plot_tde_scatter(
     ingest: bool = False,
     x_values: str = "rise",
     y_values: str = "decay",
+    cut: str = "full",
 ):
     """
     Plot the rise vs. fadetime of the TDE fit results
     """
     info_db = SampleInfo()
 
-    sample = get_tde_selection(cut="full")
+    sample = get_tde_selection(cut=cut)
 
     fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
     fig.suptitle(
@@ -1141,14 +1144,14 @@ def plot_tde_scatter_seaborn(
     ingest: bool = False,
     x_values: str = "rise",
     y_values: str = "decay",
-    cut: bool = True,
+    cut: str = "boundary",
 ):
     """
     Plot the rise vs. fadetime of the TDE fit results
     """
     info_db = SampleInfo()
 
-    sample = get_tde_selection(cut="boundary")
+    sample = get_tde_selection(cut=cut)
 
     sample_reduced = sample.query("classif != 'tde' or ztfid == 'ZTF22aagyuao'")
     # we need one TDE to survive, so we have a handle for the legend (don't ask,
@@ -1160,10 +1163,11 @@ def plot_tde_scatter_seaborn(
         y=y_values,
         hue="classif",
         hue_order=["other", "sn_other", "snia", "tde"],
-        kind="kde",
-        fill=True,
         alpha=0.8,
         legend=True,
+        kind="kde",
+        fill=True,
+        common_norm=True,
     )
     g.ax_joint.scatter(
         x=sample.query("classif == 'tde'")[x_values],
