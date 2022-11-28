@@ -859,7 +859,7 @@ def plot_lightcurve_irsa(
             flux = (flux_j * f).to("erg cm-2 s-1")
 
             jerrs = magerrs.to(u.Jansky)
-            ferrs = (jerrs * f).to("erg cm-2 s-1").value - flux.value
+            ferrs = np.abs((jerrs * f).to("erg cm-2 s-1").value - flux.value)
             ax.set_yscale("log")
 
             ax.errorbar(
