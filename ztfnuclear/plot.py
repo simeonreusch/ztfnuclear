@@ -2,20 +2,23 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, warnings
+import os, logging, warnings, typing
+
+from typing import Optional, Union
 
 import astropy  # type: ignore
 from astropy import units as u  # type: ignore
 from astropy.coordinates import Angle  # type: ignore
 from astropy import constants as const  # type: ignore
 
+import matplotlib
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt  # type: ignore
+import seaborn as sns
 
 from ztfnuclear import io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
-
 
 GOLDEN_RATIO = 1.62
 
@@ -30,7 +33,12 @@ fritz_sn_ia = [
     "Ia-CSM",
     "Type I",
     "Ia-03fg",
+    "Ia-91bg",
+    "Ia-91T",
+    "Ia-norm",
 ]
+
+fritz_cv = []
 
 tns_sn_ia = [
     "SN Ia",
@@ -80,149 +88,27 @@ axislabels = {
     "wise_w2w3": "Wise W2-W3",
 }
 
+fritz_queries = {
+    "tde": "fritz_class == 'Tidal Disruption Event'",
+    "snia": "fritz_class in @fritz_sn_ia",
+    "sn_other": "fritz_class in @fritz_sn_other",
+    "other": "fritz_class not in @fritz_sn_ia and fritz_class != 'Tidal Disruption Event' and fritz_class not in @fritz_sn_other",
+}
 
-def plot_location():
-    """Plot the sky location of all transients"""
-
-    meta = MetadataDB()
-    location = meta.read_parameters(params=["RA", "Dec"])
-
-    ra = location["RA"]
-    dec = location["Dec"]
-
-    ra = Angle(np.asarray(ra) * u.degree)
-    ra = ra.wrap_at(180 * u.degree)
-    dec = Angle(np.asarray(dec) * u.degree)
-
-    fig = plt.figure(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
-
-    fig.suptitle(f"ZTF Nuclear Sample (n={len(ra)})", fontsize=14)
-
-    ax = fig.add_subplot(111, projection="mollweide")
-    ax.scatter(ra.radian, dec.radian, s=0.05)
-    ax.grid(True)
-    outfile = os.path.join(io.LOCALSOURCE_plots, "sky_localization.pdf")
-    plt.tight_layout()
-    plt.savefig(outfile)
-    plt.close()
+pl_props = {
+    "other": {"m": ".", "s": 1, "c": "blue", "a": 0.7, "l": "Unclass."},
+    "snia": {"m": ".", "s": 8, "c": "green", "a": 1, "l": "SN Ia"},
+    "sn_other": {"m": ".", "s": 8, "c": "orange", "a": 1, "l": "SN other"},
+    "tde": {"m": "*", "s": 30, "c": "red", "a": 1, "l": "TDE"},
+}
 
 
-def plot_salt():
-    """Plot the salt fit results from the Mongo DB"""
-
-    meta = MetadataDB()
-    saltres = meta.read_parameters(params=["salt_loose_bl"])["salt_loose_bl"]
-
-    red_chisq = []
-    for entry in saltres:
-        if entry:
-            if entry != "failure":
-                chisq = float(entry["chisq"])
-                ndof = float(entry["ndof"])
-                red_chisq.append(chisq / ndof)
-
-    fig, ax = plt.subplots(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
-    fig.suptitle(
-        f"SALT fit reduced chisquare distribution (n={len(red_chisq)})", fontsize=14
-    )
-
-    ax.hist(red_chisq, bins=100, range=[0, 60])
-
-    outfile = os.path.join(io.LOCALSOURCE_plots, "salt_chisq_dist.pdf")
-    plt.tight_layout()
-    plt.savefig(outfile)
-    plt.close()
-
-
-def plot_tde():
-    """Plot the salt fit results from the Mongo DB"""
-
-    meta = MetadataDB()
-    tde_res = meta.read_parameters(params=["tde_fit_loose_bl"])["tde_fit_loose_bl"]
-
-    red_chisq = []
-    for entry in tde_res:
-        if entry:
-            if entry != "failure":
-                chisq = float(entry["chisq"])
-                ndof = float(entry["ndof"])
-                red_chisq.append(chisq / ndof)
-
-    fig, ax = plt.subplots(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
-    fig.suptitle(
-        f"TDE fit reduced chisquare distribution (n={len(red_chisq)})", fontsize=14
-    )
-
-    ax.hist(red_chisq, bins=100, range=[0, 10])
-
-    outfile = os.path.join(io.LOCALSOURCE_plots, "tde_chisq_dist.pdf")
-    plt.tight_layout()
-    plt.savefig(outfile)
-    plt.close()
-
-
-def plot_salt_tde_chisq():
-    """Plot the salt fit vs. TDE fit chisq"""
-
-    meta = MetadataDB()
-    metadata = meta.read_parameters(params=["_id", "tde_fit_loose_bl", "salt_loose_bl"])
-
-    ztfids = metadata["_id"]
-    tde_res = metadata["tde_fit_loose_bl"]
-    salt_res = metadata["salt_loose_bl"]
-
-    salt_red_chisq = []
-    tde_red_chisq = []
-
-    for i, entry in enumerate(salt_res):
-        if entry:
-            if entry != "failure":
-                if tde_res[i]:
-                    if tde_res[i] != "failure":
-                        salt_chisq = float(entry["chisq"])
-                        salt_ndof = float(entry["ndof"])
-
-                        tde_chisq = float(tde_res[i]["chisq"])
-                        tde_ndof = float(tde_res[i]["ndof"])
-
-                        salt_red_chisq.append(salt_chisq / salt_ndof)
-                        tde_red_chisq.append(tde_chisq / tde_ndof)
-
-    fig, ax = plt.subplots(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
-    fig.suptitle(f"SALT vs. TDE fit reduced chisquare", fontsize=14)
-
-    ax.scatter(
-        salt_red_chisq,
-        tde_red_chisq,
-        marker=".",
-        s=2,
-    )
-
-    ax.set_xlabel("SALT fit red. chisq.")
-    ax.set_ylabel("TDE fit red. chisq.")
-
-    ax.set_xlim([0, 25])
-    ax.set_ylim([0, 25])
-
-    outfile_zoom = os.path.join(io.LOCALSOURCE_plots, "salt_vs_tde_chisq_zoom.pdf")
-    outfile = os.path.join(io.LOCALSOURCE_plots, "salt_vs_tde_chisq.pdf")
-    plt.tight_layout()
-    plt.savefig(outfile_zoom)
-
-    ax.set_xlim([0, 100])
-    ax.set_ylim([0, 100])
-    plt.savefig(outfile)
-
-    plt.close()
-
-
-def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
+def get_tde_selection(
+    flaring_only: bool = False, cut: Optional[str] = None
+) -> pd.DataFrame:
     """
-    Plot the rise vs. fadetime of the TDE fit results
+    Apply selection cuts to a pandas dataframe
     """
-    cut = True
-    ingest = True
-
     meta = MetadataDB()
     res = meta.read_parameters(
         params=[
@@ -371,6 +257,8 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
     wise_cut1 = "wise_w1w2 < 0.3 or wise_w1w2>1.8"
     wise_cut2 = "wise_w2w3 < 1.5 or wise_w1w2>3.5"
 
+    boundary_cut = "rise>0.1 and rise < 3 and decay > 0.1 and decay<4 and wise_w2w3 < 900 and wise_w1w2 < 900"
+
     # that's the one for dtemp = 15k, evolution from peak, bolcorr
     tde_selection_finetuned = "temp > 3.93 and temp < 4.38 and d_temp>-90 and d_temp < 140 and rise>0.85 and rise<2.05 and decay>1.1 and decay<3 and red_chisq<6 and red_chisq < salt_red_chisq"
 
@@ -378,137 +266,247 @@ def plot_tde_scatter(fritz: bool = True, flaring_only: bool = False):
 
     # RERUN OVERLAPPING REGION FOR EVERYTHING
     if cut:
-        sample.query(tde_selection, inplace=True)
-        sample.query("snia_cut < decay", inplace=True)
-        sample.query("overlapping_regions == 1", inplace=True)
-        sample.query("milliquas == 'noclass'", inplace=True)
-        # sample.query(wise_cut1, inplace=True)
-        # sample.query(wise_cut2, inplace=True)
-        sample.query("wise_w1w2 < 0.4 and wise_w2w3 < 900", inplace=True)
+        if cut == "full":
+            sample.query(tde_selection, inplace=True)
+            sample.query("snia_cut < decay", inplace=True)
+            sample.query("overlapping_regions == 1", inplace=True)
+            sample.query("milliquas == 'noclass'", inplace=True)
+            sample.query("wise_w1w2 < 0.4 and wise_w2w3 < 900", inplace=True)
+        if cut == "boundary":
+            sample.query(boundary_cut, inplace=True)
 
-    x_values = "rise"
-    y_values = "decay"
+    def simple_class(row):
+        """Add simple classification labels"""
+        if row["fritz_class"] == "Tidal Disruption Event":
+            return "tde"
+        if row["fritz_class"] in fritz_sn_ia:
+            return "snia"
+        if row["fritz_class"] in fritz_sn_other:
+            return "sn_other"
+        return "other"
 
-    fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
+    sample["classif"] = sample.apply(lambda row: simple_class(row), axis=1)
+
+    return sample
+
+
+def plot_mag_cdf(cuts: str = Optional["agn"]):
+    """Plot the magnitude distribution of the transients"""
+
+    meta = MetadataDB()
+    meta_info = meta.read_parameters(params=["_id", "ZTF_bayesian", "fritz_class"])
+    bayesian = meta_info["ZTF_bayesian"]
+    ztfids = meta_info["_id"]
+    fritz_class = meta_info["fritz_class"]
+
+    mags = []
+    tde_mags = []
+
+    for i, entry in enumerate(ztfids):
+        bayes = bayesian[i]
+        if bayes:
+            fluxes = []
+            for fil in ["ZTF_g", "ZTF_r", "ZTF_i"]:
+                b = bayes.get("bayesian", {}).get(fil, {})
+                if isinstance(b, dict):
+                    maximum = b.get("max_mag_excess_region", {})
+                    if maximum:
+                        flux = max(maximum)
+                        if isinstance(flux, list):
+                            fluxes.append(flux[0])
+
+            if fluxes:
+                max_flux = max(fluxes)
+                mag = -2.5 * np.log10(max_flux)
+                if cuts == "agn":
+                    classification = fritz_class[i]
+                    if (
+                        classification not in fritz_sn_ia
+                        and classification not in fritz_sn_other
+                        and classification != "Tidal Disruption Event"
+                    ):
+                        mags.append(mag)
+                    elif classification == "Tidal Disruption Event":
+                        tde_mags.append(mag)
+                else:
+                    mags.append(mag)
+
+    fig, ax = plt.subplots(figsize=(6, 6 / GOLDEN_RATIO), dpi=300)
+    if cuts == "agn":
+        title = f"ZTF Nuclear Sample (n={len(mags)}), classified as AGN or no class"
+    else:
+        title = f"ZTF Nuclear Sample (n={len(mags)})"
+
     fig.suptitle(
-        f"TDE fit {x_values} vs. {y_values} ({len(sample)} transients)",
+        title,
         fontsize=14,
     )
 
-    if fritz:
+    ax.set_xlabel("Peak magnitude (AB)")
+    ax.set_ylabel("CDF")
+    ax.set_yscale("log")
 
-        _df = sample.query(
-            "fritz_class not in @fritz_sn_ia and fritz_class != 'Tidal Disruption Event' and fritz_class not in @fritz_sn_other"
-        )
+    ax.hist(
+        mags,
+        bins=100,
+        range=[16, 20.2],
+        cumulative=True,
+        density=True,
+        label="AGN/None",
+    )
+    ax.hist(
+        tde_mags,
+        bins=100,
+        range=[16, 20.2],
+        cumulative=True,
+        density=True,
+        label="TDE",
+        alpha=0.5,
+    )
+    plt.legend()
 
-        ax.scatter(
-            _df[x_values],
-            _df[y_values],
-            marker=".",
-            s=1,
-            c="blue",
-            alpha=0.7,
-            label=f"Unclass. ({len(_df[x_values])})",
-        )
-
-        _df = sample.query("fritz_class in @fritz_sn_ia")
-
-        ax.scatter(
-            _df[x_values],
-            _df[y_values],
-            marker=".",
-            s=8,
-            c="green",
-            label=f"SN Ia ({len(_df[x_values])})",
-        )
-
-        _df = sample.query("fritz_class in @fritz_sn_other")
-
-        ax.scatter(
-            _df[x_values],
-            _df[y_values],
-            marker=".",
-            s=8,
-            c="orange",
-            label=f"SN other ({len(_df[x_values])})",
-        )
-
-        _df = sample.query("fritz_class == 'Tidal Disruption Event'")
-
-        ax.scatter(
-            _df[x_values],
-            _df[y_values],
-            marker="*",
-            s=10,
-            c="red",
-            label=f"TDE ({len(_df[x_values])})",
-        )
-
-        plt.legend(title="Fritz classification")
-
+    if cuts == "agn":
+        outfile = os.path.join(io.LOCALSOURCE_plots, "magnitude_cdf_agn.pdf")
     else:
-
-        _df = sample.query(
-            "tns_class not in @tns_sn_ia and tns_class != 'TDE' and tns_class not in @tns_sn_other"
-        )
-
-        ax.scatter(_df.rise, _df.decay, marker=".", s=1, c="blue", alpha=0.7)
-
-        _df = sample.query("tns_class == 'TDE'")
-
-        ax.scatter(_df.rise, _df.decay, marker="*", s=10, c="red", label="TDE")
-
-        _df = sample.query("tns_class in @tns_sn_ia")
-
-        ax.scatter(_df.rise, _df.decay, marker=".", s=8, c="green", label="SN Ia")
-
-        _df = sample.query("tns_class in @tns_sn_other")
-
-        ax.scatter(_df.rise, _df.decay, marker=".", s=8, c="orange", label="SN other")
-
-        plt.legend(title="TNS class.")
-
-    ax.set_xlabel(axislabels[x_values])
-    ax.set_ylabel(axislabels[y_values])
-
-    x = np.arange(0.75, 1.08, 0.01)
-    y = aggressive_snia_diag_cut(x)
-
-    # if cut:
-    # ax.plot(x, y)
-
-    if flaring_only:
-        if fritz:
-            outfile = os.path.join(
-                io.LOCALSOURCE_plots, f"tde_{x_values}_{y_values}_fritz_flaring.pdf"
-            )
-        else:
-            outfile = os.path.join(
-                io.LOCALSOURCE_plots, f"tde_{x_values}_{y_values}_tns_flaring.pdf"
-            )
-    else:
-        if fritz:
-            outfile = os.path.join(
-                io.LOCALSOURCE_plots, f"tde_{x_values}_{y_values}_fritz.pdf"
-            )
-        else:
-            outfile = os.path.join(
-                io.LOCALSOURCE_plots, f"tde_{x_values}_{y_values}_tns.pdf"
-            )
-
+        outfile = os.path.join(io.LOCALSOURCE_plots, "magnitude_cdf.pdf")
     plt.tight_layout()
+    plt.savefig(outfile)
+    plt.close()
 
+
+def plot_location():
+    """Plot the sky location of all transients"""
+
+    meta = MetadataDB()
+    location = meta.read_parameters(params=["RA", "Dec"])
+
+    ra = location["RA"]
+    dec = location["Dec"]
+
+    ra = Angle(np.asarray(ra) * u.degree)
+    ra = ra.wrap_at(180 * u.degree)
+    dec = Angle(np.asarray(dec) * u.degree)
+
+    fig = plt.figure(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
+
+    fig.suptitle(f"ZTF Nuclear Sample (n={len(ra)})", fontsize=14)
+
+    ax = fig.add_subplot(111, projection="mollweide")
+    ax.scatter(ra.radian, dec.radian, s=0.05)
+    ax.grid(True)
+    outfile = os.path.join(io.LOCALSOURCE_plots, "sky_localization.pdf")
+    plt.tight_layout()
+    plt.savefig(outfile)
+    plt.close()
+
+
+def plot_salt():
+    """Plot the salt fit results from the Mongo DB"""
+
+    meta = MetadataDB()
+    saltres = meta.read_parameters(params=["salt_loose_bl"])["salt_loose_bl"]
+
+    red_chisq = []
+    for entry in saltres:
+        if entry:
+            if entry != "failure":
+                chisq = float(entry["chisq"])
+                ndof = float(entry["ndof"])
+                red_chisq.append(chisq / ndof)
+
+    fig, ax = plt.subplots(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
+    fig.suptitle(
+        f"SALT fit reduced chisquare distribution (n={len(red_chisq)})", fontsize=14
+    )
+
+    ax.hist(red_chisq, bins=100, range=[0, 60])
+
+    outfile = os.path.join(io.LOCALSOURCE_plots, "salt_chisq_dist.pdf")
+    plt.tight_layout()
+    plt.savefig(outfile)
+    plt.close()
+
+
+def plot_tde():
+    """Plot the salt fit results from the Mongo DB"""
+
+    meta = MetadataDB()
+    tde_res = meta.read_parameters(params=["tde_fit_loose_bl"])["tde_fit_loose_bl"]
+
+    red_chisq = []
+    for entry in tde_res:
+        if entry:
+            if entry != "failure":
+                chisq = float(entry["chisq"])
+                ndof = float(entry["ndof"])
+                red_chisq.append(chisq / ndof)
+
+    fig, ax = plt.subplots(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
+    fig.suptitle(
+        f"TDE fit reduced chisquare distribution (n={len(red_chisq)})", fontsize=14
+    )
+
+    ax.hist(red_chisq, bins=100, range=[0, 10])
+
+    outfile = os.path.join(io.LOCALSOURCE_plots, "tde_chisq_dist.pdf")
+    plt.tight_layout()
+    plt.savefig(outfile)
+    plt.close()
+
+
+def plot_salt_tde_chisq():
+    """Plot the salt fit vs. TDE fit chisq"""
+
+    meta = MetadataDB()
+    metadata = meta.read_parameters(params=["_id", "tde_fit_loose_bl", "salt_loose_bl"])
+
+    ztfids = metadata["_id"]
+    tde_res = metadata["tde_fit_loose_bl"]
+    salt_res = metadata["salt_loose_bl"]
+
+    salt_red_chisq = []
+    tde_red_chisq = []
+
+    for i, entry in enumerate(salt_res):
+        if entry:
+            if entry != "failure":
+                if tde_res[i]:
+                    if tde_res[i] != "failure":
+                        salt_chisq = float(entry["chisq"])
+                        salt_ndof = float(entry["ndof"])
+
+                        tde_chisq = float(tde_res[i]["chisq"])
+                        tde_ndof = float(tde_res[i]["ndof"])
+
+                        salt_red_chisq.append(salt_chisq / salt_ndof)
+                        tde_red_chisq.append(tde_chisq / tde_ndof)
+
+    fig, ax = plt.subplots(figsize=(8, 8 / GOLDEN_RATIO), dpi=300)
+    fig.suptitle(f"SALT vs. TDE fit reduced chisquare", fontsize=14)
+
+    ax.scatter(
+        salt_red_chisq,
+        tde_red_chisq,
+        marker=".",
+        s=2,
+    )
+
+    ax.set_xlabel("SALT fit red. chisq.")
+    ax.set_ylabel("TDE fit red. chisq.")
+
+    ax.set_xlim([0, 25])
+    ax.set_ylim([0, 25])
+
+    outfile_zoom = os.path.join(io.LOCALSOURCE_plots, "salt_vs_tde_chisq_zoom.pdf")
+    outfile = os.path.join(io.LOCALSOURCE_plots, "salt_vs_tde_chisq.pdf")
+    plt.tight_layout()
+    plt.savefig(outfile_zoom)
+
+    ax.set_xlim([0, 100])
+    ax.set_ylim([0, 100])
     plt.savefig(outfile)
 
     plt.close()
-
-    if ingest:
-
-        info_db.ingest_ztfid_collection(
-            ztfids=sample.ztfid.values, collection_name="tde_selection"
-        )
-
-    # sample.query("fritz_class == 'Tidal Disruption Event'").to_csv("tde_verified.csv")
 
 
 def plot_ampelz():
@@ -1076,3 +1074,140 @@ def plot_tde_fit(
     plt.close()
 
     del fig, ax
+
+
+def plot_tde_scatter(
+    flaring_only: bool = False,
+    ingest: bool = False,
+    x_values: str = "rise",
+    y_values: str = "decay",
+):
+    """
+    Plot the rise vs. fadetime of the TDE fit results
+    """
+    info_db = SampleInfo()
+
+    sample = get_tde_selection(cut="full")
+
+    fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
+    fig.suptitle(
+        f"TDE fit {x_values} vs. {y_values} ({len(sample)} transients)",
+        fontsize=14,
+    )
+    for key in fritz_queries.keys():
+        _df = sample.query(fritz_queries[key])
+        ax.scatter(
+            _df[x_values],
+            _df[y_values],
+            marker=pl_props[key]["m"],
+            s=pl_props[key]["s"],
+            c=pl_props[key]["c"],
+            alpha=pl_props[key]["a"],
+            label=pl_props[key]["l"] + f" ({len(_df[x_values])})",
+        )
+
+    plt.legend(title="Fritz classification")
+
+    ax.set_xlabel(axislabels[x_values])
+    ax.set_ylabel(axislabels[y_values])
+
+    # x = np.arange(0.75, 1.08, 0.01)
+    # y = aggressive_snia_diag_cut(x)
+    # if cut:
+    # ax.plot(x, y)
+
+    if flaring_only:
+        outfile = os.path.join(
+            io.LOCALSOURCE_plots, f"tde_{x_values}_{y_values}_flaring.pdf"
+        )
+
+    else:
+        outfile = os.path.join(io.LOCALSOURCE_plots, f"tde_{x_values}_{y_values}.pdf")
+
+    plt.tight_layout()
+
+    plt.savefig(outfile)
+
+    plt.close()
+
+    if ingest:
+
+        info_db.ingest_ztfid_collection(
+            ztfids=sample.ztfid.values, collection_name="tde_selection"
+        )
+
+
+def plot_tde_scatter_seaborn(
+    ingest: bool = False,
+    x_values: str = "rise",
+    y_values: str = "decay",
+    cut: bool = True,
+):
+    """
+    Plot the rise vs. fadetime of the TDE fit results
+    """
+    info_db = SampleInfo()
+
+    sample = get_tde_selection(cut="boundary")
+
+    sample_reduced = sample.query("classif != 'tde' or ztfid == 'ZTF22aagyuao'")
+    # we need one TDE to survive, so we have a handle for the legend (don't ask,
+    # I DID try to make this not hacky, but failed)
+
+    g = sns.jointplot(
+        data=sample_reduced,
+        x=x_values,
+        y=y_values,
+        hue="classif",
+        hue_order=["other", "sn_other", "snia", "tde"],
+        kind="kde",
+        fill=True,
+        alpha=0.8,
+        legend=True,
+    )
+    g.ax_joint.scatter(
+        x=sample.query("classif == 'tde'")[x_values],
+        y=sample.query("classif == 'tde'")[y_values],
+        c=pl_props["tde"]["c"],
+        s=pl_props["tde"]["s"],
+        marker=pl_props["tde"]["m"],
+    )
+
+    leg = g.ax_joint.get_legend()
+
+    leg.set_title("Fritz classification")
+
+    # test = matplotlib.text.Text(0, 0, "test")
+
+    # leg.texts.append(test)
+
+    new_labels = [
+        pl_props["other"]["l"]
+        + " ({length})".format(length=len(sample_reduced.query("classif == 'other'"))),
+        pl_props["sn_other"]["l"]
+        + " ({length})".format(
+            length=len(sample_reduced.query("classif == 'sn_other'"))
+        ),
+        pl_props["snia"]["l"]
+        + " ({length})".format(length=len(sample_reduced.query("classif == 'snia'"))),
+        pl_props["tde"]["l"]
+        + " ({length})".format(length=len(sample.query("classif == 'tde'"))),
+    ]
+    for t, l in zip(leg.texts, new_labels):
+        t.set_text(l)
+
+    # print(leg.texts)
+
+    outfile = os.path.join(
+        io.LOCALSOURCE_plots, f"tde_{x_values}_{y_values}_seaborn.pdf"
+    )
+
+    g.fig.savefig(outfile)
+    # g.set_axis_labels("Colors", "Values")
+    plt.close()
+
+    if ingest:
+
+        info_db.ingest_ztfid_collection(
+            ztfids=sample.ztfid.values, collection_name="tde_selection"
+        )
