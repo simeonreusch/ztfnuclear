@@ -963,53 +963,19 @@ class Transient(object):
                         "bayesian" in self.meta["WISE_bayesian"].keys()
                         and self.meta["WISE_bayesian"]["bayesian"] is not None
                     ):
-                        bl_W1_uncorr = self.meta["WISE_bayesian"]["bayesian"][
+                        bl_W1= self.meta["WISE_bayesian"]["bayesian"][
                             "Wise_W1"
                         ]["baseline"][0]
-                        bl_W2_uncorr = self.meta["WISE_bayesian"]["bayesian"][
+                        bl_W2 = self.meta["WISE_bayesian"]["bayesian"][
                             "Wise_W2"
                         ]["baseline"][0]
 
-                        bl_W1_err_uncorr = self.meta["WISE_bayesian"]["bayesian"][
+                        bl_W1_err = self.meta["WISE_bayesian"]["bayesian"][
                             "Wise_W1"
                         ]["baseline_rms"][0]
-                        bl_W2_err_uncorr = self.meta["WISE_bayesian"]["bayesian"][
+                        bl_W2_err = self.meta["WISE_bayesian"]["bayesian"][
                             "Wise_W2"
                         ]["baseline_rms"][0]
-
-                        bl_W1 = utils.flux_density_bug_correction(
-                            flux_density=bl_W1_uncorr, band="W1"
-                        )
-                        bl_W2 = utils.flux_density_bug_correction(
-                            flux_density=bl_W2_uncorr, band="W2"
-                        )
-                        bl_W1_err = utils.flux_density_bug_correction(
-                            flux_density=bl_W1_err_uncorr, band="W1"
-                        )
-                        bl_W2_err = utils.flux_density_bug_correction(
-                            flux_density=bl_W2_err_uncorr, band="W2"
-                        )
-
-                        wise_df[
-                            "W1_mean_flux_density"
-                        ] = utils.flux_density_bug_correction(
-                            flux_density=wise_df["W1_mean_flux_density"], band="W1"
-                        )
-                        wise_df[
-                            "W2_mean_flux_density"
-                        ] = utils.flux_density_bug_correction(
-                            flux_density=wise_df["W2_mean_flux_density"], band="W2"
-                        )
-                        wise_df[
-                            "W1_flux_density_rms"
-                        ] = utils.flux_density_bug_correction(
-                            flux_density=wise_df["W1_flux_density_rms"], band="W1"
-                        )
-                        wise_df[
-                            "W2_flux_density_rms"
-                        ] = utils.flux_density_bug_correction(
-                            flux_density=wise_df["W2_flux_density_rms"], band="W2"
-                        )
 
                         wise_df["W1_mean_flux_density_bl_corr"] = (
                             wise_df["W1_mean_flux_density"] - bl_W1

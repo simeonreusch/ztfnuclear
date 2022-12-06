@@ -234,12 +234,28 @@ def parse_json(filepath: str) -> dict:
     return data
 
 
+def airflares_stock_to_ztfid():
+    """ """
+    infile = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "airflares_raw.json")
+    with open(infile, "r") as f:
+        wise_lcs = json.load(f)
+    stock_to_ztfid = {}
+
+    for key in wise_lcs.keys():
+        stock_to_ztfid[key] = wise_lcs[key]["id"]
+
+    return stock_to_ztfid
+
+
+
 def parse_ampel_json(filepath: str, parameter_name: str) -> dict:
     """Reads the mongodb export from Ampel"""
     if not os.path.isfile(filepath):
         raise ValueError("No file at given filepath")
 
     resultdict = {}
+    if parameter_name == "wise_bayesian":
+        airflares_to_ztf = airflares_stock_to_ztfid()
 
     with open(filepath) as json_file:
         data = json.load(json_file)
@@ -249,7 +265,7 @@ def parse_ampel_json(filepath: str, parameter_name: str) -> dict:
             if parameter_name != "wise_bayesian":
                 ztfid = utils.stockid_to_ztfid(stockid)
             else:
-                ztfid = stockid
+                ztfid = airflares_to_ztf[str(stockid)]
 
             if "body" in entry.keys():
                 body = entry["body"][0]

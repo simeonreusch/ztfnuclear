@@ -35,14 +35,6 @@ def get_wise_photometry(
             self.df = sample_df
             self.default_keymap = DEFAULT_KEYMAP
 
-    class NuclearSampleWithID(ParentSampleBase):
-        """The nuclear sample gets initialized here"""
-
-        def __init__(self):
-            super(NuclearSampleWithID, self).__init__(base_name="ztfnuclear")
-            self.df = pd.read_csv(self.local_sample_copy, index_col=0)
-            self.default_keymap = DEFAULT_KEYMAP
-
     tw_sample_init = WiseDataByVisit(
         base_name="ztfnuclear",
         parent_sample_class=NuclearSampleInit,
@@ -50,27 +42,12 @@ def get_wise_photometry(
         n_chunks=1,
     )
 
-    if positional:
+    wise_lcs = tw_sample_init.load_binned_lcs(service=SERVICE)
+    if not wise_lcs:
+        logger.info("No data present, issuing WISE query for the sample.")
+        tw_sample_init.get_photometric_data(service=SERVICE, nthreads=1)
         wise_lcs = tw_sample_init.load_binned_lcs(service=SERVICE)
-        if not wise_lcs:
-            logger.info("No data present, issuing WISE query for the sample.")
-            tw_sample_init.get_photometric_data(service=SERVICE, nthreads=1)
-            wise_lcs = tw_sample_init.load_binned_lcs(service=SERVICE)
 
-    else:
-        tw_sample_init.match_all_chunks()
-        tw_sample_with_id = WiseDataByVisit(
-            base_name="ztfnuclear",
-            parent_sample_class=NuclearSampleWithID,
-            min_sep_arcsec=searchradius_arcsec,
-            n_chunks=1,
-        )
-        wise_lcs = tw_sample_with_id.load_binned_lcs(service=SERVICE)
-        if not wise_lcs:
-            tw_sample_with_id.get_photometric_data(
-                service=SERVICE, query_type="by_allwise_id", nthreads=1
-            )
-            wise_lcs = tw_sample_with_id.load_binned_lcs(service=SERVICE)
 
     # Now we reindex with the proper ZTF IDs
     _wise_lcs = copy.deepcopy(wise_lcs)
@@ -90,10 +67,9 @@ def get_wise_photometry(
             wise_lcs[ztfid][vegamag_key + "_ab"] = abmags
 
     returndict = {}
-    if positional:
-        wise_key = "WISE_lc_by_pos"
-    else:
-        wise_key = "WISE_lc_by_id"
+
+    wise_key = "WISE_lc_by_pos"
+
     for ztfid in sample_df.ztfid:
         if ztfid in wise_lcs.keys():
             returndict.update({ztfid: {wise_key: wise_lcs[ztfid]}})
@@ -117,7 +93,6 @@ if __name__ == "__main__":
     """
     Run the WISE query
     """
-
     positional_search = False
 
     full_sample = pd.read_csv("full_sample.csv", index_col=0)
