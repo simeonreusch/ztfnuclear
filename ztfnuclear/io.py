@@ -246,6 +246,13 @@ def airflares_stock_to_ztfid():
 
     return stock_to_ztfid
 
+def ztfid_to_airflares_stock():
+    """ """
+    stock_to_ztfid = airflares_stock_to_ztfid()
+
+    ztfid_to_stock = {v: k for k, v in stock_to_ztfid.items()}
+
+    return ztfid_to_stock
 
 
 def parse_ampel_json(filepath: str, parameter_name: str) -> dict:
@@ -320,14 +327,10 @@ def parse_ampel_json(filepath: str, parameter_name: str) -> dict:
                     unit = entry["unit"]
 
                     if unit == "T2BayesianBlocks":
-                        if "result" in body.keys():
-                            resultdict.update(
-                                {ztfid: {"WISE_bayesian": {"bayesian": body["result"]}}}
-                            )
-                        else:
-                            resultdict.update(
-                                {ztfid: {"WISE_bayesian": {"bayesian": None}}}
-                            )
+                        resultdict.update(
+                            {ztfid: {"WISE_bayesian": {"bayesian": body}}}
+                        )
+
                     elif unit == "T2DustEchoEval":
                         if "result" in body.keys():
                             resultdict[ztfid]["WISE_bayesian"].update(
