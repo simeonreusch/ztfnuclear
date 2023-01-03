@@ -498,7 +498,13 @@ class Transient(object):
 
         self.sampletype = sampletype
 
-        transient_info = self.meta.read_transient(self.ztfid)
+        if self.sampletype == "nuclear":
+            transient_info = meta.read_transient(self.ztfid)
+        else:
+            transient_info = meta_bts.read_transient(self.ztfid)
+
+        if transient_info is None:
+            raise ValueError(f"{ztfid} is not in {sampletype} sample")
 
         self.ra = transient_info["RA"]
         self.dec = transient_info["Dec"]
