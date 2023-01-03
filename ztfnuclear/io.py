@@ -27,10 +27,12 @@ if os.getenv("ZTFDATA"):
         "overview_flaring.pkl",
     )
     LOCALSOURCE_dfs = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "data")
+    LOCALSOURCE_bts_dfs = os.path.join(LOCALSOURCE, "BTS", "data")
     LOCALSOURCE_irsa = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "irsa")
     LOCALSOURCE_fitres = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "fitres")
     LOCALSOURCE_ampelz = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "ampel_z.json")
     LOCALSOURCE_location = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "location.csv")
+    LOCALSOURCE_bts_info = os.path.join(LOCALSOURCE, "BTS", "bts.csv")
     LOCALSOURCE_peak_dates = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "peak_dates.csv")
     LOCALSOURCE_ZTF_tdes = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "ztf_tdes.csv")
     LOCALSOURCE_WISE = os.path.join(LOCALSOURCE, "WISE")
@@ -73,13 +75,18 @@ for p in [
         os.makedirs(p)
 
 
-def download_if_neccessary():
+def download_if_neccessary(sampletype="nuclear"):
     """
     Check if the dataframes have been downloaded and do so if neccessary
     """
-    if os.path.exists(LOCALSOURCE_dfs):
+    if sampletype == "nuclear":
+        local = LOCALSOURCE_dfs
+    elif sampletype == "bts":
+        local = LOCALSOURCE_bts_dfs
+
+    if os.path.exists(local):
         csvs = []
-        for name in os.listdir(LOCALSOURCE_dfs):
+        for name in os.listdir(local):
             if name[-4:] == ".csv":
                 csvs.append(name)
         number_of_files = len(csvs)
@@ -89,9 +96,10 @@ def download_if_neccessary():
         logger.info("Dataframe directory is not present, proceed to download files.")
         download_sample()
 
-    if not os.path.isfile(os.path.join(LOCALSOURCE_WISE, "WISE.parquet")):
-        logger.info("WISE dataframe does not exist, proceed to download.")
-        download_wise()
+    if sampletype == "nuclear":
+        if not os.path.isfile(os.path.join(LOCALSOURCE_WISE, "WISE.parquet")):
+            logger.info("WISE dataframe does not exist, proceed to download.")
+            download_wise()
 
 
 def download_sample():
@@ -116,12 +124,17 @@ def download_wise():
     logger.info("WISE location file download complete")
 
 
-def get_all_ztfids() -> List[str]:
+def get_all_ztfids(sampletype="nuclear") -> List[str]:
     """
     Checks the download folder and gets all ztfids
     """
+    if sampletype == "nuclear":
+        local = LOCALSOURCE_dfs
+    elif sampletype == "bts":
+        local = LOCALSOURCE_bts_dfs
+
     ztfids = []
-    for name in os.listdir(LOCALSOURCE_dfs):
+    for name in os.listdir(local):
         if name[-4:] == ".csv":
             ztfids.append(name[:-4])
     return ztfids
@@ -150,11 +163,19 @@ def is_valid_wiseid(wiseid: str) -> bool:
         return False
 
 
-def get_locations() -> pd.DataFrame:
+def get_locations(sampletype="nuclear") -> pd.DataFrame:
     """
     Gets the metadata dataframe for the full sample
     """
-    df = pd.read_csv(LOCALSOURCE_location, index_col=0)
+    if sampletype == "nuclear":
+        local = LOCALSOURCE_location
+    elif sampletype == "bts":
+        local = LOCALSOURCE_bts_info
+
+    df = pd.read_csv(local, index_col=0)
+
+    if sampletype == "bts":
+        df = df[["RA", "Dec"]]
     return df
 
 
@@ -169,12 +190,17 @@ def get_thumbnail_count() -> int:
     return file_count
 
 
-def get_ztfid_dataframe(ztfid: str) -> Optional[pd.DataFrame]:
+def get_ztfid_dataframe(
+    ztfid: str, sampletype: str = "nuclear"
+) -> Optional[pd.DataFrame]:
     """
     Get the Pandas Dataframe of a single transient
     """
     if is_valid_ztfid(ztfid):
-        filepath = os.path.join(LOCALSOURCE_dfs, f"{ztfid}.csv")
+        if sampletype == "nuclear":
+            filepath = os.path.join(LOCALSOURCE_dfs, f"{ztfid}.csv")
+        else:
+            filepath = os.path.join(LOCALSOURCE_bts_dfs, f"{ztfid}.csv")
         try:
             df = pd.read_csv(filepath, comment="#")
             return df
@@ -185,12 +211,15 @@ def get_ztfid_dataframe(ztfid: str) -> Optional[pd.DataFrame]:
         raise ValueError(f"{ztfid} is not a valid ZTF ID")
 
 
-def get_ztfid_header(ztfid: str) -> Optional[dict]:
+def get_ztfid_header(ztfid: str, sampletype="nuclear") -> Optional[dict]:
     """
     Returns the metadata contained in the csvs as dictionary
     """
     if is_valid_ztfid(ztfid):
-        filepath = os.path.join(LOCALSOURCE_dfs, f"{ztfid}.csv")
+        if sampletype == "nuclear":
+            filepath = os.path.join(LOCALSOURCE_dfs, f"{ztfid}.csv")
+        else:
+            filepath = os.path.join(LOCALSOURCE_bts_dfs, f"{ztfid}.csv")
 
         try:
             with open(filepath, "r") as input_file:
@@ -245,6 +274,7 @@ def airflares_stock_to_ztfid():
         stock_to_ztfid[key] = wise_lcs[key]["id"]
 
     return stock_to_ztfid
+
 
 def ztfid_to_airflares_stock():
     """ """

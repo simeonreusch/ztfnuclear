@@ -19,71 +19,84 @@ from ztfnuclear.fritz import FritzAPI
 logger = logging.getLogger(__name__)
 
 meta = MetadataDB()
+meta_bts = MetadataDB(sampletype="bts")
 info_db = SampleInfo()
+info_db_bts = SampleInfo(sampletype="bts")
 
 
 class NuclearSample(object):
     """
     This is the parent class for the ZTF nuclear transient sample"""
 
-    def __init__(self):
+    def __init__(self, sampletype="nuclear"):
         super(NuclearSample, self).__init__()
         self.logger = logging.getLogger(__name__)
         self.logger.info("Initializing sample")
-
-        io.download_if_neccessary()
+        self.sampletype = sampletype
+        io.download_if_neccessary(sampletype=self.sampletype)
 
         self.get_all_ztfids()
         self.location()
-        self.meta = MetadataDB()
-        self.info_db = info_db
-        db_check = self.meta.get_statistics()
+        self.meta = MetadataDB(sampletype=self.sampletype)
+        self.info_db = SampleInfo(sampletype=self.sampletype)
 
-        if not db_check["has_ra"]:
-            self.populate_db_from_csv(filepath=io.LOCALSOURCE_location)
+        if self.sampletype == "nuclear":
+            db_check = self.meta.get_statistics()
 
-        if not db_check["has_peak_dates"]:
-            self.populate_db_from_csv(
-                filepath=io.LOCALSOURCE_peak_dates, name="peak_dates"
-            )
-        if not db_check["has_salt"]:
-            saltfit_res = io.parse_ampel_json(
-                filepath=os.path.join(io.LOCALSOURCE_fitres, "saltfit.json"),
-                parameter_name="salt",
-            )
-            self.populate_db_from_dict(data=saltfit_res)
+            if not db_check["has_ra"]:
+                self.populate_db_from_csv(filepath=io.LOCALSOURCE_location)
 
-        if not db_check["has_salt_loose_bl"]:
-            saltfit_res = io.parse_ampel_json(
-                filepath=os.path.join(io.LOCALSOURCE_fitres, "saltfit_loose_bl.json"),
-                parameter_name="salt_loose_bl",
-            )
-            self.populate_db_from_dict(data=saltfit_res)
+            if not db_check["has_peak_dates"]:
+                self.populate_db_from_csv(
+                    filepath=io.LOCALSOURCE_peak_dates, name="peak_dates"
+                )
+            if not db_check["has_salt"]:
+                saltfit_res = io.parse_ampel_json(
+                    filepath=os.path.join(io.LOCALSOURCE_fitres, "saltfit.json"),
+                    parameter_name="salt",
+                )
+                self.populate_db_from_dict(data=saltfit_res)
 
-        if not db_check["has_ampel_z"]:
-            ampelz = io.parse_ampel_json(
-                filepath=os.path.join(io.LOCALSOURCE_ampelz),
-                parameter_name="ampel_z",
-            )
-            self.populate_db_from_dict(data=ampelz)
+            if not db_check["has_salt_loose_bl"]:
+                saltfit_res = io.parse_ampel_json(
+                    filepath=os.path.join(
+                        io.LOCALSOURCE_fitres, "saltfit_loose_bl.json"
+                    ),
+                    parameter_name="salt_loose_bl",
+                )
+                self.populate_db_from_dict(data=saltfit_res)
 
-        if not db_check["has_wise_bayesian"]:
-            wise_bayesian = io.parse_ampel_json(
-                filepath=os.path.join(io.LOCALSOURCE_WISE_bayesian),
-                parameter_name="wise_bayesian",
-            )
-            self.populate_db_from_dict(data=wise_bayesian)
+            if not db_check["has_ampel_z"]:
+                ampelz = io.parse_ampel_json(
+                    filepath=os.path.join(io.LOCALSOURCE_ampelz),
+                    parameter_name="ampel_z",
+                )
+                self.populate_db_from_dict(data=ampelz)
 
-        if not db_check["has_wise_lc_by_pos"]:
-            wise_lcs_by_pos = io.parse_json(filepath=io.LOCALSOURCE_WISE_lc_by_pos)
-            self.populate_db_from_dict(data=wise_lcs_by_pos)
+            if not db_check["has_wise_bayesian"]:
+                wise_bayesian = io.parse_ampel_json(
+                    filepath=os.path.join(io.LOCALSOURCE_WISE_bayesian),
+                    parameter_name="wise_bayesian",
+                )
+                self.populate_db_from_dict(data=wise_bayesian)
 
-        if not db_check["has_wise_lc_by_id"]:
-            wise_lcs_by_id = io.parse_json(filepath=io.LOCALSOURCE_WISE_lc_by_id)
-            self.populate_db_from_dict(data=wise_lcs_by_id)
+            if not db_check["has_wise_lc_by_pos"]:
+                wise_lcs_by_pos = io.parse_json(filepath=io.LOCALSOURCE_WISE_lc_by_pos)
+                self.populate_db_from_dict(data=wise_lcs_by_pos)
 
-        db_check = self.meta.get_statistics()
-        assert db_check["count"] == 11687
+            if not db_check["has_wise_lc_by_id"]:
+                wise_lcs_by_id = io.parse_json(filepath=io.LOCALSOURCE_WISE_lc_by_id)
+                self.populate_db_from_dict(data=wise_lcs_by_id)
+
+        elif self.sampletype == "bts":
+            db_check = self.meta.get_statistics()
+            if db_check["count"] == 0:
+                self.populate_db_from_csv(filepath=io.LOCALSOURCE_bts_info)
+
+        if self.sampletype == "nuclear":
+            assert db_check["count"] == 11687
+        else:
+            assert db_check["count"] == 7131
 
     def get_transient(self, ztfid: str):
         df = io.get_ztfid_dataframe(ztfid=ztfid)
@@ -91,11 +104,11 @@ class NuclearSample(object):
         return header, df
 
     def get_all_ztfids(self):
-        all_ztfids = io.get_all_ztfids()
+        all_ztfids = io.get_all_ztfids(sampletype=self.sampletype)
         self.ztfids = all_ztfids
 
     def location(self):
-        df = io.get_locations()
+        df = io.get_locations(sampletype=self.sampletype)
         self.location = df
 
     def create_baseline(self):
@@ -112,14 +125,16 @@ class NuclearSample(object):
             data = []
             for s in df.iterrows():
                 ztfid = s[0]
-                ztfids.append(ztfid)
-                if name:
-                    write_dict = {name: s[1].to_dict()}
-                else:
-                    write_dict = s[1].to_dict()
-                data.append(write_dict)
+                if ztfid in self.ztfids:
+                    ztfids.append(ztfid)
+                    if name:
+                        write_dict = {name: s[1].to_dict()}
+                    else:
+                        write_dict = s[1].to_dict()
+                    data.append(write_dict)
 
             self.meta.update_many(ztfids=ztfids, data=data)
+            self.logger.info(f"Wrote {len(ztfids)} entries to db")
         else:
             raise ValueError("File does not exist")
 
@@ -333,7 +348,7 @@ class NuclearSample(object):
 
         selected_ztfids = []
 
-        meta = MetadataDB()
+        meta = MetadataDB(sampletype=self.sampletype)
         db_res = meta.read_parameters(params=["_id", fitname])
         fitres_all = db_res[fitname]
         ztfids_all = db_res["_id"]
@@ -366,7 +381,7 @@ class NuclearSample(object):
 
         selected_ztfids = []
 
-        meta = MetadataDB()
+        meta = MetadataDB(sampletype=self.sampletype)
         db_res = meta.read_parameters(params=["_id", fitname])
         fitres_all = db_res[fitname]
         ztfids_all = db_res["_id"]
@@ -389,7 +404,7 @@ class NuclearSample(object):
         """
         Create a list of transients that match the WISE IR flare selection and write them to the info db
         """
-        meta = MetadataDB()
+        meta = MetadataDB(sampletype=self.sampletype)
         db_res = meta.read_parameters(
             params=[
                 "_id",
@@ -476,12 +491,15 @@ class Transient(object):
     This class contains all info for a given transient
     """
 
-    def __init__(self, ztfid: str):
+    def __init__(self, ztfid: str, sampletype: str = "nuclear"):
         super(Transient, self).__init__()
         self.logger = logging.getLogger(__name__)
         self.ztfid = ztfid
 
-        transient_info = meta.read_transient(self.ztfid)
+        self.sampletype = sampletype
+
+        transient_info = self.meta.read_transient(self.ztfid)
+
         self.ra = transient_info["RA"]
         self.dec = transient_info["Dec"]
 
@@ -659,7 +677,10 @@ class Transient(object):
         """
         Read all metadata for the transient from the database
         """
-        transient_metadata = meta.read_transient(ztfid=self.ztfid)
+        if self.sampletype == "nuclear":
+            transient_metadata = meta.read_transient(ztfid=self.ztfid)
+        else:
+            transient_metadata = meta_bts.read_transient(ztfid=self.ztfid)
         if transient_metadata:
             return transient_metadata
         else:
@@ -963,19 +984,19 @@ class Transient(object):
                         "bayesian" in self.meta["WISE_bayesian"].keys()
                         and self.meta["WISE_bayesian"]["bayesian"] is not None
                     ):
-                        bl_W1= self.meta["WISE_bayesian"]["bayesian"][
-                            "Wise_W1"
-                        ]["baseline"][0]
-                        bl_W2 = self.meta["WISE_bayesian"]["bayesian"][
-                            "Wise_W2"
-                        ]["baseline"][0]
+                        bl_W1 = self.meta["WISE_bayesian"]["bayesian"]["Wise_W1"][
+                            "baseline"
+                        ][0]
+                        bl_W2 = self.meta["WISE_bayesian"]["bayesian"]["Wise_W2"][
+                            "baseline"
+                        ][0]
 
-                        bl_W1_err = self.meta["WISE_bayesian"]["bayesian"][
-                            "Wise_W1"
-                        ]["baseline_rms"][0]
-                        bl_W2_err = self.meta["WISE_bayesian"]["bayesian"][
-                            "Wise_W2"
-                        ]["baseline_rms"][0]
+                        bl_W1_err = self.meta["WISE_bayesian"]["bayesian"]["Wise_W1"][
+                            "baseline_rms"
+                        ][0]
+                        bl_W2_err = self.meta["WISE_bayesian"]["bayesian"]["Wise_W2"][
+                            "baseline_rms"
+                        ][0]
 
                         wise_df["W1_mean_flux_density_bl_corr"] = (
                             wise_df["W1_mean_flux_density"] - bl_W1

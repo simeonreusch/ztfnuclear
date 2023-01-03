@@ -27,14 +27,18 @@ class SampleInfo(object):
     Mongo DB collection storing information about the sample
     """
 
-    def __init__(self):
+    def __init__(self, sampletype="nuclear"):
         super(SampleInfo, self).__init__()
         mongo_client: MongoClient = MongoClient("localhost", MONGO_PORT)
         self.logger = logging.getLogger(__name__)
+        self.sampletype = sampletype
         self.logger.debug("Established connection to Mongo DB")
         self.client = mongo_client
         self.db = self.client.ztfnuclear
-        self.coll = self.db.info
+        if self.sampletype == "nuclear":
+            self.coll = self.db.info
+        else:
+            self.coll = self.db.info_bts
 
     def update(self, data):
         """
@@ -70,14 +74,18 @@ class MetadataDB(object):
     Mongo DB collection storing all transient metadata
     """
 
-    def __init__(self):
+    def __init__(self, sampletype="nuclear"):
         super(MetadataDB, self).__init__()
         mongo_client: MongoClient = MongoClient("localhost", MONGO_PORT)
         self.logger = logging.getLogger(__name__)
         self.logger.debug("Established connection to Mongo DB")
         self.client = mongo_client
+        self.sampletype = sampletype
         self.db = self.client.ztfnuclear
-        self.coll = self.db.metadata
+        if self.sampletype == "nuclear":
+            self.coll = self.db.metadata
+        else:
+            self.coll = self.db.metadata_bts
 
     def update_transient(self, ztfid: str, data: dict):
         """
@@ -91,7 +99,7 @@ class MetadataDB(object):
         Update DB for a list of ztfids
         """
         bulk_operations = []
-        allowed_ztfids = io.get_all_ztfids()
+        allowed_ztfids = io.get_all_ztfids(sampletype=self.sampletype)
 
         for i, ztfid in enumerate(ztfids):
             if ztfid in allowed_ztfids:
@@ -192,7 +200,11 @@ class MetadataDB(object):
         """
         Get collection statistic
         """
-        items_in_coll = self.db.command("collstats", "metadata")["count"]
+        if self.sampletype == "nuclear":
+            items_in_coll = self.db.command("collstats", "metadata")["count"]
+        else:
+            items_in_coll = self.db.command("collstats", "metadata_bts")["count"]
+
         testobj = self.read_transient(ztfid="ZTF19aatubsj")
 
         if testobj:
