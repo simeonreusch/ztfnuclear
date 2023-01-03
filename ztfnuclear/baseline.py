@@ -153,6 +153,10 @@ def baseline(
 
     unique_fid = np.unique(df.fcqfid.values).astype(int)
 
+    if df.shape[0] == 0:
+        logger.warn(f"{transient.ztfid}: No datapoints survived baseline correction.")
+        return (df, {})
+
     # Time index for use for rolling window
     df = df.sort_values("obsmjd")
     obs_jd = Time(df["obsmjd"].values, format="mjd")

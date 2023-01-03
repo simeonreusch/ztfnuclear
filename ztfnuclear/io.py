@@ -29,6 +29,7 @@ if os.getenv("ZTFDATA"):
     LOCALSOURCE_dfs = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "data")
     LOCALSOURCE_bts_dfs = os.path.join(LOCALSOURCE, "BTS", "data")
     LOCALSOURCE_irsa = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "irsa")
+    LOCALSOURCE_bts_irsa = os.path.join(LOCALSOURCE, "BTS", "irsa")
     LOCALSOURCE_fitres = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "fitres")
     LOCALSOURCE_ampelz = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "ampel_z.json")
     LOCALSOURCE_location = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "location.csv")
@@ -46,6 +47,7 @@ if os.getenv("ZTFDATA"):
         LOCALSOURCE, "FINAL_SAMPLE", "wise_bayesian_blocks.json"
     )
     LOCALSOURCE_plots = os.path.join(LOCALSOURCE, "plots")
+    LOCALSOURCE_bts_plots = os.path.join(LOCALSOURCE, "plots_bts")
     LOCALSOURCE_plots_irsa = os.path.join(LOCALSOURCE, "plots", "lightcurves_irsa")
     LOCALSOURCE_baseline = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "baseline")
     LOCALSOURCE_bts_baseline = os.path.join(LOCALSOURCE, "BTS", "baseline")
@@ -68,6 +70,7 @@ logger = logging.getLogger(__name__)
 for p in [
     LOCALSOURCE,
     LOCALSOURCE_plots,
+    LOCALSOURCE_bts_plots,
     LOCALSOURCE_baseline,
     LOCALSOURCE_bts_baseline,
     LOCALSOURCE_WISE,

@@ -104,6 +104,9 @@ class NuclearSample(object):
         header = io.get_ztfid_header(ztfid=ztfid)
         return header, df
 
+    def transient(self, ztfid: str):
+        return Transient(ztfid=ztfid, sampletype=self.sampletype)
+
     def get_all_ztfids(self):
         all_ztfids = io.get_all_ztfids(sampletype=self.sampletype)
         self.ztfids = all_ztfids
@@ -114,9 +117,19 @@ class NuclearSample(object):
 
     def create_baseline(self):
         self.logger.info("Creating baseline corrections for the full sample")
+        success = []
+        failed = []
         for ztfid in tqdm(self.ztfids):
-            t = Transient(ztfid)
-            t.create_baseline()
+            t = Transient(ztfid, sampletype=self.sampletype)
+            try:
+                t.recreate_baseline()
+                success.append(ztfid)
+            except:
+                self.logger.warn(f"{ztfid} failed")
+                failed.append(ztfid)
+
+        self.logger.info(f"{len(failed)} objects failed the baseline creation:")
+        self.logger.info(failed)
 
     def populate_db_from_csv(self, filepath, name=None):
         self.logger.info("Populating the database from a csv file")
@@ -291,12 +304,12 @@ class NuclearSample(object):
 
         if ztfids is None:
             for ztfid in self.ztfids[:n]:
-                t = Transient(ztfid)
+                t = Transient(ztfid, sampletype=self.sampletype)
                 yield t
 
         else:
             for ztfid in ztfids[:n]:
-                t = Transient(ztfid)
+                t = Transient(ztfid, sampletype=self.sampletype)
                 yield t
 
     def get_transients_pickled(self, flaring_only: bool = False):
@@ -572,7 +585,10 @@ class Transient(object):
         """
         Read the lightcurve_dataframe
         """
-        lc_path = os.path.join(io.LOCALSOURCE_dfs, self.ztfid + ".csv")
+        if self.sampletype == "nuclear":
+            lc_path = os.path.join(io.LOCALSOURCE_dfs, self.ztfid + ".csv")
+        else:
+            lc_path = os.path.join(io.LOCALSOURCE_bts_dfs, self.ztfid + ".csv")
         lc = pd.read_csv(lc_path, comment="#")
 
         return lc
@@ -707,7 +723,12 @@ class Transient(object):
         """
         Read the thumbnail image and return as base64 string
         """
-        plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "thumbnails")
+        if self.sampletype == "nuclear":
+            plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "thumbnails")
+        else:
+            plot_dir = os.path.join(
+                io.LOCALSOURCE_bts_bplots, "lightcurves", "thumbnails"
+            )
         thumb_file = os.path.join(plot_dir, self.ztfid + "_thumbnail.png")
 
         if os.path.isfile(thumb_file):
@@ -723,7 +744,10 @@ class Transient(object):
         """
         Load the IRSA lightcurve if not locally present
         """
-        path_to_lc = os.path.join(io.LOCALSOURCE_irsa, f"{self.ztfid}.csv")
+        if self.sampletype == "nuclear":
+            path_to_lc = os.path.join(io.LOCALSOURCE_irsa, f"{self.ztfid}.csv")
+        else:
+            path_to_lc = os.path.join(io.LOCALSOURCE_bts_irsa, f"{self.ztfid}.csv")
         if not os.path.isfile(path_to_lc):
             df = io.load_irsa(ra=self.ra, dec=self.dec, radius_arcsec=0.5)
             df.to_csv(path_to_lc)
@@ -817,13 +841,19 @@ class Transient(object):
         if timestamp in all_comments.keys():
             del all_comments[timestamp]
 
-        meta.update_transient(self.ztfid, data={"comments": all_comments})
+        if self.sampletype == "nuclear":
+            meta.update_transient(self.ztfid, data={"comments": all_comments})
+        else:
+            meta_bts.update_transient(self.ztfid, data={"comments": all_comments})
 
     def delete_all_comments(self):
         """
         Delete all comments for a transient
         """
-        meta.update_transient(self.ztfid, data={"comments": {}})
+        if self.sampletype == "nuclear":
+            meta.update_transient(self.ztfid, data={"comments": {}})
+        else:
+            meta_bts.update_transient(self.ztfid, data={"comments": {}})
 
     def get_comments_generator(self):
         """
@@ -856,7 +886,10 @@ class Transient(object):
             {timestamp: {"username": username, "comment": str(comment)}}
         )
 
-        meta.update_transient(self.ztfid, data={"comments": comments_dict})
+        if self.sampletype == "nuclear":
+            meta.update_transient(self.ztfid, data={"comments": comments_dict})
+        else:
+            meta_bts.update_transient(self.ztfid, data={"comments": comments_dict})
 
     @cached_property
     def crossmatch_info(self) -> Optional[str]:
@@ -947,11 +980,17 @@ class Transient(object):
             results.update(res)
 
         self.crossmatch = {"crossmatch": results}
+
+        if self.sampletype == "nuclear":
+            m_db = meta
+        else:
+            m_db = meta_bts
+
         if "name" in self.crossmatch["crossmatch"]["TNS"].keys():
             tns_name = self.crossmatch["crossmatch"]["TNS"]["name"]
-            meta.update_transient(ztfid=self.ztfid, data={"TNS_name": tns_name})
+            m_db.update_transient(ztfid=self.ztfid, data={"TNS_name": tns_name})
 
-        meta.update_transient(ztfid=self.ztfid, data=self.crossmatch)
+        m_db.update_transient(ztfid=self.ztfid, data=self.crossmatch)
 
     def fritz(self):
         """
@@ -960,7 +999,10 @@ class Transient(object):
         fritz = FritzAPI()
         fritzinfo = fritz.get_transient(self.ztfid)
         data = fritzinfo[self.ztfid]
-        meta.update_transient(ztfid=self.ztfid, data=data)
+        if self.sampletype == "nuclear":
+            meta.update_transient(ztfid=self.ztfid, data=data)
+        else:
+            meta_bts.update_transient(ztfid=self.ztfid, data=data)
 
     def plot(
         self,
@@ -1070,6 +1112,11 @@ class Transient(object):
         """
         from ztfnuclear import tde_fit
 
+        if self.sampletype == "nuclear":
+            m_db = meta
+        else:
+            m_db = meta_bts
+
         if len(self.baseline) > 0:
             fitresult = tde_fit.fit(
                 df=self.baseline,
@@ -1083,9 +1130,9 @@ class Transient(object):
                 debug=debug,
             )
             if powerlaw:
-                meta.update_transient(self.ztfid, data={"tde_fit_pl": fitresult})
+                m_db.update_transient(self.ztfid, data={"tde_fit_pl": fitresult})
             else:
-                meta.update_transient(self.ztfid, data={"tde_fit_exp": fitresult})
+                m_db.update_transient(self.ztfid, data={"tde_fit_exp": fitresult})
 
         else:
             self.logger.info(
