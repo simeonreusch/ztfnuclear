@@ -513,7 +513,7 @@ class Transient(object):
 
     @cached_property
     def header(self):
-        header = io.get_ztfid_header(ztfid=self.ztfid)
+        header = io.get_ztfid_header(ztfid=self.ztfid, sampletype=self.sampletype)
         return header
 
     @cached_property

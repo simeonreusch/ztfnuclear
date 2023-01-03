@@ -223,29 +223,28 @@ def get_ztfid_header(ztfid: str, sampletype="nuclear") -> Optional[dict]:
 
         try:
             with open(filepath, "r") as input_file:
-                headerlines = []
-                for i, line in enumerate(input_file):
-                    if i == 6:
-                        break
-                    line = line.split(",", 2)[0].split("=")[1][:-1]
-                    headerlines.append(line)
-                ztfid, ra, dec, lastobs, lastdownload, lastfit = headerlines
+                headerkeys = []
+                headervals = []
 
-                returndict = {
-                    "ztfid": ztfid,
-                    "ra": ra,
-                    "dec": dec,
-                    "lastobs": lastobs,
-                    "lastdownload": lastdownload,
-                    "lastfit": lastfit,
-                }
+                for i, line in enumerate(input_file):
+                    if len(line) >= 300:
+                        break
+                    key = line.split(",", 2)[0].split("=")[0].lstrip("#")
+                    headerkeys.append(key)
+                    val = line.split(",", 2)[0].split("=")[1][:-1]
+                    headervals.append(val)
+
+                returndict = {}
+                for i, key in enumerate(headerkeys):
+                    returndict.update({key: headervals[i]})
+
+                returndict["ztfid"] = returndict.pop("name")
 
                 return returndict
 
         except FileNotFoundError:
             logger.warn(f"No file found for {ztfid}. Check the ID.")
             return None
-
     else:
         raise ValueError(f"{ztfid} is not a valid ZTF ID")
 
