@@ -92,6 +92,7 @@ class NuclearSample(object):
             db_check = self.meta.get_statistics()
             if db_check["count"] == 0:
                 self.populate_db_from_csv(filepath=io.LOCALSOURCE_bts_info)
+            db_check = self.meta.get_statistics()
 
         if self.sampletype == "nuclear":
             assert db_check["count"] == 11687
@@ -518,12 +519,12 @@ class Transient(object):
 
     @cached_property
     def df(self):
-        df = io.get_ztfid_dataframe(ztfid=self.ztfid)
+        df = io.get_ztfid_dataframe(ztfid=self.ztfid, sampletype=self.sampletype)
         return df
 
     @cached_property
     def sample_ids(self):
-        ids = NuclearSample().ztfids
+        ids = NuclearSample(sampletype=self.sampletype).ztfids
         return ids
 
     @cached_property
@@ -531,21 +532,18 @@ class Transient(object):
         """
         Obtain the baseline correction, create if not present
         """
-        bl_file = os.path.join(io.LOCALSOURCE_baseline, self.ztfid + "_bl.csv")
+        if self.sampletype == "nuclear":
+            bl_file = os.path.join(io.LOCALSOURCE_baseline, self.ztfid + "_bl.csv")
+        else:
+            bl_file = os.path.join(io.LOCALSOURCE_bts_baseline, self.ztfid + "_bl.csv")
 
         if os.path.isfile(bl_file):
             bl = pd.read_csv(bl_file)
-            return bl
         else:
-            # self.logger.info(
-            #     f"{self.ztfid}: No baseline correction file, trying to apply baseline correction"
-            # )
-            # bl, bl_info = baseline.baseline(transient=self, plot=False)
-
-            # meta.update_transient(self.ztfid, data={"bl_info": bl_info})
+            # create empty df
             bl = pd.DataFrame()
 
-            return bl
+        return bl
 
     @cached_property
     def baseline_info(self) -> dict:

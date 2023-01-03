@@ -423,7 +423,10 @@ def baseline(
     df["ampl_corr"] /= df["ampl_zp_scale"]
     df["ampl_err_corr"] /= df["ampl_zp_scale"]
 
-    outpath = os.path.join(io.LOCALSOURCE_baseline, transient.ztfid + "_bl.csv")
+    if transient.sampletype == "nuclear":
+        outpath = os.path.join(io.LOCALSOURCE_baseline, transient.ztfid + "_bl.csv")
+    else:
+        outpath = os.path.join(io.LOCALSOURCE_bts_baseline, transient.ztfid + "_bl.csv")
     df.to_csv(outpath)
 
     return df, fcqfid_dict

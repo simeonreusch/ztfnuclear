@@ -47,7 +47,8 @@ if os.getenv("ZTFDATA"):
     )
     LOCALSOURCE_plots = os.path.join(LOCALSOURCE, "plots")
     LOCALSOURCE_plots_irsa = os.path.join(LOCALSOURCE, "plots", "lightcurves_irsa")
-    LOCALSOURCE_baseline = os.path.join(LOCALSOURCE, "baseline")
+    LOCALSOURCE_baseline = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "baseline")
+    LOCALSOURCE_bts_baseline = os.path.join(LOCALSOURCE, "BTS", "baseline")
 
     DOWNLOAD_URL_SAMPLE = (
         "https://syncandshare.desy.de/index.php/s/GHeGQYxgk5FeToY/download"
@@ -68,6 +69,7 @@ for p in [
     LOCALSOURCE,
     LOCALSOURCE_plots,
     LOCALSOURCE_baseline,
+    LOCALSOURCE_bts_baseline,
     LOCALSOURCE_WISE,
     LOCALSOURCE_plots_irsa,
 ]:
