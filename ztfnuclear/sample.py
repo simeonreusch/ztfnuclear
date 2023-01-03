@@ -578,7 +578,10 @@ class Transient(object):
         self.baseline = bl
         self.baseline_info = bl_info
 
-        meta.update_transient(self.ztfid, data={"bl_info": bl_info})
+        if self.sampletype == "nuclear":
+            meta.update_transient(self.ztfid, data={"bl_info": bl_info})
+        else:
+            meta_bts.update_transient(self.ztfid, data={"bl_info": bl_info})
 
     @cached_property
     def raw_lc(self) -> pd.DataFrame:
@@ -1176,6 +1179,7 @@ class Transient(object):
                             tns_name=self.tns_name,
                             tde_params=self.meta[keyword]["paramdict"],
                             savepath=savepath,
+                            sampletype=self.sampletype,
                         )
 
                         success = True
@@ -1188,6 +1192,7 @@ class Transient(object):
                     tns_name=self.tns_name,
                     tde_params=params,
                     savepath=savepath,
+                    sampletype=self.sampletype,
                 )
 
                 success = True

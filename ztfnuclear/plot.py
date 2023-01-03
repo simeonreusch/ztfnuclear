@@ -429,10 +429,10 @@ def plot_salt():
     plt.close()
 
 
-def plot_tde():
+def plot_tde(sampletype: str = "nuclear"):
     """Plot the salt fit results from the Mongo DB"""
 
-    meta = MetadataDB()
+    meta = MetadataDB(sampletype=sampletype)
     tde_res = meta.read_parameters(params=["tde_fit_loose_bl"])["tde_fit_loose_bl"]
 
     red_chisq = []
@@ -906,6 +906,7 @@ def plot_tde_fit(
     tns_name: str = None,
     snt_threshold=3.0,
     savepath: str = None,
+    sampletype: str = "nuclear",
 ):
     """
     Plot the TDE fit result if present
@@ -919,7 +920,10 @@ def plot_tde_fit(
     color_dict = {1: "green", 2: "red", 3: "orange"}
     filtername_dict = {1: "ZTF g", 2: "ZTF r", 3: "ZTF i"}
 
-    plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "tde_fit")
+    if sampletype == "nuclear":
+        plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "tde_fit")
+    else:
+        plot_dir = os.path.join(io.LOCALSOURCE_bts_plots, "lightcurves", "tde_fit")
 
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
