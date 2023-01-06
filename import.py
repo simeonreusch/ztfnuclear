@@ -5,7 +5,7 @@
 import os, logging, re, json, argparse
 from ztfnuclear.database import MetadataDB
 
-meta = MetadataDB()
+databases = {"ztfnuclear": MetadataDB(), "bts": MetadataDB(sampletype="bts")}
 
 if __name__ == "__main__":
 
@@ -18,9 +18,18 @@ if __name__ == "__main__":
         help="Provide a key of the database",
     )
 
+    parser.add_argument(
+        "--db",
+        type=str,
+        default="ztfnuclear",
+        help="Provide a name of the database",
+    )
+
     commandline_args = parser.parse_args()
 
     json_path = commandline_args.key_name + ".json"
 
-    meta.key_update_from_json(json_path=json_path, mongo_key=commandline_args.key_name)
-    logger.info(f"Imported {json_path} to MongoDB")
+    databases[commandline_args.db].key_update_from_json(
+        json_path=json_path, mongo_key=commandline_args.key_name
+    )
+    logger.info(f"Imported {json_path} to MongoDB {commandline_args.db}")

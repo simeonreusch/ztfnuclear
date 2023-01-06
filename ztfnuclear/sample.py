@@ -153,7 +153,9 @@ class NuclearSample(object):
             raise ValueError("File does not exist")
 
     def populate_db_from_dict(self, data: dict):
-        """Use a dict of the form {ztfid: data} to update the Mongo DB"""
+        """
+        Use a dict of the form {ztfid: data} to update the Mongo DB
+        """
         self.logger.info("Populating the database from a dictionary")
 
         ztfids = data.keys()
@@ -162,6 +164,24 @@ class NuclearSample(object):
             data_list.append(data[ztfid])
 
         self.meta.update_many(ztfids=ztfids, data=data_list)
+
+    def populate_db_from_ampel_json(self, json_path: str):
+        """
+        Use an AMPEL json export to populate the sample db
+        json filename must be equal to parameter name!
+        """
+        param_name = os.path.basename(json_path).split(".")[0]
+
+        self.logger.info(
+            f"Populating the database from an AMPEL json; parameter name: {param_name}"
+        )
+
+        json_content = io.parse_ampel_json(
+            filepath=json_path,
+            parameter_name=param_name,
+        )
+
+        self.populate_db_from_dict(data=json_content)
 
     def crossmatch(self, startindex: int = 0):
         """Crossmatch the full sample"""

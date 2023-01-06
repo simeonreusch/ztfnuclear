@@ -674,8 +674,11 @@ def fit(
         F0 = 10 ** (df.magzp / 2.5)
         F0_err = F0 / 2.5 * np.log(10) * df.magzpunc
         Fratio = df[ampl_column] / F0
-        Fratio_err = np.sqrt(
-            (df[ampl_err_column] / F0) ** 2 + (df[ampl_column] * F0_err / F0**2) ** 2
+        Fratio_err = np.abs(
+            np.sqrt(
+                (df[ampl_err_column] / F0) ** 2
+                + (df[ampl_column] * F0_err / F0**2) ** 2
+            )
         )
 
     df.replace(
