@@ -9,8 +9,8 @@ from tqdm import tqdm
 from ztfnuclear.database import MetadataDB
 from ztfnuclear.sample import NuclearSample, Transient
 
-s = NuclearSample()
-meta = MetadataDB()
+s = NuclearSample(sampletype="bts")
+meta = MetadataDB(sampletype="bts")
 
 cores = multiprocessing.cpu_count()
 nprocess = int(cores / 2)
@@ -20,7 +20,7 @@ os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
 FIT_TYPE = "tde_fit_exp"
-RECREATE_BASELINE = False
+RECREATE_BASELINE = True
 DEBUG = False
 
 
@@ -46,18 +46,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Fit certified TDEs only.",
     )
-    # parser.add_argument(
-    #     "-debug",
-    #     "--debug",
-    #     action="store_true",
-    #     help="Debug mode",
-    # )
 
     logger.info(f"Running fits for {FIT_TYPE} in {nprocess} threads.")
 
     commandline_args = parser.parse_args()
     tde_only = commandline_args.tde
-    # debug = commandline_args.debug
 
     if tde_only:
         res = meta.read_parameters(

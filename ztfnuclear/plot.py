@@ -254,7 +254,7 @@ def plot_tde_scatter(
     """
     Plot the rise vs. fadetime of the TDE fit results
     """
-    info_db = SampleInfo()
+    info_db = SampleInfo(sampletype=sampletype)
 
     sample = get_tde_selection(cut=cut, sampletype=sampletype)
 
@@ -264,7 +264,6 @@ def plot_tde_scatter(
         fontsize=14,
     )
     for key in config["fritz_queries"].keys():
-
         _df = sample.query(config["fritz_queries"][key])
         ax.scatter(
             _df[x_values],
@@ -274,6 +273,7 @@ def plot_tde_scatter(
             c=config["pl_props"][key]["c"],
             alpha=config["pl_props"][key]["a"],
             label=config["pl_props"][key]["l"] + f" ({len(_df[x_values])})",
+            zorder=config["pl_props"][key]["order"],
         )
 
     plt.legend(title="Fritz classification")

@@ -100,11 +100,11 @@ axislabels:
   wise_w2w3: Wise W2-W3
 
 fritz_queries:
-    tde: fritz_class == 'Tidal Disruption Event' or fritz_class == 'TDE'
     snia: fritz_class in @config['fritz_sn_ia']
     sn_other: fritz_class in @config['fritz_sn_other']
     agn_star: fritz_class in @config['fritz_agn_star']
     other: fritz_class not in @config['fritz_sn_ia'] and fritz_class != 'Tidal Disruption Event' and fritz_class not in @config['fritz_sn_other'] and fritz_class != 'TDE'
+    tde: fritz_class == 'Tidal Disruption Event' or fritz_class == 'TDE'
 
 pl_props:
     other: 
@@ -113,27 +113,32 @@ pl_props:
       c: blue
       a: 0.7
       l: Unclass.
+      order: 1
     snia:
       m: .
       s: 8
       c: green
       a: 1
       l: SN Ia
+      order: 2
     sn_other:
       m: .
       s: 8
       c: orange
       a: 1
       l: SN other
+      order: 3
     tde:
       m: '*'
       s: 30
       c: red
       a: 1
       l: TDE
+      order: 100
     agn_star:
       m: .
       s: 8
       c: black
       a: 1
       l: AGN/star
+      order: 4
