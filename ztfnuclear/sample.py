@@ -730,19 +730,21 @@ class Transient(object):
             return None
 
     @cached_property
-    def wise_lc(self) -> Optional[pd.DataFrame]:
+    def wise_lc(self) -> pd.DataFrame | None:
         """
         Get the corresponding WISE lightcurve (if available) as pandas df
         """
-        wise_dict = self.meta["WISE_lc"]
-        df = pd.DataFrame.from_dict(wise_dict)
-        if len(df) == 0:
-            return None
-        else:
-            return df
+        df = None
+        wise_dict = self.meta.get("WISE_lc")
+        if wise_dict is not None:
+            df = pd.DataFrame.from_dict(wise_dict)
+            if len(df) == 0:
+                return None
+
+        return df
 
     @cached_property
-    def thumbnail(self) -> Optional[str]:
+    def thumbnail(self) -> str | None:
         """
         Read the thumbnail image and return as base64 string
         """
@@ -1119,6 +1121,7 @@ class Transient(object):
             plot_png=plot_png,
             wide=wide,
             thumbnail=thumbnail,
+            sampletype=self.sampletype,
         )
 
         return axlims

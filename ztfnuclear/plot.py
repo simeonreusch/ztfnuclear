@@ -13,6 +13,7 @@ from astropy import constants as const  # type: ignore
 
 import matplotlib
 import numpy as np
+import numpy.ma as ma
 import pandas as pd
 import matplotlib.pyplot as plt  # type: ignore
 import seaborn as sns
@@ -637,6 +638,7 @@ def plot_lightcurve(
     plot_png: bool = False,
     wide: bool = False,
     thumbnail: bool = False,
+    sampletype: str = "nuclear",
 ) -> list:
     """Plot a lightcurve"""
     if magplot:
@@ -647,13 +649,18 @@ def plot_lightcurve(
     color_dict = {1: "green", 2: "red", 3: "orange"}
     filtername_dict = {1: "ZTF g", 2: "ZTF r", 3: "ZTF i"}
 
+    if sampletype == "nuclear":
+        local = io.LOCALSOURCE_plots
+    else:
+        local = io.LOCALSOURCE_bts_plots
+
     if magplot:
-        plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "mag")
+        plot_dir = os.path.join(local, "lightcurves", "mag")
     else:
         if thumbnail:
-            plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "thumbnails")
+            plot_dir = os.path.join(local, "lightcurves", "thumbnails")
         else:
-            plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "flux")
+            plot_dir = os.path.join(local, "lightcurves", "flux")
 
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
@@ -702,25 +709,23 @@ def plot_lightcurve(
             warnings.filterwarnings("ignore", category=RuntimeWarning)
             F0 = 10 ** (_df.magzp / 2.5)
             F0_err = F0 / 2.5 * np.log(10) * _df.magzpunc
-            Fratio = _df[ampl_column] / F0
-            Fratio_err = np.sqrt(
+            flux = _df[ampl_column] / F0
+            flux_err = np.sqrt(
                 (_df[ampl_err_column] / F0) ** 2
                 + (_df[ampl_column] * F0_err / F0**2) ** 2
             )
-            abmag = -2.5 * np.log10(Fratio)
-            abmag_err = 2.5 / np.log(10) * Fratio_err / Fratio
+            abmag = -2.5 * np.log10(flux)
+            abmag_err = 2.5 / np.log(10) * flux_err / flux
+            obsmjd = _df.obsmjd.values
 
         if snt_threshold:
-            snt_limit = Fratio_err * snt_threshold
-            abmag = np.where(Fratio > snt_limit, abmag, np.nan)
-            abmag_err = np.where(Fratio > snt_limit, abmag_err, np.nan)
-            placeholder_obsmjd = obsmjd[np.argmin(abmag)]
-            obsmjd = np.where(abmag < 99, obsmjd, placeholder_obsmjd)
-
-        _df["flux_Jy"] = utils.abmag_to_flux_density(abmag)
-        _df["flux_Jy_err"] = utils.abmag_err_to_flux_density_err(
-            abmag=abmag, abmag_err=abmag_err
-        )
+            snt_limit = flux_err.values * snt_threshold
+            mask = np.less(flux.values, snt_limit)
+            flux = ma.masked_array(flux.values, mask=mask).compressed()
+            flux_err = ma.masked_array(flux_err.values, mask=mask).compressed()
+            abmag = ma.masked_array(abmag.values, mask=mask).compressed()
+            abmag_err = ma.masked_array(abmag_err.values, mask=mask).compressed()
+            obsmjd = ma.masked_array(obsmjd, mask=mask).compressed()
 
         if magplot:
 
@@ -742,8 +747,8 @@ def plot_lightcurve(
 
         else:
 
-            nu_fnu = utils.band_frequency(bandname) * _df["flux_Jy"] * 1e-23
-            nu_fnu_err = utils.band_frequency(bandname) * _df["flux_Jy_err"] * 1e-23
+            nu_fnu = utils.band_frequency(bandname) * flux * 1e-23
+            nu_fnu_err = utils.band_frequency(bandname) * flux_err * 1e-23
 
             ax.set_yscale("log")
 
@@ -753,7 +758,7 @@ def plot_lightcurve(
                 ms = 2
 
             ax.errorbar(
-                _df.obsmjd,
+                obsmjd,
                 nu_fnu,
                 nu_fnu_err,
                 fmt="o",
@@ -765,6 +770,8 @@ def plot_lightcurve(
                 elinewidth=0.5,
                 label=filtername_dict[filterid],
             )
+
+            ax.set_ylabel(r"$\nu$ F$_\nu$ (erg s$^{-1}$ cm$^{-2}$)", fontsize=12)
 
             if z is not None and thumbnail is False:
 
@@ -853,7 +860,6 @@ def plot_lightcurve(
 
     if not thumbnail:
         ax.set_xlabel("Date (MJD)", fontsize=12)
-        ax.set_ylabel(r"$\nu$ F$_\nu$ (erg s$^{-1}$ cm$^{-2}$)", fontsize=12)
         ax.grid(which="both", b=True, axis="both", alpha=0.3)
         plt.legend()
     else:
@@ -1066,32 +1072,36 @@ def plot_tde_fit(
             warnings.filterwarnings("ignore", category=RuntimeWarning)
             F0 = 10 ** (_df.magzp / 2.5)
             F0_err = F0 / 2.5 * np.log(10) * _df.magzpunc
-            Fratio = _df[ampl_column] / F0
-            Fratio_err = np.sqrt(
-                (_df[ampl_err_column] / F0) ** 2
-                + (_df[ampl_column] * F0_err / F0**2) ** 2
+            flux = _df[ampl_column] / F0 * 3630.78
+            flux_err = (
+                np.sqrt(
+                    (_df[ampl_err_column] / F0) ** 2
+                    + (_df[ampl_column] * F0_err / F0**2) ** 2
+                )
+                * 3630.78
             )
-            abmag = -2.5 * np.log10(Fratio)
-            abmag_err = 2.5 / np.log(10) * Fratio_err / Fratio
+            abmag = -2.5 * np.log10(flux)
+            abmag_err = 2.5 / np.log(10) * flux_err / flux
+            obsmjd = _df.obsmjd.values
 
         if snt_threshold:
-            snt_limit = Fratio_err * snt_threshold
-            abmag = np.where(Fratio > snt_limit, abmag, np.nan)
-            abmag_err = np.where(Fratio > snt_limit, abmag_err, np.nan)
-            placeholder_obsmjd = obsmjd[np.argmin(abmag)]
-            obsmjd = np.where(abmag < 99, obsmjd, placeholder_obsmjd)
+            snt_limit = flux_err.values * snt_threshold
+            mask = np.less(flux.values, snt_limit)
+            flux = ma.masked_array(flux.values, mask=mask).compressed()
+            flux_err = ma.masked_array(flux_err.values, mask=mask).compressed()
+            abmag = ma.masked_array(abmag.values, mask=mask).compressed()
+            abmag_err = ma.masked_array(abmag_err.values, mask=mask).compressed()
+            obsmjd = ma.masked_array(obsmjd, mask=mask).compressed()
 
-        _df["flux_Jy"] = utils.abmag_to_flux_density(abmag)
-        _df["flux_Jy_err"] = utils.abmag_err_to_flux_density_err(
-            abmag=abmag, abmag_err=abmag_err
-        )
-
-        nu_fnu = utils.band_frequency(bandname) * _df["flux_Jy"] * 1e-23
-        nu_fnu_err = utils.band_frequency(bandname) * _df["flux_Jy_err"] * 1e-23
+        nu_fnu = utils.band_frequency(bandname) * flux * 1e-23
+        nu_fnu_err = utils.band_frequency(bandname) * flux_err * 1e-23
 
         ax.set_yscale("log")
 
         ms = 2
+
+        if len(nu_fnu) == 0:
+            continue
 
         max_nufnu = np.max(nu_fnu)
         min_nufnu = np.min(nu_fnu)
@@ -1103,7 +1113,7 @@ def plot_tde_fit(
             ylim_lower = min_nufnu
 
         ax.errorbar(
-            _df.obsmjd,
+            obsmjd,
             nu_fnu,
             nu_fnu_err,
             fmt="o",
