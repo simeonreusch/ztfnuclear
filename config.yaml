@@ -1,0 +1,139 @@
+fritz_sn_ia:
+  - Ia
+  - Ia-pec
+  - Ia-02cx
+  - Ia-91b
+  - Ia-18byg
+  - Ia-CSM
+  - Type I
+  - Ia-CSM?
+  - Ia-03fg
+  - Ia-91bg
+  - Ia-91bg?
+  - Ia-91T
+  - Ia-norm
+  - Iax
+  - Ia-03fg
+  - Ia?
+
+fritz_sn_other:
+  - IIP
+  - II
+  - Type II
+  - IIb?
+  - IIn
+  - Ibn?
+  - Supernova
+  - SLSN-I
+  - Ic-BL?
+  - Ic
+  - Ic-SLSN
+  - SLSN-II
+  - Ib/c?
+  - Ic?
+  - IIn?
+  - Ib
+  - Ic-BL
+  - SLSN I
+  - Ib/c
+  - IIb
+  - II-norm
+  - Ibn
+  - SLSN-I?
+  - II?
+  - IIb-pec
+  - SLSN-I.5
+  - Icn
+  - Ib?
+
+fritz_bogus:
+  - bogus
+  - duplicate
+  - bogus?
+  - CV
+  - varstar
+  - rock
+
+fritz_agn_star:
+  - nova
+  - CV?
+  - varstar
+  - AGN
+  - QSO
+  - nova?
+  - star
+  - NLSy1?
+  - NLSy1
+  - CLAGN
+  - AGN?
+  - NLS1
+  - galaxy
+
+tns_sn_ia:
+  - SN Ia
+  - SN Ia-91T-like
+  - SN Ia-pec
+  - SN Ia-CSM
+  - SN Iax[02cx-like]
+
+tns_sn_other:
+  - SN II
+  - SN IIn
+  - SLSN-II
+  - SN Ic
+  - SLSN-I
+  - SN IIP
+  - SN Ib
+  - SN Ic-BL
+  - SN Ib/c
+  - SN IIb
+  - SN I
+  - SN
+  - SN Ibn
+
+axislabels:
+  temp: Temperature (log K)
+  d_temp: Temperature change (K)
+  rise: Rise time (log day)
+  decay: Decay time (log day)
+  wise_w1w2: Wise W1-W2
+  wise_w2w3: Wise W2-W3
+
+fritz_queries:
+    tde: fritz_class == 'Tidal Disruption Event' or fritz_class == 'TDE'
+    snia: fritz_class in @config['fritz_sn_ia']
+    sn_other: fritz_class in @config['fritz_sn_other']
+    agn_star: fritz_class in @config['fritz_agn_star']
+    other: fritz_class not in @config['fritz_sn_ia'] and fritz_class != 'Tidal Disruption Event' and fritz_class not in @config['fritz_sn_other'] and fritz_class != 'TDE'
+
+pl_props:
+    other: 
+      m: .
+      s: 1
+      c: blue
+      a: 0.7
+      l: Unclass.
+    snia:
+      m: .
+      s: 8
+      c: green
+      a: 1
+      l: SN Ia
+    sn_other:
+      m: .
+      s: 8
+      c: orange
+      a: 1
+      l: SN other
+    tde:
+      m: '*'
+      s: 30
+      c: red
+      a: 1
+      l: TDE
+    agn_star:
+      m: .
+      s: 8
+      c: black
+      a: 1
+      l: AGN/star
