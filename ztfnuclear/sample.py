@@ -716,7 +716,7 @@ class Transient(object):
             return None
 
     @property
-    def meta(self) -> Optional[dict]:
+    def meta(self) -> dict | None:
         """
         Read all metadata for the transient from the database
         """

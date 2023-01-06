@@ -24,100 +24,40 @@ GOLDEN_RATIO = 1.62
 
 logger = logging.getLogger(__name__)
 
-fritz_sn_ia = [
-    "Ia",
-    "Ia-pec",
-    "Ia-02cx",
-    "Ia-91b",
-    "Ia-18byg",
-    "Ia-CSM",
-    "Type I",
-    "Ia-03fg",
-    "Ia-91bg",
-    "Ia-91T",
-    "Ia-norm",
+config = io.load_config()
+config["fritz_sn_ia"] = config["fritz_sn_ia"] + [
+    f"SN {i}" for i in config["fritz_sn_ia"]
 ]
-
-fritz_cv = []
-
-tns_sn_ia = [
-    "SN Ia",
-    "SN Ia-91T-like",
-    "SN Ia-pec",
-    "SN Ia-CSM",
-    "SN Iax[02cx-like]",
+config["fritz_sn_other"] = config["fritz_sn_other"] + [
+    f"SN {i}" for i in config["fritz_sn_other"]
 ]
-tns_sn_other = [
-    "SN II",
-    "SN IIn",
-    "SLSN-II",
-    "SN Ic",
-    "SLSN-I",
-    "SN IIP",
-    "SN Ib",
-    "SN Ic-BL",
-    "SN Ib/c",
-    "SN IIb",
-    "SN I",
-    "SN",
-    "SN Ibn",
-]
-
-fritz_sn_other = [
-    "IIP",
-    "Type II",
-    "IIn",
-    "Supernova",
-    "Ic",
-    "Ic-SLSN",
-    "Ib",
-    "Ic-BL",
-    "SLSN I",
-    "Ib/c",
-    "IIb",
-    "II-norm",
-    "Ibn",
-]
-
-axislabels = {
-    "temp": "Temperature (log K)",
-    "d_temp": "Temperature change (K)",
-    "rise": "Rise time (log day)",
-    "decay": "Decay time (log day)",
-    "wise_w1w2": "Wise W1-W2",
-    "wise_w2w3": "Wise W2-W3",
-}
-
-fritz_queries = {
-    "tde": "fritz_class == 'Tidal Disruption Event'",
-    "snia": "fritz_class in @fritz_sn_ia",
-    "sn_other": "fritz_class in @fritz_sn_other",
-    "other": "fritz_class not in @fritz_sn_ia and fritz_class != 'Tidal Disruption Event' and fritz_class not in @fritz_sn_other",
-}
-
-pl_props = {
-    "other": {"m": ".", "s": 1, "c": "blue", "a": 0.7, "l": "Unclass."},
-    "snia": {"m": ".", "s": 8, "c": "green", "a": 1, "l": "SN Ia"},
-    "sn_other": {"m": ".", "s": 8, "c": "orange", "a": 1, "l": "SN other"},
-    "tde": {"m": "*", "s": 30, "c": "red", "a": 1, "l": "TDE"},
-}
 
 
 def get_tde_selection(
-    flaring_only: bool = False, cut: Optional[str] = None
+    flaring_only: bool = False,
+    cut: Optional[str] = None,
+    sampletype: str = "nuclear",
 ) -> pd.DataFrame:
     """
     Apply selection cuts to a pandas dataframe
     """
-    meta = MetadataDB()
+    meta = MetadataDB(sampletype=sampletype)
+
+    if sampletype == "nuclear":
+        salt_key = "salt_loose_bl"
+        class_key = "fritz_class"
+    else:
+        salt_key = "salt"
+        class_key = "type"
+
     res = meta.read_parameters(
         params=[
             "tde_fit_exp",
             "_id",
-            "fritz_class",
+            class_key,
             "crossmatch",
             "WISE_bayesian",
-            "salt_loose_bl",
+            salt_key,
             "ZTF_bayesian",
         ]
     )
@@ -130,10 +70,10 @@ def get_tde_selection(
 
     tde_res = res["tde_fit_exp"]
     all_ztfids = res["_id"]
-    fritz_class_all = res["fritz_class"]
+    fritz_class_all = res[class_key]
     crossmatch_all = res["crossmatch"]
     wise_bayesian = res["WISE_bayesian"]
-    salt = res["salt_loose_bl"]
+    salt = res[salt_key]
     ztf_bayesian = res["ZTF_bayesian"]
 
     risetimes = []
@@ -212,25 +152,28 @@ def get_tde_selection(
                         fritz_class.append(fritz_class_all[i])
 
                         _tns_class = None
-                        if "TNS" in crossmatch_all[i].keys():
-                            if "type" in crossmatch_all[i]["TNS"].keys():
-                                _tns_class = crossmatch_all[i]["TNS"]["type"]
+                        if crossmatch_all[i] is not None:
+                            if "TNS" in crossmatch_all[i].keys():
+                                if "type" in crossmatch_all[i]["TNS"].keys():
+                                    _tns_class = crossmatch_all[i]["TNS"]["type"]
                         tns_class.append(_tns_class)
 
                         _milliquas_class = "noclass"
-                        if "Milliquas" in crossmatch_all[i].keys():
-                            if "type" in crossmatch_all[i]["Milliquas"].keys():
-                                _milliquas_class = crossmatch_all[i]["Milliquas"][
-                                    "type"
-                                ]
+                        if crossmatch_all[i] is not None:
+                            if "Milliquas" in crossmatch_all[i].keys():
+                                if "type" in crossmatch_all[i]["Milliquas"].keys():
+                                    _milliquas_class = crossmatch_all[i]["Milliquas"][
+                                        "type"
+                                    ]
                         milliquas.append(_milliquas_class)
 
                         _w1w2 = 999
                         _w2w3 = 999
-                        if "WISE_cat" in crossmatch_all[i].keys():
-                            if wise := crossmatch_all[i]["WISE_cat"]:
-                                _w1w2 = wise["Mag_W1"] - wise["Mag_W2"]
-                                _w2w3 = wise["Mag_W2"] - wise["Mag_W3"]
+                        if crossmatch_all[i] is not None:
+                            if "WISE_cat" in crossmatch_all[i].keys():
+                                if wise := crossmatch_all[i]["WISE_cat"]:
+                                    _w1w2 = wise["Mag_W1"] - wise["Mag_W2"]
+                                    _w2w3 = wise["Mag_W2"] - wise["Mag_W3"]
 
                         wise_w1w2.append(_w1w2)
                         wise_w2w3.append(_w2w3)
@@ -253,6 +196,11 @@ def get_tde_selection(
     sample["overlapping_regions"] = overlapping_regions
     sample["total_d_temp"] = np.asarray(plateaustarts) * np.asarray(d_temps)
     sample["snia_cut"] = aggressive_snia_diag_cut(np.asarray(risetimes))
+
+    sample.query(
+        "fritz_class not in @config['fritz_bogus'] and fritz_class not in @config['fritz_agn_star']",
+        inplace=True,
+    )
 
     wise_cut = "(wise_w1w2<0.3 or wise_w1w2>1.8) or (wise_w2w3 <1.5 or wise_w2w3>3.5)"
 
@@ -281,15 +229,158 @@ def get_tde_selection(
         """Add simple classification labels"""
         if row["fritz_class"] == "Tidal Disruption Event":
             return "tde"
-        if row["fritz_class"] in fritz_sn_ia:
+        if row["fritz_class"] in config["fritz_sn_ia"]:
             return "snia"
-        if row["fritz_class"] in fritz_sn_other:
+        if row["fritz_class"] in config["fritz_sn_other"]:
             return "sn_other"
+        if row["fritz_class"] in config["fritz_agn_star"]:
+            return "agn_star"
         return "other"
 
     sample["classif"] = sample.apply(lambda row: simple_class(row), axis=1)
 
     return sample
+
+
+def plot_tde_scatter(
+    flaring_only: bool = False,
+    ingest: bool = False,
+    x_values: str = "rise",
+    y_values: str = "decay",
+    cut: str = "full",
+    sampletype: str = "nuclear",
+):
+    """
+    Plot the rise vs. fadetime of the TDE fit results
+    """
+    info_db = SampleInfo()
+
+    sample = get_tde_selection(cut=cut, sampletype=sampletype)
+
+    fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
+    fig.suptitle(
+        f"TDE fit {x_values} vs. {y_values} ({len(sample)} transients)",
+        fontsize=14,
+    )
+    for key in config["fritz_queries"].keys():
+
+        _df = sample.query(config["fritz_queries"][key])
+        ax.scatter(
+            _df[x_values],
+            _df[y_values],
+            marker=config["pl_props"][key]["m"],
+            s=config["pl_props"][key]["s"],
+            c=config["pl_props"][key]["c"],
+            alpha=config["pl_props"][key]["a"],
+            label=config["pl_props"][key]["l"] + f" ({len(_df[x_values])})",
+        )
+
+    plt.legend(title="Fritz classification")
+
+    ax.set_xlabel(config["axislabels"][x_values])
+    ax.set_ylabel(config["axislabels"][y_values])
+
+    # x = np.arange(0.75, 1.08, 0.01)
+    # y = aggressive_snia_diag_cut(x)
+    # if cut:
+    # ax.plot(x, y)
+
+    if sampletype == "ztfnuclear":
+        local = io.LOCALSOURCE_plots
+    else:
+        local = io.LOCALSOURCE_bts_plots
+
+    if flaring_only:
+        outfile = os.path.join(local, f"tde_{x_values}_{y_values}_flaring_{cut}.pdf")
+
+    else:
+        outfile = os.path.join(local, f"tde_{x_values}_{y_values}_{cut}.pdf")
+
+    plt.tight_layout()
+
+    plt.savefig(outfile)
+
+    plt.close()
+
+    if ingest:
+
+        info_db.ingest_ztfid_collection(
+            ztfids=sample.ztfid.values, collection_name="tde_selection"
+        )
+
+
+def plot_tde_scatter_seaborn(
+    ingest: bool = False,
+    x_values: str = "rise",
+    y_values: str = "decay",
+    cut: str = "boundary",
+    sampletype: str = "nuclear",
+):
+    """
+    Plot the rise vs. fadetime of the TDE fit results
+    """
+    info_db = SampleInfo(sampletype=sampletype)
+
+    sample = get_tde_selection(cut=cut, sampletype=sampletype)
+
+    sample_reduced = sample.query("classif != 'tde' or ztfid == 'ZTF22aagyuao'")
+    # we need one TDE to survive, so we have a handle for the legend (don't ask,
+    # I DID try to make this not hacky, but failed)
+
+    g = sns.jointplot(
+        data=sample_reduced,
+        x=x_values,
+        y=y_values,
+        hue="classif",
+        hue_order=["other", "sn_other", "snia", "tde"],
+        alpha=0.8,
+        legend=True,
+        kind="kde",
+        fill=True,
+        common_norm=True,
+    )
+    g.ax_joint.scatter(
+        x=sample.query("classif == 'tde'")[x_values],
+        y=sample.query("classif == 'tde'")[y_values],
+        c=config["pl_props"]["tde"]["c"],
+        s=config["pl_props"]["tde"]["s"],
+        marker=config["pl_props"]["tde"]["m"],
+    )
+
+    leg = g.ax_joint.get_legend()
+
+    leg.set_title("Fritz classification")
+
+    new_labels = [
+        config["pl_props"]["other"]["l"]
+        + " ({length})".format(length=len(sample_reduced.query("classif == 'other'"))),
+        config["pl_props"]["sn_other"]["l"]
+        + " ({length})".format(
+            length=len(sample_reduced.query("classif == 'sn_other'"))
+        ),
+        config["pl_props"]["snia"]["l"]
+        + " ({length})".format(length=len(sample_reduced.query("classif == 'snia'"))),
+        config["pl_props"]["tde"]["l"]
+        + " ({length})".format(length=len(sample.query("classif == 'tde'"))),
+    ]
+    for t, l in zip(leg.texts, new_labels):
+        t.set_text(l)
+
+    if sampletype == "nuclear":
+        local = io.LOCALSOURCE_plots
+    else:
+        local = io.LOCALSOURCE_bts_plots
+
+    outfile = os.path.join(local, f"tde_{x_values}_{y_values}_seaborn_{cut}.pdf")
+
+    g.fig.savefig(outfile)
+    plt.close()
+
+    if ingest:
+
+        info_db.ingest_ztfid_collection(
+            ztfids=sample.ztfid.values, collection_name="tde_selection"
+        )
 
 
 def plot_mag_cdf(cuts: str = Optional["agn"]):
@@ -1080,142 +1171,3 @@ def plot_tde_fit(
     plt.close()
 
     del fig, ax
-
-
-def plot_tde_scatter(
-    flaring_only: bool = False,
-    ingest: bool = False,
-    x_values: str = "rise",
-    y_values: str = "decay",
-    cut: str = "full",
-):
-    """
-    Plot the rise vs. fadetime of the TDE fit results
-    """
-    info_db = SampleInfo()
-
-    sample = get_tde_selection(cut=cut)
-
-    fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
-    fig.suptitle(
-        f"TDE fit {x_values} vs. {y_values} ({len(sample)} transients)",
-        fontsize=14,
-    )
-    for key in fritz_queries.keys():
-        _df = sample.query(fritz_queries[key])
-        ax.scatter(
-            _df[x_values],
-            _df[y_values],
-            marker=pl_props[key]["m"],
-            s=pl_props[key]["s"],
-            c=pl_props[key]["c"],
-            alpha=pl_props[key]["a"],
-            label=pl_props[key]["l"] + f" ({len(_df[x_values])})",
-        )
-
-    plt.legend(title="Fritz classification")
-
-    ax.set_xlabel(axislabels[x_values])
-    ax.set_ylabel(axislabels[y_values])
-
-    # x = np.arange(0.75, 1.08, 0.01)
-    # y = aggressive_snia_diag_cut(x)
-    # if cut:
-    # ax.plot(x, y)
-
-    if flaring_only:
-        outfile = os.path.join(
-            io.LOCALSOURCE_plots, f"tde_{x_values}_{y_values}_flaring.pdf"
-        )
-
-    else:
-        outfile = os.path.join(io.LOCALSOURCE_plots, f"tde_{x_values}_{y_values}.pdf")
-
-    plt.tight_layout()
-
-    plt.savefig(outfile)
-
-    plt.close()
-
-    if ingest:
-
-        info_db.ingest_ztfid_collection(
-            ztfids=sample.ztfid.values, collection_name="tde_selection"
-        )
-
-
-def plot_tde_scatter_seaborn(
-    ingest: bool = False,
-    x_values: str = "rise",
-    y_values: str = "decay",
-    cut: str = "boundary",
-):
-    """
-    Plot the rise vs. fadetime of the TDE fit results
-    """
-    info_db = SampleInfo()
-
-    sample = get_tde_selection(cut=cut)
-
-    sample_reduced = sample.query("classif != 'tde' or ztfid == 'ZTF22aagyuao'")
-    # we need one TDE to survive, so we have a handle for the legend (don't ask,
-    # I DID try to make this not hacky, but failed)
-
-    g = sns.jointplot(
-        data=sample_reduced,
-        x=x_values,
-        y=y_values,
-        hue="classif",
-        hue_order=["other", "sn_other", "snia", "tde"],
-        alpha=0.8,
-        legend=True,
-        kind="kde",
-        fill=True,
-        common_norm=True,
-    )
-    g.ax_joint.scatter(
-        x=sample.query("classif == 'tde'")[x_values],
-        y=sample.query("classif == 'tde'")[y_values],
-        c=pl_props["tde"]["c"],
-        s=pl_props["tde"]["s"],
-        marker=pl_props["tde"]["m"],
-    )
-
-    leg = g.ax_joint.get_legend()
-
-    leg.set_title("Fritz classification")
-
-    # test = matplotlib.text.Text(0, 0, "test")
-
-    # leg.texts.append(test)
-
-    new_labels = [
-        pl_props["other"]["l"]
-        + " ({length})".format(length=len(sample_reduced.query("classif == 'other'"))),
-        pl_props["sn_other"]["l"]
-        + " ({length})".format(
-            length=len(sample_reduced.query("classif == 'sn_other'"))
-        ),
-        pl_props["snia"]["l"]
-        + " ({length})".format(length=len(sample_reduced.query("classif == 'snia'"))),
-        pl_props["tde"]["l"]
-        + " ({length})".format(length=len(sample.query("classif == 'tde'"))),
-    ]
-    for t, l in zip(leg.texts, new_labels):
-        t.set_text(l)
-
-    # print(leg.texts)
-
-    outfile = os.path.join(
-        io.LOCALSOURCE_plots, f"tde_{x_values}_{y_values}_seaborn.pdf"
-    )
-
-    g.fig.savefig(outfile)
-    # g.set_axis_labels("Colors", "Values")
-    plt.close()
-
-    if ingest:
-
-        info_db.ingest_ztfid_collection(
-            ztfids=sample.ztfid.values, collection_name="tde_selection"
-        )

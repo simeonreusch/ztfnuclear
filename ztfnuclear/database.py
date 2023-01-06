@@ -138,7 +138,9 @@ class MetadataDB(object):
         for key in keys:
             self.coll.update_many({}, {"$unset": {key: 1}})
 
-        self.logger.info(f"Deleted keys {keys} for all transients in metadata db")
+        self.logger.info(
+            f"Deleted keys {keys} for all transients in metadata db {self.sampletype}"
+        )
 
     def read_parameters(self, params: List[str]) -> dict:
         """

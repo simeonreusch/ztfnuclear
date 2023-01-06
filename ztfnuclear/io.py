@@ -2,7 +2,7 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, re, subprocess, json
+import os, logging, re, subprocess, json, yaml
 from typing import Optional, List, Dict
 
 from ztfnuclear import utils
@@ -316,7 +316,6 @@ def parse_ampel_json(filepath: str, parameter_name: str) -> dict:
                     "salt_loose_bl",
                     "tde_fit",
                     "tde_fit_loose_bl",
-                    "salt_fit_bts",
                 ]:
                     if "sncosmo_result" in body.keys():
                         sncosmo_result = body["sncosmo_result"]
@@ -424,3 +423,17 @@ def load_irsa(ra: float, dec: float, radius_arcsec: float = 0.5) -> pd.DataFrame
 
         df = df.drop(df[mask].index)
         return df
+
+
+def load_config(config_path: Optional[str] = None) -> dict:
+    """
+    Loads the user-specific config
+    """
+    if not config_path:
+        current_dir = os.path.dirname(__file__)
+        config_path = os.path.join(current_dir, "..", "config.yaml")
+
+    with open(config_path) as f:
+        config = yaml.safe_load(f)
+
+    return config
