@@ -519,6 +519,35 @@ class NuclearSample(object):
             with open(io.LOCALSOURCE_pickle, "wb") as f:
                 pickle.dump(transients_pickled, f)
 
+    def get_gold_transients(self):
+        """
+        get gold sample
+        """
+
+        golden_sample_ztfids = []
+
+        # get all transients rated as interesting by at least one person
+        interesting_ztfids = self.get_ratings(select="interesting")
+
+        # at least two persons must have rated the transient as interesting
+        for k, v in interesting_ztfids.items():
+            if len(v) > 1:
+                rated_interesting = 0
+                for entry in v.keys():
+                    if v[entry] == 3:
+                        rated_interesting += 1
+
+                if rated_interesting >= 2:
+                    golden_sample_ztfids.append(k)
+
+        self.logger.info(
+            f"Golden sample consists of {len(golden_sample_ztfids)} transients at the moment"
+        )
+
+        for ztfid in golden_sample_ztfids:
+            t = Transient(ztfid, sampletype=self.sampletype)
+            yield t
+
 
 class Transient(object):
     """
