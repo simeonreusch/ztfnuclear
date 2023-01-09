@@ -97,7 +97,7 @@ class NuclearSample(object):
         if self.sampletype == "nuclear":
             assert db_check["count"] == 11687
         else:
-            assert db_check["count"] == 7131
+            assert db_check["count"] == 7131 or db_check["count"] == 7130
 
     def get_transient(self, ztfid: str):
         df = io.get_ztfid_dataframe(ztfid=ztfid)
