@@ -36,7 +36,7 @@ config["fritz_sn_other"] = config["fritz_sn_other"] + [
 
 def get_tde_selection(
     flaring_only: bool = False,
-    cut: Optional[str] = None,
+    cuts: None | list = None,
     sampletype: str = "nuclear",
 ) -> pd.DataFrame:
     """
@@ -170,6 +170,7 @@ def get_tde_selection(
 
                         _w1w2 = 999
                         _w2w3 = 999
+
                         if crossmatch_all[i] is not None:
                             if "WISE_cat" in crossmatch_all[i].keys():
                                 if wise := crossmatch_all[i]["WISE_cat"]:
@@ -207,23 +208,47 @@ def get_tde_selection(
 
     boundary_cut = "rise>0.1 and rise < 3 and decay > 0.1 and decay<4 and wise_w2w3 < 900 and wise_w1w2 < 900"
 
-    # that's the one for dtemp = 15k, evolution from peak, bolcorr
-    tde_selection_finetuned = "temp > 3.93 and temp < 4.38 and d_temp>-90 and d_temp < 140 and rise>0.85 and rise<2.05 and decay>1.1 and decay<3 and red_chisq<6 and red_chisq < salt_red_chisq"
+    # # that's the one for dtemp = 15k, evolution from peak, bolcorr
+    # tde_selection_finetuned = "temp > 3.93 and temp < 4.38 and d_temp>-90 and d_temp < 140 and rise>0.85 and rise<2.05 and decay>1.1 and decay<3 and red_chisq<6 and red_chisq < salt_red_chisq"
 
-    tde_selection = "temp > 3.9 and temp < 4.4 and d_temp>-100 and d_temp < 150 and rise>0.8 and rise<2.05 and decay>1.1 and decay<3 and red_chisq<6 and red_chisq < salt_red_chisq"
+    # tde_selection_full = "temp > 3.9 and temp < 4.4 and d_temp>-100 and d_temp < 150 and rise>0.8 and rise<2.05 and decay>1.1 and decay<3 and red_chisq<6 and red_chisq < salt_red_chisq"
+
+    rise_decay_selection = "rise>0.8 and rise<2.05 and decay>1.1 and decay<3"
+
+    chisq_selection = "red_chisq<6 and red_chisq < salt_red_chisq"
+
+    temp_selection = "temp > 3.9 and temp < 4.4 and d_temp>-100 and d_temp < 150"
 
     # RERUN OVERLAPPING REGION FOR EVERYTHING
-    if cut:
-        if cut == "full":
-            sample.query(tde_selection, inplace=True)
+    if cuts:
+        if "full" in cuts:
+            # sample.query(tde_selection_full, inplace=True)
+            sample.query(rise_decay_selection, inplace=True)
+            sample.query(chisq_selection, inplace=True)
+            sample.query(temp_selection, inplace=True)
             sample.query("snia_cut < decay", inplace=True)
             sample.query("overlapping_regions == 1", inplace=True)
             sample.query("milliquas == 'noclass'", inplace=True)
             sample.query(wise_cut, inplace=True)
-        if cut == "boundary":
+        if "bayes" in cuts:
+            sample.query("overlapping_regions == 1", inplace=True)
+
+        if "chisq" in cuts:
+            sample.query(chisq_selection, inplace=True)
+
+        if "temp" in cuts:
+            sample.query(temp_selection, inplace=True)
+
+        if "risedecay" in cuts:
+            sample.query(rise_decay_selection, inplace=True)
+
+        if "snia" in cuts:
+            sample.query("snia_cut < decay", inplace=True)
+
+        if "boundary" in cuts:
             sample.query(boundary_cut, inplace=True)
-        if cut == "wise":
-            sample.query(boundary_cut, inplace=True)
+
+        if "wise" in cuts:
             sample.query(wise_cut, inplace=True)
 
     def simple_class(row):
@@ -248,15 +273,17 @@ def plot_tde_scatter(
     ingest: bool = False,
     x_values: str = "rise",
     y_values: str = "decay",
-    cut: str = "full",
+    cuts: str | None = None,
     sampletype: str = "nuclear",
+    xlim: tuple | None = None,
+    ylim: tuple | None = None,
 ):
     """
     Plot the rise vs. fadetime of the TDE fit results
     """
     info_db = SampleInfo(sampletype=sampletype)
 
-    sample = get_tde_selection(cut=cut, sampletype=sampletype)
+    sample = get_tde_selection(cuts=cuts, sampletype=sampletype)
 
     fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
     fig.suptitle(
@@ -292,10 +319,15 @@ def plot_tde_scatter(
         local = io.LOCALSOURCE_bts_plots
 
     if flaring_only:
-        outfile = os.path.join(local, f"tde_{x_values}_{y_values}_flaring_{cut}.pdf")
+        outfile = os.path.join(local, f"tde_{x_values}_{y_values}_flaring_{cuts}.pdf")
 
     else:
-        outfile = os.path.join(local, f"tde_{x_values}_{y_values}_{cut}.pdf")
+        outfile = os.path.join(local, f"tde_{x_values}_{y_values}_{cuts}.pdf")
+
+    if xlim is not None:
+        ax.set_xlim(xlim)
+    if ylim is not None:
+        ax.set_ylim(ylim)
 
     plt.tight_layout()
 

@@ -738,140 +738,42 @@ def fit(
 
     default_param_vals = sncosmo_model_simple.parameters
 
-    # try:
-    if powerlaw:
-        bounds_simple = {
-            "t0": [t_peak - 30, t_peak + 30],
-            "temperature": [3.5, 5.0],
-            "risetime": [0, 5],
-            "alpha": [-15, 0],
-            "normalization": [0, 5],
-        }
-
-    else:
-        bounds_simple = {
-            "t0": [t_peak - 30, t_peak + 30],
-            "temperature": [3.5, 5.0],
-            "risetime": [0, 5],
-            "decaytime": [0, 5],
-        }
-
-    result, fitted_model_simple = sncosmo.fit_lc(
-        phot_tab,
-        sncosmo_model_simple,
-        fit_params,
-        bounds=bounds_simple,
-    )
-
-    if debug:
-        fig = sncosmo.plot_lc(
-            data=phot_tab, model=fitted_model_simple, zpsys="ab", zp=25
-        )
-        outpath = "/Users/simeon/Desktop/flextemp_test/diagnostic"
-        if not os.path.exists(outpath):
-            os.makedirs(outpath)
+    try:
         if powerlaw:
-            fig.savefig(os.path.join(outpath, f"{ztfid}_pl.png"))
-        else:
-            fig.savefig(os.path.join(outpath, f"{ztfid}_exp.png"))
-
-    result["parameters"] = result["parameters"].tolist()
-
-    NoneType = type(None)
-
-    if not isinstance(result["covariance"], NoneType):
-        result["covariance"] = result["covariance"].tolist()
-    else:
-        result["covariance"] = [None]
-
-    result.pop("data_mask")
-
-    result["paramdict"] = {}
-    for ix, pname in enumerate(result["param_names"]):
-        result["paramdict"][pname] = result["parameters"][ix]
-
-    result.pop("param_names")
-    result.pop("vparam_names")
-
-    if debug:
-        print(result["paramdict"])
-
-    if simplefit_only:
-        result.pop("parameters")
-
-    if simplefit_only:
-        print(result)
-        return result
-
-    else:
-        # doing a second round of fitting, flexible temperature evolution
-
-        params = result["parameters"]
-        pdict = result["paramdict"]
-
-        if not powerlaw:
-            priors = [
-                pdict["risetime"],
-                pdict["decaytime"],
-                pdict["temperature"],
-                pdict["amplitude"],
-                0.0,
-                365.0,
-            ]
-        else:
-            priors = [
-                pdict["risetime"],
-                pdict["alpha"],
-                pdict["temperature"],
-                pdict["amplitude"],
-                pdict["normalization"],
-                0,
-                365.0,
-            ]
-
-        t0 = pdict["t0"]
-
-        if not powerlaw:
-            tde_source_flextemp = TDESource_exp_flextemp(
-                phase, wave, name="tde", priors=priors, debug=debug
-            )
+            bounds_simple = {
+                "t0": [t_peak - 30, t_peak + 30],
+                "temperature": [3.5, 5.0],
+                "risetime": [0, 5],
+                "alpha": [-15, 0],
+                "normalization": [0, 5],
+            }
 
         else:
-            tde_source_flextemp = TDESource_pl_flextemp(
-                phase, wave, name="tde", priors=priors, debug=debug
-            )
+            bounds_simple = {
+                "t0": [t_peak - 30, t_peak + 30],
+                "temperature": [3.5, 5.0],
+                "risetime": [0, 5],
+                "decaytime": [0, 5],
+            }
 
-        sncosmo_model_flextemp = sncosmo.Model(
-            source=tde_source_flextemp,
-            effects=[dust],
-            effect_names=["mw"],
-            effect_frames=["obs"],
-        )
-
-        sncosmo_model_flextemp.set(mwebv=transient_mwebv)
-
-        fit_params = copy.deepcopy(sncosmo_model_flextemp.param_names)
-        fit_params.remove("mwebv")
-        fit_params.remove("mwr_v")
-        fit_params.remove("z")  # let's not fit z here
-
-        # if pdict["risetime"] < 2:
-        # lol = 1
-        # fit_params.remove("risetime")
-        # sncosmo_model_flextemp.set(risetime=pdict["risetime"])
-
-        default_param_vals = sncosmo_model_flextemp.parameters
-
-        bounds_flextemp = bounds_simple
-        bounds_flextemp["d_temp"] = [-1500, 1500]
-        bounds_flextemp["plateaustart"] = [100, 1200]
-
-        result, fitted_model = sncosmo.fit_lc(
+        result, fitted_model_simple = sncosmo.fit_lc(
             phot_tab,
-            sncosmo_model_flextemp,
+            sncosmo_model_simple,
             fit_params,
-            bounds=bounds_flextemp,
+            bounds=bounds_simple,
         )
+
+        if debug:
+            fig = sncosmo.plot_lc(
+                data=phot_tab, model=fitted_model_simple, zpsys="ab", zp=25
+            )
+            outpath = "/Users/simeon/Desktop/flextemp_test/diagnostic"
+            if not os.path.exists(outpath):
+                os.makedirs(outpath)
+            if powerlaw:
+                fig.savefig(os.path.join(outpath, f"{ztfid}_pl.png"))
+            else:
+                fig.savefig(os.path.join(outpath, f"{ztfid}_exp.png"))
 
         result["parameters"] = result["parameters"].tolist()
 
@@ -890,22 +792,122 @@ def fit(
 
         result.pop("param_names")
         result.pop("vparam_names")
-        result.pop("parameters")
-
-        if "Hesse" in result["message"]:
-            result["success"] = True
 
         if debug:
-            fig = sncosmo.plot_lc(data=phot_tab, model=fitted_model, zpsys="ab", zp=25)
-            outpath = "/Users/simeon/Desktop/flextemp_test/diagnostic"
-            if powerlaw:
-                fig.savefig(os.path.join(outpath, f"{ztfid}_pl_flextemp.png"))
-            else:
-                fig.savefig(os.path.join(outpath, f"{ztfid}_exp_flextemp.png"))
+            print(result["paramdict"])
 
+        if simplefit_only:
+            result.pop("parameters")
+
+        if simplefit_only:
             print(result)
+            return result
 
-        return result
+        else:
+            # doing a second round of fitting, flexible temperature evolution
 
-    # except:
-    # return {"success": False}
+            params = result["parameters"]
+            pdict = result["paramdict"]
+
+            if not powerlaw:
+                priors = [
+                    pdict["risetime"],
+                    pdict["decaytime"],
+                    pdict["temperature"],
+                    pdict["amplitude"],
+                    0.0,
+                    365.0,
+                ]
+            else:
+                priors = [
+                    pdict["risetime"],
+                    pdict["alpha"],
+                    pdict["temperature"],
+                    pdict["amplitude"],
+                    pdict["normalization"],
+                    0,
+                    365.0,
+                ]
+
+            t0 = pdict["t0"]
+
+            if not powerlaw:
+                tde_source_flextemp = TDESource_exp_flextemp(
+                    phase, wave, name="tde", priors=priors, debug=debug
+                )
+
+            else:
+                tde_source_flextemp = TDESource_pl_flextemp(
+                    phase, wave, name="tde", priors=priors, debug=debug
+                )
+
+            sncosmo_model_flextemp = sncosmo.Model(
+                source=tde_source_flextemp,
+                effects=[dust],
+                effect_names=["mw"],
+                effect_frames=["obs"],
+            )
+
+            sncosmo_model_flextemp.set(mwebv=transient_mwebv)
+
+            fit_params = copy.deepcopy(sncosmo_model_flextemp.param_names)
+            fit_params.remove("mwebv")
+            fit_params.remove("mwr_v")
+            fit_params.remove("z")  # let's not fit z here
+
+            # if pdict["risetime"] < 2:
+            # lol = 1
+            # fit_params.remove("risetime")
+            # sncosmo_model_flextemp.set(risetime=pdict["risetime"])
+
+            default_param_vals = sncosmo_model_flextemp.parameters
+
+            bounds_flextemp = bounds_simple
+            bounds_flextemp["d_temp"] = [-1500, 1500]
+            bounds_flextemp["plateaustart"] = [100, 1200]
+
+            result, fitted_model = sncosmo.fit_lc(
+                phot_tab,
+                sncosmo_model_flextemp,
+                fit_params,
+                bounds=bounds_flextemp,
+            )
+
+            result["parameters"] = result["parameters"].tolist()
+
+            NoneType = type(None)
+
+            if not isinstance(result["covariance"], NoneType):
+                result["covariance"] = result["covariance"].tolist()
+            else:
+                result["covariance"] = [None]
+
+            result.pop("data_mask")
+
+            result["paramdict"] = {}
+            for ix, pname in enumerate(result["param_names"]):
+                result["paramdict"][pname] = result["parameters"][ix]
+
+            result.pop("param_names")
+            result.pop("vparam_names")
+            result.pop("parameters")
+
+            if "Hesse" in result["message"]:
+                result["success"] = True
+
+            if debug:
+                fig = sncosmo.plot_lc(
+                    data=phot_tab, model=fitted_model, zpsys="ab", zp=25
+                )
+                outpath = "/Users/simeon/Desktop/flextemp_test/diagnostic"
+                if powerlaw:
+                    fig.savefig(os.path.join(outpath, f"{ztfid}_pl_flextemp.png"))
+                else:
+                    fig.savefig(os.path.join(outpath, f"{ztfid}_exp_flextemp.png"))
+
+                print(result)
+
+            return result
+
+    except:
+        return {"success": False}

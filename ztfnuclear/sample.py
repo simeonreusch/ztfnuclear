@@ -631,6 +631,7 @@ class Transient(object):
         """
         Get the TNS classification if one is present in metadata
         """
+        # USE DEFAULTDICT TO FIX THIS MESS
         if "crossmatch" in self.meta.keys():
             if "TNS" in self.meta["crossmatch"].keys():
                 if "type" in self.meta["crossmatch"]["TNS"].keys():
@@ -969,7 +970,7 @@ class Transient(object):
         else:
             return message
 
-    def crossmatch(self):
+    def crossmatch(self, crossmatch_types: list | None = None):
         """
         Do all kinds of crossmatches for the transient
         """
@@ -981,37 +982,53 @@ class Transient(object):
             query_wise,
             query_tns,
             query_wise_cat,
+            query_ampel_dist,
         )
 
         results = {}
+        res_list = []
 
-        crts_res = query_crts(ra_deg=self.ra, dec_deg=self.dec)
-        wise_cat_res = query_wise_cat(ra_deg=self.ra, dec_deg=self.dec)
-        millliquas_res = query_milliquas(ra_deg=self.ra, dec_deg=self.dec)
-        sdss_res = query_sdss(ra_deg=self.ra, dec_deg=self.dec)
-        gaia_res = query_gaia(ra_deg=self.ra, dec_deg=self.dec)
-        wise_res = query_wise(ra_deg=self.ra, dec_deg=self.dec)
-        tns_res = query_tns(ra_deg=self.ra, dec_deg=self.dec)
+        if crossmatch_types is None:
+            res_list.append(query_crts(ra_deg=self.ra, dec_deg=self.dec))
+            res_list.append(query_wise_cat(ra_deg=self.ra, dec_deg=self.dec))
+            res_list.append(query_milliquas(ra_deg=self.ra, dec_deg=self.dec))
+            res_list.append(query_sdss(ra_deg=self.ra, dec_deg=self.dec))
+            res_list.append(query_gaia(ra_deg=self.ra, dec_deg=self.dec))
+            res_list.append(query_wise(ra_deg=self.ra, dec_deg=self.dec))
+            res_list.append(query_tns(ra_deg=self.ra, dec_deg=self.dec))
 
-        for res in [
-            crts_res,
-            wise_cat_res,
-            millliquas_res,
-            sdss_res,
-            gaia_res,
-            wise_res,
-            tns_res,
-        ]:
-            results.update(res)
+        else:
+            if "crts" in crossmatch_types:
+                res_list.append(query_crts(ra_deg=self.ra, dec_deg=self.dec))
+            if "wise_cat" in crossmatch_types:
+                res_list.append(query_wise_cat(ra_deg=self.ra, dec_deg=self.dec))
+            if "milliquas" in crossmatch_types:
+                res_list.append(query_milliquas(ra_deg=self.ra, dec_deg=self.dec))
+            if "sdss" in crossmatch_types:
+                res_list.append(query_sdss(ra_deg=self.ra, dec_deg=self.dec))
+            if "gaia" in crossmatch_types:
+                res_list.append(query_gaia(ra_deg=self.ra, dec_deg=self.dec))
+            if "wise" in crossmatch_types:
+                res_list.append(query_wise(ra_deg=self.ra, dec_deg=self.dec))
+            if "tns" in crossmatch_types:
+                res_list.append(query_tns(ra_deg=self.ra, dec_deg=self.dec))
+
+            if "dist" in crossmatch_types:
+                res_list.append(query_ampel_dist(ztfid=self.ztfid))
+
+            for res in res_list:
+                results.update(res)
 
         self.crossmatch = {"crossmatch": results}
+        print(self.crossmatch)
+        quit()
 
         if self.sampletype == "nuclear":
             m_db = meta
         else:
             m_db = meta_bts
 
-        if "name" in self.crossmatch["crossmatch"]["TNS"].keys():
+        if "name" in self.crossmatch["crossmatch"].get("TNS", {}).keys():
             tns_name = self.crossmatch["crossmatch"]["TNS"]["name"]
             m_db.update_transient(ztfid=self.ztfid, data={"TNS_name": tns_name})
 

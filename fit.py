@@ -22,10 +22,11 @@ os.environ["OPENBLAS_NUM_THREADS"] = "1"
 FIT_TYPE = "tde_fit_exp"
 RECREATE_BASELINE = True
 DEBUG = False
+SINGLECORE = False
 
 
 def _tde_fitter(ztfid):
-    t = Transient(ztfid)
+    t = Transient(ztfid, sampletype="bts")
     if RECREATE_BASELINE:
         t.recreate_baseline()
     if FIT_TYPE == "tde_fit_exp":
@@ -70,17 +71,31 @@ if __name__ == "__main__":
     else:
         ztfids = s.ztfids
 
-    with multiprocessing.Pool(nprocess) as p:
-        for result in tqdm(
-            p.imap_unordered(_tde_fitter, ztfids),
-            total=len(ztfids),
-        ):
-            a = 1
+    if SINGLECORE:
+        for ztfid in tqdm(ztfids):
+            t = Transient(ztfid, sampletype="bts")
+            print(ztfid)
+            if RECREATE_BASELINE:
+                t.recreate_baseline()
+            if FIT_TYPE == "tde_fit_exp":
+                t.fit_tde(debug=DEBUG)
+                if DEBUG:
+                    t.plot_tde(debug=DEBUG)
+            elif FIT_TYPE == "tde_fit_pl":
+                t.fit_tde(powerlaw=True, debug=DEBUG)
 
-    fitres = meta.read_parameters(["_id", FIT_TYPE])
-    outfile = f"{FIT_TYPE}.json"
+    else:
+        with multiprocessing.Pool(nprocess) as p:
+            for result in tqdm(
+                p.imap_unordered(_tde_fitter, ztfids),
+                total=len(ztfids),
+            ):
+                a = 1
 
-    logger.info(f"Fitting for {FIT_TYPE} done, exporting result to {outfile}")
+        fitres = meta.read_parameters(["_id", FIT_TYPE])
+        outfile = f"{FIT_TYPE}.json"
 
-    with open(outfile, "w") as fp:
-        json.dump(fitres, fp)
+        logger.info(f"Fitting for {FIT_TYPE} done, exporting result to {outfile}")
+
+        with open(outfile, "w") as fp:
+            json.dump(fitres, fp)
