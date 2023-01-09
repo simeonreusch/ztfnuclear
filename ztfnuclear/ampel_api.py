@@ -79,9 +79,9 @@ def ampel_api_catalog(
 @backoff.on_exception(
     backoff.expo,
     requests.exceptions.RequestException,
-    max_time=600,
+    max_time=30,
 )
-def ampel_api_ztfid(ztfid: str, limit: int = 999) -> dict | None:
+def ampel_api_ztfid(ztfid: str, limit: int = 200) -> dict | None:
     """
     Query alerts via the Ampel API
     """

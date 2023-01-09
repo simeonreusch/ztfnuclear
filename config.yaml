@@ -115,6 +115,8 @@ axislabels:
   d_temp: Temperature change (K)
   rise: Rise time (log day)
   decay: Decay time (log day)
+  red_chisq: TDE fit red. chisq.
+  salt_red_chisq: SALT fit red. chisq.
   wise_w1w2: Wise W1-W2
   wise_w2w3: Wise W2-W3
 
@@ -155,6 +157,13 @@ pl_props:
       a: 1
       l: TDE
       order: 100
+    gold:
+      m: 'X'
+      s: 30
+      c: gold
+      a: 1
+      l: Gold
+      order: 101
     other:
       m: .
       s: 8

@@ -13,7 +13,6 @@ import pandas as pd  # type: ignore
 
 from ztfnuclear import io, baseline, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
-from ztfnuclear.plot import plot_lightcurve, plot_lightcurve_irsa, plot_tde_fit
 from ztfnuclear.fritz import FritzAPI
 
 logger = logging.getLogger(__name__)
@@ -311,24 +310,27 @@ class NuclearSample(object):
             return self.ztfids[idx - 1]
 
     def get_transients(
-        self, n: Optional[int] = None, ztfids: Optional[List[str]] = None
+        self,
+        start: int | None = 0,
+        end: int | None = None,
+        ztfids: List[str] | None = None,
     ):
         """
         Loop over all transients in sample (or over all ztfids if given) and return a Transient Object
         """
-        if not n:
+        if not end:
             if ztfids is None:
-                n = len(self.ztfids)
+                end = len(self.ztfids)
             else:
-                n = len(ztfids)
+                end = len(ztfids)
 
         if ztfids is None:
-            for ztfid in self.ztfids[:n]:
+            for ztfid in self.ztfids[start:end]:
                 t = Transient(ztfid, sampletype=self.sampletype)
                 yield t
 
         else:
-            for ztfid in ztfids[:n]:
+            for ztfid in ztfids[start:end]:
                 t = Transient(ztfid, sampletype=self.sampletype)
                 yield t
 
@@ -556,6 +558,8 @@ class Transient(object):
 
     def __init__(self, ztfid: str, sampletype: str = "nuclear"):
         super(Transient, self).__init__()
+        from ztfnuclear.plot import plot_lightcurve, plot_lightcurve_irsa, plot_tde_fit
+
         self.logger = logging.getLogger(__name__)
         self.ztfid = ztfid
 

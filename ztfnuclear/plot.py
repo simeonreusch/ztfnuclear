@@ -96,9 +96,10 @@ def get_tde_selection(
     milliquas = []
 
     info_db = SampleInfo()
+    flaring_ztfids = info_db.read()["flaring"]["ztfids"]
 
     if flaring_only:
-        selected_subset = set(info_db.read()["flaring"]["ztfids"])
+        selected_subset = set(flaring_ztfids)
     else:
         selected_subset = set(info_db.read()["all"]["ztfids"])
 
@@ -180,6 +181,13 @@ def get_tde_selection(
                         wise_w1w2.append(_w1w2)
                         wise_w2w3.append(_w2w3)
 
+    from ztfnuclear.sample import NuclearSample
+
+    gold_sample = []
+    nuc_sample = NuclearSample(sampletype="nuclear")
+    for t in nuc_sample.get_gold_transients():
+        gold_sample.append(t.ztfid)
+
     sample = pd.DataFrame()
     sample["ztfid"] = ztfids
     sample["rise"] = risetimes
@@ -206,7 +214,15 @@ def get_tde_selection(
 
     wise_cut = "(wise_w1w2<0.3 or wise_w1w2>1.8) or (wise_w2w3 <1.5 or wise_w2w3>3.5)"
 
-    boundary_cut = "rise>0.1 and rise < 3 and decay > 0.1 and decay<4 and wise_w2w3 < 900 and wise_w1w2 < 900"
+    gold_wise_cut = (
+        "not (wise_w1w2<-0.1 or wise_w1w2>1.1 or wise_w2w3 <1.4 or wise_w2w3>4.3)"
+    )
+
+    flaring_wise_cut = (
+        "not (wise_w1w2<-0.1 or wise_w1w2>1.1 or wise_w2w3 <1.5 or wise_w2w3>4)"
+    )
+
+    boundary_cut = "rise>0.1 and rise < 3 and decay > 0.1 and decay<4 and wise_w2w3 < 900 and wise_w1w2 < 900 and red_chisq < 1000 and salt_red_chisq < 600"
 
     # # that's the one for dtemp = 15k, evolution from peak, bolcorr
     # tde_selection_finetuned = "temp > 3.93 and temp < 4.38 and d_temp>-90 and d_temp < 140 and rise>0.85 and rise<2.05 and decay>1.1 and decay<3 and red_chisq<6 and red_chisq < salt_red_chisq"
@@ -215,9 +231,25 @@ def get_tde_selection(
 
     rise_decay_selection = "rise>0.8 and rise<2.05 and decay>1.1 and decay<3"
 
+    gold_rise_decay_selection = "0.9<rise<2.5 and 1.5<decay<3.8"
+
+    flaring_rise_decay_selection = "1.4<decay<4 and 0.8<rise<2.5"
+
     chisq_selection = "red_chisq<6 and red_chisq < salt_red_chisq"
 
+    gold_chisq_selection = (
+        "red_chisq < 5 and salt_red_chisq < 75 and red_chisq < salt_red_chisq"
+    )
+
+    flaring_chisq_selection = "red_chisq<12 and salt_red_chisq<120"
+
     temp_selection = "temp > 3.9 and temp < 4.4 and d_temp>-100 and d_temp < 150"
+
+    gold_temp_selection = "3.5<temp<4.3 and -100<d_temp<120"
+
+    flaring_temp_selection = "3.5<temp<4.3 and -80<d_temp<200"
+
+    flaring_selection = "ztfid in @flaring_ztfids"
 
     # RERUN OVERLAPPING REGION FOR EVERYTHING
     if cuts:
@@ -230,17 +262,54 @@ def get_tde_selection(
             sample.query("overlapping_regions == 1", inplace=True)
             sample.query("milliquas == 'noclass'", inplace=True)
             sample.query(wise_cut, inplace=True)
+
+        if "goldfull" in cuts:
+            sample.query(gold_rise_decay_selection, inplace=True)
+            sample.query(gold_chisq_selection, inplace=True)
+            sample.query(gold_temp_selection, inplace=True)
+            sample.query("overlapping_regions == 1", inplace=True)
+            # sample.query("milliquas == 'noclass'", inplace=True)
+            sample.query(gold_wise_cut, inplace=True)
+
+        if "flaringfull" in cuts:
+            sample.query(flaring_selection, inplace=True)
+            sample.query(flaring_rise_decay_selection, inplace=True)
+            sample.query(flaring_chisq_selection, inplace=True)
+            sample.query(flaring_temp_selection, inplace=True)
+            sample.query(flaring_wise_cut, inplace=True)
+
+        if "flaring" in cuts:
+            sample.query(flaring_selection, inplace=True)
+
         if "bayes" in cuts:
             sample.query("overlapping_regions == 1", inplace=True)
 
         if "chisq" in cuts:
             sample.query(chisq_selection, inplace=True)
 
+        if "goldchisq" in cuts:
+            sample.query(gold_chisq_selection, inplace=True)
+
+        if "flaringchisq" in cuts:
+            sample.query(flaring_chisq_selection, inplace=True)
+
         if "temp" in cuts:
             sample.query(temp_selection, inplace=True)
 
+        if "goldtemp" in cuts:
+            sample.query(gold_temp_selection, inplace=True)
+
+        if "flaringtemp" in cuts:
+            sample.query(flaring_temp_selection, inplace=True)
+
         if "risedecay" in cuts:
             sample.query(rise_decay_selection, inplace=True)
+
+        if "goldrisedecay" in cuts:
+            sample.query(gold_rise_decay_selection, inplace=True)
+
+        if "flaringrisedecay" in cuts:
+            sample.query(flaring_rise_decay_selection, inplace=True)
 
         if "snia" in cuts:
             sample.query("snia_cut < decay", inplace=True)
@@ -251,8 +320,16 @@ def get_tde_selection(
         if "wise" in cuts:
             sample.query(wise_cut, inplace=True)
 
+        if "goldwise" in cuts:
+            sample.query(gold_wise_cut, inplace=True)
+
+        if "flaringwise" in cuts:
+            sample.query(flaring_wise_cut, inplace=True)
+
     def simple_class(row):
         """Add simple classification labels"""
+        if row["ztfid"] in gold_sample:  # or row["fritz_class"] in config["fritz_tde"]:
+            return "gold"
         if row["fritz_class"] in config["fritz_tde"]:
             return "tde"
         if row["fritz_class"] in config["fritz_sn_ia"]:
@@ -279,6 +356,7 @@ def plot_tde_scatter(
     sampletype: str = "nuclear",
     xlim: tuple | None = None,
     ylim: tuple | None = None,
+    purity_sel: str | None = "tde",
 ):
     """
     Plot the rise vs. fadetime of the TDE fit results
@@ -288,12 +366,24 @@ def plot_tde_scatter(
     sample = get_tde_selection(cuts=cuts, sampletype=sampletype)
 
     fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
+
+    title = f"TDE fit {x_values} vs. {y_values} ({len(sample)} transients)"
+
+    if purity_sel is not None:
+        n = len(sample.query("classif == @purity_sel"))
+        _sample = get_tde_selection(cuts=None, sampletype=sampletype)
+        n_orig = len(_sample.query("classif == @purity_sel"))
+        frac_pur = n / len(sample) * 100
+        frac_eff = n / n_orig * 100
+        title += f"\nPurity: {frac_pur:.1f}% / Efficiency: {frac_eff:.1f} %"
+
     fig.suptitle(
-        f"TDE fit {x_values} vs. {y_values} ({len(sample)} transients)",
+        title,
         fontsize=14,
     )
-    for key in config["fritz_queries"].keys():
-        _df = sample.query(config["fritz_queries"][key])
+
+    for key in sample.classif.unique():
+        _df = sample.query("classif == @key")
         ax.scatter(
             _df[x_values],
             _df[y_values],
@@ -384,6 +474,10 @@ def plot_tde_scatter_seaborn(
     new_labels = [
         config["pl_props"]["other"]["l"]
         + " ({length})".format(length=len(sample_reduced.query("classif == 'other'"))),
+        config["pl_props"]["unclass"]["l"]
+        + " ({length})".format(
+            length=len(sample_reduced.query("classif == 'unclass'"))
+        ),
         config["pl_props"]["sn_other"]["l"]
         + " ({length})".format(
             length=len(sample_reduced.query("classif == 'sn_other'"))
