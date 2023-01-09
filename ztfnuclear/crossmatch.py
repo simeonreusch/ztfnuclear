@@ -6,8 +6,7 @@ import os, logging
 
 import pandas as pd
 
-from typing import Optional, Tuple
-from ztfnuclear.ampel_api import ampel_api_catalog
+from ztfnuclear.ampel_api import ampel_api_catalog, ampel_api_distnr
 from ztfnuclear import io
 from ztfnuclear.database import WISE
 
@@ -16,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 def query_ned_for_z(
     ra_deg: float, dec_deg: float, searchradius_arcsec: float = 10
-) -> Optional[dict]:
+) -> dict | None:
     """Function to obtain redshifts from NED (via the AMPEL API)"""
     logger.info(f"Querying NEDz for redshift")
 
@@ -38,7 +37,7 @@ def query_ned_for_z(
 
 def query_crts(
     ra_deg: float, dec_deg: float, searchradius_arcsec: float = 5
-) -> Optional[dict]:
+) -> dict | None:
 
     logger.debug(f"Querying CRTS DR1 if variable star")
 
@@ -70,7 +69,7 @@ def query_crts(
 
 def query_milliquas(
     ra_deg: float, dec_deg: float, searchradius_arcsec: float = 1.5
-) -> Optional[dict]:
+) -> dict | None:
     """Query Milliquas"""
 
     logger.debug("Querying Milliquas for AGN/Quasar")
@@ -123,7 +122,7 @@ def query_milliquas(
 
 def query_gaia(
     ra_deg: float, dec_deg: float, searchradius_arcsec: float = 1.5
-) -> Optional[dict]:
+) -> dict | None:
     """Query Gaia"""
     logger.debug("Querying Gaia for parallax")
     res = ampel_api_catalog(
@@ -154,7 +153,7 @@ def query_gaia(
 
 def query_sdss(
     ra_deg: float, dec_deg: float, searchradius_arcsec: float = 1.5
-) -> Optional[dict]:
+) -> dict | None:
     """Query SDSS"""
     logger.debug("Querying SDSS for probable star")
 
@@ -183,7 +182,7 @@ def query_sdss(
 
 def query_tns(
     ra_deg: float, dec_deg: float, searchradius_arcsec: float = 1.5
-) -> Optional[dict]:
+) -> dict | None:
     """
     Query the AMPEL-hosted copy of TNS
     """
@@ -214,7 +213,7 @@ def query_tns(
 
 def query_wise_cat(
     ra_deg: float, dec_deg: float, searchradius_arcsec: float = 1.5
-) -> Optional[dict]:
+) -> dict | None:
     """
     Query the AMPEL-hosted WISE catalogue
     """
@@ -246,9 +245,7 @@ def query_wise_cat(
     return {"WISE_cat": {}}
 
 
-def query_wise(
-    ra_deg: float, dec_deg: float, searchradius_arcsec: float = 20
-) -> Optional[dict]:
+def query_wise(ra_deg: float, dec_deg: float, searchradius_arcsec: float = 20) -> dict:
     """
     Obtains WISE object RA and Dec from parquet file
     """
@@ -263,3 +260,17 @@ def query_wise(
         return {"WISE": res}
     else:
         return {"WISE": {}}
+
+
+def query_ampel_dist(ztfid: str) -> dict:
+    """
+    Gets the median core distance from Ampel alerts
+    """
+    res = ampel_api_distnr(ztfid=ztfid)
+
+    if res:
+        logger.debug("Ampel dist: Match found")
+    else:
+        res = {}
+
+    return {"distnr": res}
