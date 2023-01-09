@@ -200,7 +200,7 @@ def get_tde_selection(
     sample["snia_cut"] = aggressive_snia_diag_cut(np.asarray(risetimes))
 
     sample.query(
-        "fritz_class not in @config['fritz_bogus'] and fritz_class not in @config['fritz_agn_star']",
+        "fritz_class not in @config['fritz_bogus'] and fritz_class not in @config['fritz_unclass']",
         inplace=True,
     )
 
@@ -253,7 +253,7 @@ def get_tde_selection(
 
     def simple_class(row):
         """Add simple classification labels"""
-        if row["fritz_class"] == "Tidal Disruption Event":
+        if row["fritz_class"] in config["fritz_tde"]:
             return "tde"
         if row["fritz_class"] in config["fritz_sn_ia"]:
             return "snia"
@@ -261,7 +261,9 @@ def get_tde_selection(
             return "sn_other"
         if row["fritz_class"] in config["fritz_agn_star"]:
             return "agn_star"
-        return "other"
+        if row["fritz_class"] in config["fritz_other"]:
+            return "other"
+        return "unclass"
 
     sample["classif"] = sample.apply(lambda row: simple_class(row), axis=1)
 
@@ -303,17 +305,12 @@ def plot_tde_scatter(
             zorder=config["pl_props"][key]["order"],
         )
 
-    plt.legend(title="Fritz classification")
+    plt.legend(title="Fritz classification", loc="lower right")
 
     ax.set_xlabel(config["axislabels"][x_values])
     ax.set_ylabel(config["axislabels"][y_values])
 
-    # x = np.arange(0.75, 1.08, 0.01)
-    # y = aggressive_snia_diag_cut(x)
-    # if cut:
-    # ax.plot(x, y)
-
-    if sampletype == "ztfnuclear":
+    if sampletype == "nuclear":
         local = io.LOCALSOURCE_plots
     else:
         local = io.LOCALSOURCE_bts_plots
@@ -449,10 +446,10 @@ def plot_mag_cdf(cuts: str = Optional["agn"]):
                     if (
                         classification not in fritz_sn_ia
                         and classification not in fritz_sn_other
-                        and classification != "Tidal Disruption Event"
+                        and classification not in fritz_tde
                     ):
                         mags.append(mag)
-                    elif classification == "Tidal Disruption Event":
+                    elif classification in fritz_tde:
                         tde_mags.append(mag)
                 else:
                     mags.append(mag)
@@ -553,8 +550,8 @@ def plot_salt():
     plt.close()
 
 
-def plot_tde(sampletype: str = "nuclear"):
-    """Plot the salt fit results from the Mongo DB"""
+def plot_tde(sampletype: str = "nuclear", outfile: str | None = None):
+    """Plot the tde fit results from the Mongo DB"""
 
     meta = MetadataDB(sampletype=sampletype)
     tde_res = meta.read_parameters(params=["tde_fit_loose_bl"])["tde_fit_loose_bl"]
@@ -574,7 +571,8 @@ def plot_tde(sampletype: str = "nuclear"):
 
     ax.hist(red_chisq, bins=100, range=[0, 10])
 
-    outfile = os.path.join(io.LOCALSOURCE_plots, "tde_chisq_dist.pdf")
+    if outfile is None:
+        outfile = os.path.join(io.LOCALSOURCE_plots, "tde_chisq_dist.pdf")
     plt.tight_layout()
     plt.savefig(outfile)
     plt.close()

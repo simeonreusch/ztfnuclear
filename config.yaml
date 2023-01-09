@@ -16,6 +16,10 @@ fritz_sn_ia:
   - Ia-03fg
   - Ia?
 
+fritz_tde:
+  - Tidal Disruption Event
+  - TDE
+
 fritz_sn_other:
   - IIP
   - II
@@ -54,6 +58,17 @@ fritz_bogus:
   - varstar
   - rock
 
+fritz_unclass:
+  - "-"
+
+fritz_other:
+  - FBOT
+  - LRN
+  - ILRT
+  - Ca-rich
+  - LRN?
+  - afterglow
+
 fritz_agn_star:
   - nova
   - CV?
@@ -68,6 +83,10 @@ fritz_agn_star:
   - AGN?
   - NLS1
   - galaxy
+  - Seyfert
+  - AM CVn
+  - var
+  - blazar
 
 tns_sn_ia:
   - SN Ia
@@ -101,18 +120,19 @@ axislabels:
 
 fritz_queries:
     snia: fritz_class in @config['fritz_sn_ia']
+    unclass: fritz_class not in @config['fritz_sn_ia'] and fritz_class not in @config['fritz_tde'] and fritz_class not in @config['fritz_sn_other'] and fritz_class not in @config['fritz_other'] and fritz_class not in @config['fritz_agn_star']
     sn_other: fritz_class in @config['fritz_sn_other']
     agn_star: fritz_class in @config['fritz_agn_star']
-    other: fritz_class not in @config['fritz_sn_ia'] and fritz_class != 'Tidal Disruption Event' and fritz_class not in @config['fritz_sn_other'] and fritz_class != 'TDE'
-    tde: fritz_class == 'Tidal Disruption Event' or fritz_class == 'TDE'
+    other: fritz_class in @config['fritz_other']
+    tde: fritz_class in @config['fritz_tde']
 
 pl_props:
-    other: 
+    unclass: 
       m: .
       s: 1
       c: blue
       a: 0.7
-      l: Unclass.
+      l: unclass.
       order: 1
     snia:
       m: .
@@ -135,6 +155,13 @@ pl_props:
       a: 1
       l: TDE
       order: 100
+    other:
+      m: .
+      s: 8
+      c: brown
+      a: 1
+      l: other
+      order: 3
     agn_star:
       m: .
       s: 8

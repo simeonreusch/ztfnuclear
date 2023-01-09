@@ -1020,8 +1020,6 @@ class Transient(object):
                 results.update(res)
 
         self.crossmatch = {"crossmatch": results}
-        print(self.crossmatch)
-        quit()
 
         if self.sampletype == "nuclear":
             m_db = meta
@@ -1183,7 +1181,11 @@ class Transient(object):
             )
 
     def plot_tde(
-        self, powerlaw: bool = False, debug: bool = False, params: dict = None
+        self,
+        powerlaw: bool = False,
+        debug: bool = False,
+        params: dict = None,
+        savepath: str | None = None,
     ) -> bool:
         """
         Plot the TDE fit result if present
@@ -1195,8 +1197,6 @@ class Transient(object):
 
         if debug:
             savepath = "/Users/simeon/Desktop/flextemp_test/"
-        else:
-            savepath = None
 
         success = False
 
