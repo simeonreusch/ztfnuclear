@@ -9,24 +9,28 @@ from tqdm import tqdm
 from ztfnuclear.database import MetadataDB
 from ztfnuclear.sample import NuclearSample, Transient
 
-s = NuclearSample(sampletype="bts")
-meta = MetadataDB(sampletype="bts")
-
-cores = multiprocessing.cpu_count()
-nprocess = int(cores / 2)
-
 
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
 FIT_TYPE = "tde_fit_exp"
-RECREATE_BASELINE = True
+RECREATE_BASELINE = False
 DEBUG = False
 SINGLECORE = False
+CORES = 16
+SAMPLE = "bts"
+
+if not CORES:
+    nprocess = int(multiprocessing.cpu_count() / 2)
+else:
+    nprocess = int(CORES)
+
+s = NuclearSample(sampletype=SAMPLE)
+meta = MetadataDB(sampletype=SAMPLE)
 
 
 def _tde_fitter(ztfid):
-    t = Transient(ztfid, sampletype="bts")
+    t = Transient(ztfid, sampletype=SAMPLE)
     if RECREATE_BASELINE:
         t.recreate_baseline()
     if FIT_TYPE == "tde_fit_exp":
@@ -73,7 +77,7 @@ if __name__ == "__main__":
 
     if SINGLECORE:
         for ztfid in tqdm(ztfids):
-            t = Transient(ztfid, sampletype="bts")
+            t = Transient(ztfid, sampletype=SAMPLE)
             print(ztfid)
             if RECREATE_BASELINE:
                 t.recreate_baseline()
