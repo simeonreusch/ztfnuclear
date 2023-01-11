@@ -38,7 +38,8 @@ def get_tde_selection(
     flaring_only: bool = False,
     cuts: None | list = None,
     sampletype: str = "nuclear",
-) -> pd.DataFrame:
+    purity_sel: str = "tde",
+) -> pd.DataFrame | dict:
     """
     Apply selection cuts to a pandas dataframe
     """
@@ -60,6 +61,7 @@ def get_tde_selection(
             "WISE_bayesian",
             salt_key,
             "ZTF_bayesian",
+            "peak_mags",
         ]
     )
 
@@ -76,7 +78,9 @@ def get_tde_selection(
     wise_bayesian = res["WISE_bayesian"]
     salt = res[salt_key]
     ztf_bayesian = res["ZTF_bayesian"]
+    peak_mags_full = res["peak_mags"]
 
+    peak_mags = []
     risetimes = []
     decaytimes = []
     temperatures = []
@@ -113,14 +117,19 @@ def get_tde_selection(
                 ):
                     has_wise.append(all_ztfids[i])
 
-    # selected_subset = set(has_wise)
     selected_subset = set(all_ztfids)
+
+    has_no_fit_entry = []
+    has_fit_entry = []
+    has_fit_success = []
 
     for i, entry in enumerate(tde_res):
         ztfid = all_ztfids[i]
         if entry:
+            has_fit_entry.append(ztfid)
             if "success" in entry.keys():
                 if entry["success"] == True:
+                    has_fit_success.append(ztfid)
                     chisq = entry["chisq"]
                     ndof = entry["ndof"]
                     chisqs.append(chisq)
@@ -133,11 +142,6 @@ def get_tde_selection(
                             salt_red_chisqs.append(salt_red_chisq)
                         else:
                             salt_red_chisqs.append(99999)
-                        # wise_dict = wise_bayesian[i]["bayesian"]
-                        # wise_w1 = wise_dict["Wise_W1"]
-                        # wise_w2 = wise_dict["Wise_W2"]
-                        # wise_strength1.append(wise_w1["strength_sjoert"][0])
-                        # wise_strength2.append(wise_w2["strength_sjoert"][0])
                         risetimes.append(paramdict["risetime"])
                         decaytimes.append(paramdict["decaytime"])
                         temperatures.append(paramdict["temperature"])
@@ -145,6 +149,7 @@ def get_tde_selection(
                         plateaustarts.append(paramdict["plateaustart"])
                         red_chisqs.append(red_chisq)
                         ztfids.append(ztfid)
+                        peak_mags.append(peak_mags_full[i])
                         if ztf_bayesian[i] == None:
                             overlapping_regions.append(-99)
                         else:
@@ -180,6 +185,12 @@ def get_tde_selection(
 
                         wise_w1w2.append(_w1w2)
                         wise_w2w3.append(_w2w3)
+        else:
+            has_no_fit_entry.append(ztfid)
+
+    logger.info(
+        f"Stats: has no fit entry: {len(has_no_fit_entry)} / has fit entry: {len(has_fit_entry)} / fit success: {len(has_fit_success)}"
+    )
 
     from ztfnuclear.sample import NuclearSample
 
@@ -206,6 +217,7 @@ def get_tde_selection(
     sample["overlapping_regions"] = overlapping_regions
     sample["total_d_temp"] = np.asarray(plateaustarts) * np.asarray(d_temps)
     sample["snia_cut"] = aggressive_snia_diag_cut(np.asarray(risetimes))
+    sample["peak_mags"] = peak_mags
 
     sample.query(
         "fritz_class not in @config['fritz_bogus'] and fritz_class not in @config['fritz_unclass']",
@@ -253,96 +265,100 @@ def get_tde_selection(
 
     # RERUN OVERLAPPING REGION FOR EVERYTHING
     if cuts:
-        if "full" in cuts:
-            # sample.query(tde_selection_full, inplace=True)
-            sample.query(rise_decay_selection, inplace=True)
-            sample.query(chisq_selection, inplace=True)
-            sample.query(temp_selection, inplace=True)
-            sample.query("snia_cut < decay", inplace=True)
-            sample.query("overlapping_regions == 1", inplace=True)
-            sample.query("milliquas == 'noclass'", inplace=True)
-            sample.query(wise_cut, inplace=True)
+        if cuts != "nocut":
+            if "full" in cuts:
+                # sample.query(tde_selection_full, inplace=True)
+                sample.query(rise_decay_selection, inplace=True)
+                sample.query(chisq_selection, inplace=True)
+                sample.query(temp_selection, inplace=True)
+                sample.query("snia_cut < decay", inplace=True)
+                sample.query("overlapping_regions == 1", inplace=True)
+                sample.query("milliquas == 'noclass'", inplace=True)
+                sample.query(wise_cut, inplace=True)
 
-        if "goldfull" in cuts:
-            sample.query(gold_rise_decay_selection, inplace=True)
-            sample.query(gold_chisq_selection, inplace=True)
-            sample.query(gold_temp_selection, inplace=True)
-            sample.query("overlapping_regions == 1", inplace=True)
-            # sample.query("milliquas == 'noclass'", inplace=True)
-            sample.query(gold_wise_cut, inplace=True)
+            if "goldfull" in cuts:
+                sample.query(gold_rise_decay_selection, inplace=True)
+                sample.query(gold_chisq_selection, inplace=True)
+                sample.query(gold_temp_selection, inplace=True)
+                sample.query("overlapping_regions == 1", inplace=True)
+                # sample.query("milliquas == 'noclass'", inplace=True)
+                sample.query(gold_wise_cut, inplace=True)
 
-        if "flaringfull" in cuts:
-            sample.query(flaring_selection, inplace=True)
-            sample.query(flaring_rise_decay_selection, inplace=True)
-            sample.query(flaring_chisq_selection, inplace=True)
-            sample.query(flaring_temp_selection, inplace=True)
-            sample.query(flaring_wise_cut, inplace=True)
+            if "flaringfull" in cuts:
+                sample.query(flaring_selection, inplace=True)
+                sample.query(flaring_rise_decay_selection, inplace=True)
+                sample.query(flaring_chisq_selection, inplace=True)
+                sample.query(flaring_temp_selection, inplace=True)
+                sample.query(flaring_wise_cut, inplace=True)
 
-        if "flaring" in cuts:
-            sample.query(flaring_selection, inplace=True)
+            if "flaring" in cuts:
+                sample.query(flaring_selection, inplace=True)
 
-        if "bayes" in cuts:
-            sample.query("overlapping_regions == 1", inplace=True)
+            if "bayes" in cuts:
+                sample.query("overlapping_regions == 1", inplace=True)
 
-        if "chisq" in cuts:
-            sample.query(chisq_selection, inplace=True)
+            if "chisq" in cuts:
+                sample.query(chisq_selection, inplace=True)
 
-        if "goldchisq" in cuts:
-            sample.query(gold_chisq_selection, inplace=True)
+            if "goldchisq" in cuts:
+                sample.query(gold_chisq_selection, inplace=True)
 
-        if "flaringchisq" in cuts:
-            sample.query(flaring_chisq_selection, inplace=True)
+            if "flaringchisq" in cuts:
+                sample.query(flaring_chisq_selection, inplace=True)
 
-        if "temp" in cuts:
-            sample.query(temp_selection, inplace=True)
+            if "temp" in cuts:
+                sample.query(temp_selection, inplace=True)
 
-        if "goldtemp" in cuts:
-            sample.query(gold_temp_selection, inplace=True)
+            if "goldtemp" in cuts:
+                sample.query(gold_temp_selection, inplace=True)
 
-        if "flaringtemp" in cuts:
-            sample.query(flaring_temp_selection, inplace=True)
+            if "flaringtemp" in cuts:
+                sample.query(flaring_temp_selection, inplace=True)
 
-        if "risedecay" in cuts:
-            sample.query(rise_decay_selection, inplace=True)
+            if "risedecay" in cuts:
+                sample.query(rise_decay_selection, inplace=True)
 
-        if "goldrisedecay" in cuts:
-            sample.query(gold_rise_decay_selection, inplace=True)
+            if "goldrisedecay" in cuts:
+                sample.query(gold_rise_decay_selection, inplace=True)
 
-        if "flaringrisedecay" in cuts:
-            sample.query(flaring_rise_decay_selection, inplace=True)
+            if "flaringrisedecay" in cuts:
+                sample.query(flaring_rise_decay_selection, inplace=True)
 
-        if "snia" in cuts:
-            sample.query("snia_cut < decay", inplace=True)
+            if "snia" in cuts:
+                sample.query("snia_cut < decay", inplace=True)
 
-        if "boundary" in cuts:
-            sample.query(boundary_cut, inplace=True)
+            if "boundary" in cuts:
+                sample.query(boundary_cut, inplace=True)
 
-        if "wise" in cuts:
-            sample.query(wise_cut, inplace=True)
+            if "wise" in cuts:
+                sample.query(wise_cut, inplace=True)
 
-        if "goldwise" in cuts:
-            sample.query(gold_wise_cut, inplace=True)
+            if "goldwise" in cuts:
+                sample.query(gold_wise_cut, inplace=True)
 
-        if "flaringwise" in cuts:
-            sample.query(flaring_wise_cut, inplace=True)
+            if "flaringwise" in cuts:
+                sample.query(flaring_wise_cut, inplace=True)
 
-    def simple_class(row):
+    def simple_class(row, sampletype, purity_sel):
         """Add simple classification labels"""
-        if row["ztfid"] in gold_sample:  # or row["fritz_class"] in config["fritz_tde"]:
-            return "gold"
+        if purity_sel == "gold":
+            if row["ztfid"] in gold_sample:
+                return "gold"
         if row["fritz_class"] in config["fritz_tde"]:
             return "tde"
         if row["fritz_class"] in config["fritz_sn_ia"]:
             return "snia"
         if row["fritz_class"] in config["fritz_sn_other"]:
             return "sn_other"
-        if row["fritz_class"] in config["fritz_agn_star"]:
+        if sampletype == "bts" and row["fritz_class"] in config["fritz_agn_star"]:
             return "agn_star"
         if row["fritz_class"] in config["fritz_other"]:
             return "other"
         return "unclass"
 
-    sample["classif"] = sample.apply(lambda row: simple_class(row), axis=1)
+    sample["classif"] = sample.apply(
+        lambda row: simple_class(row, sampletype, purity_sel), axis=1
+    )
 
     return sample
 
@@ -363,7 +379,7 @@ def plot_tde_scatter(
     """
     info_db = SampleInfo(sampletype=sampletype)
 
-    sample = get_tde_selection(cuts=cuts, sampletype=sampletype)
+    sample = get_tde_selection(cuts=cuts, sampletype=sampletype, purity_sel=purity_sel)
 
     fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
 
@@ -371,7 +387,9 @@ def plot_tde_scatter(
 
     if purity_sel is not None:
         n = len(sample.query("classif == @purity_sel"))
-        _sample = get_tde_selection(cuts=None, sampletype=sampletype)
+        _sample = get_tde_selection(
+            cuts=None, sampletype=sampletype, purity_sel=purity_sel
+        )
         n_orig = len(_sample.query("classif == @purity_sel"))
         frac_pur = n / len(sample) * 100
         frac_eff = n / n_orig * 100
@@ -433,15 +451,16 @@ def plot_tde_scatter_seaborn(
     ingest: bool = False,
     x_values: str = "rise",
     y_values: str = "decay",
-    cut: str = "boundary",
+    cuts: list | None = "boundary",
     sampletype: str = "nuclear",
+    purity_sel: str | None = "tde",
 ):
     """
     Plot the rise vs. fadetime of the TDE fit results
     """
     info_db = SampleInfo(sampletype=sampletype)
 
-    sample = get_tde_selection(cut=cut, sampletype=sampletype)
+    sample = get_tde_selection(cuts=cuts, sampletype=sampletype)
 
     sample_reduced = sample.query("classif != 'tde' or ztfid == 'ZTF22aagyuao'")
     # we need one TDE to survive, so we have a handle for the legend (don't ask,
@@ -452,7 +471,7 @@ def plot_tde_scatter_seaborn(
         x=x_values,
         y=y_values,
         hue="classif",
-        hue_order=["other", "sn_other", "snia", "tde"],
+        hue_order=["unclass", "sn_other", "snia", "tde"],
         alpha=0.8,
         legend=True,
         kind="kde",
@@ -469,11 +488,24 @@ def plot_tde_scatter_seaborn(
 
     leg = g.ax_joint.get_legend()
 
+    title = f"TDE fit {x_values} vs. {y_values} ({len(sample)} transients)"
+
+    if purity_sel is not None:
+        n = len(sample.query("classif == @purity_sel"))
+        _sample = get_tde_selection(cuts=None, sampletype=sampletype)
+        n_orig = len(_sample.query("classif == @purity_sel"))
+        frac_pur = n / len(sample) * 100
+        frac_eff = n / n_orig * 100
+        title += f"\nPurity: {frac_pur:.1f}% / Efficiency: {frac_eff:.1f} %"
+
+    g.fig.suptitle(
+        title,
+        fontsize=14,
+    )
+
     leg.set_title("Fritz classification")
 
     new_labels = [
-        config["pl_props"]["other"]["l"]
-        + " ({length})".format(length=len(sample_reduced.query("classif == 'other'"))),
         config["pl_props"]["unclass"]["l"]
         + " ({length})".format(
             length=len(sample_reduced.query("classif == 'unclass'"))
@@ -495,7 +527,7 @@ def plot_tde_scatter_seaborn(
     else:
         local = io.LOCALSOURCE_bts_plots
 
-    outfile = os.path.join(local, f"tde_{x_values}_{y_values}_seaborn_{cut}.pdf")
+    outfile = os.path.join(local, f"tde_{x_values}_{y_values}_seaborn_{cuts}.pdf")
 
     g.fig.savefig(outfile)
     plt.close()
@@ -507,7 +539,70 @@ def plot_tde_scatter_seaborn(
         )
 
 
-def plot_mag_cdf(cuts: str = Optional["agn"]):
+def plot_mag_hist(
+    cuts: list | None = None,
+    sampletype: str = "nuclear",
+):
+    """
+    Plot the mag histogram
+    """
+    info_db = SampleInfo(sampletype=sampletype)
+
+    sample_nuc = get_tde_selection(cuts=cuts, sampletype="nuclear", raw=True)
+    sample_bts = get_tde_selection(cuts=cuts, sampletype="bts", raw=True)
+
+    sample_nuc["sample"] = "nuclear"
+    sample_bts["sample"] = "bts"
+
+    combined = pd.concat([sample_nuc, sample_bts])
+
+    peak_gmag = []
+
+    for entry in combined.peak_mags.values:
+        if entry.get("g"):
+            peak_gmag.append(entry["g"])
+
+    combined["peak_mag_g"] = peak_gmag
+
+    fig, ax = plt.subplots()
+
+    g = sns.FacetGrid(combined, col="sample", hue="classif", height=4, aspect=1)
+    g.map(
+        sns.histplot,
+        # combined,
+        "peak_mag_g",
+        # hue=combined["classif"],
+        multiple="stack",
+        binrange=(16, 21),
+        bins=12,
+    )
+
+    # sns.histplot(
+    #     data=sample_nuc,
+    #     x="peak_mag_g",
+    #     hue="classif",
+    #     multiple="stack",
+    #     binrange=(16, 21),
+    #     bins=12,
+    # )
+
+    # title = f"cuts: {cuts}, nuc={len(peak_gmag)}, bts={len(peak_gmag_bts)}"
+
+    # fig.suptitle(
+    #     title,
+    #     fontsize=14,
+    # )
+
+    # ax.hist(peak_gmag_bts, bins=12, range=[16, 21], label="bts", fill=False, ec="blue")
+    # ax.hist(peak_gmag_nuc, bins=12, range=[16, 21], label="nuc", fill=False, ec="red")
+
+    plt.legend()
+
+    outfile = os.path.join(io.LOCALSOURCE_plots, f"maghist_{cuts}.pdf")
+    plt.savefig(outfile)
+
+
+def plot_mag_cdf(cuts: str | None = "agn"):
     """Plot the magnitude distribution of the transients"""
 
     meta = MetadataDB()

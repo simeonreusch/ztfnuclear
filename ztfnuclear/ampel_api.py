@@ -13,7 +13,7 @@ import requests
 
 API_BASEURL = "https://ampel.zeuthen.desy.de/api"
 API_CATALOGMATCH_URL = API_BASEURL + "/catalogmatch"
-API_ZTF_ARCHIVE_URL = API_BASEURL + "/ztf/archive/v2"
+API_ZTF_ARCHIVE_URL = API_BASEURL + "/ztf/archive/v3"
 
 logging.getLogger("backoff").setLevel(logging.ERROR)
 
@@ -81,7 +81,7 @@ def ampel_api_catalog(
     requests.exceptions.RequestException,
     max_time=30,
 )
-def ampel_api_ztfid(ztfid: str, limit: int = 200) -> dict | None:
+def ampel_api_ztfid(ztfid: str, limit: int = 100) -> dict | None:
     """
     Query alerts via the Ampel API
     """

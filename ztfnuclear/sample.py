@@ -49,6 +49,10 @@ class NuclearSample(object):
                 self.populate_db_from_csv(
                     filepath=io.LOCALSOURCE_peak_dates, name="peak_dates"
                 )
+            if not db_check["has_peak_mags"]:
+                self.populate_db_from_csv(
+                    filepath=io.LOCALSOURCE_peak_mags, name="peak_mags"
+                )
             if not db_check["has_salt"]:
                 saltfit_res = io.parse_ampel_json(
                     filepath=os.path.join(io.LOCALSOURCE_fitres, "saltfit.json"),
@@ -89,6 +93,10 @@ class NuclearSample(object):
 
         elif self.sampletype == "bts":
             db_check = self.meta.get_statistics()
+            if not db_check["has_peak_mags"]:
+                self.populate_db_from_csv(
+                    filepath=io.LOCALSOURCE_bts_peak_mags, name="peak_mags"
+                )
             if db_check["count"] == 0:
                 self.populate_db_from_csv(filepath=io.LOCALSOURCE_bts_info)
             db_check = self.meta.get_statistics()
@@ -558,7 +566,6 @@ class Transient(object):
 
     def __init__(self, ztfid: str, sampletype: str = "nuclear"):
         super(Transient, self).__init__()
-        from ztfnuclear.plot import plot_lightcurve, plot_lightcurve_irsa, plot_tde_fit
 
         self.logger = logging.getLogger(__name__)
         self.ztfid = ztfid
@@ -1158,6 +1165,8 @@ class Transient(object):
         else:
             z = None
 
+        from ztfnuclear.plot import plot_lightcurve
+
         axlims = plot_lightcurve(
             df=df_to_plot,
             ztfid=self.ztfid,
@@ -1233,6 +1242,8 @@ class Transient(object):
 
         success = False
 
+        from ztfnuclear.plot import plot_tde_fit
+
         if keyword in self.meta.keys():
             if self.meta[keyword] is not None and params is None:
                 if "success" in self.meta[keyword].keys():
@@ -1282,6 +1293,8 @@ class Transient(object):
         """
         Get the non-difference alert photometry for this transient from IRSA and plot it
         """
+        from ztfnuclear.plot import plot_lightcurve_irsa
+
         df = self.irsa()
 
         plot_lightcurve_irsa(
