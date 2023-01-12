@@ -219,6 +219,7 @@ class MetadataDB(object):
             )
             has_peak_dates = True if "peak_dates" in testobj.keys() else False
             has_peak_mags = True if "peak_mags" in testobj.keys() else False
+            has_distnr = True if "distnr" in testobj.keys() else False
             has_ampel_z = True if "ampel_z" in testobj.keys() else False
             has_wise_lc_by_pos = True if "WISE_lc_by_pos" in testobj.keys() else False
             has_wise_lc_by_id = True if "WISE_lc_by_id" in testobj.keys() else False
@@ -233,6 +234,7 @@ class MetadataDB(object):
             has_tdefit_loose_bl = False
             has_peak_dates = False
             has_peak_mags = False
+            has_distnr = False
             has_ampel_z = False
             has_wise_lc_by_pos = False
             has_wise_lc_by_id = False
@@ -248,6 +250,7 @@ class MetadataDB(object):
             "has_tdefit_loose_bl": has_tdefit_loose_bl,
             "has_peak_dates": has_peak_dates,
             "has_peak_mags": has_peak_mags,
+            "has_distnr": has_distnr,
             "has_ampel_z": has_ampel_z,
             "has_wise_lc_by_pos": has_wise_lc_by_pos,
             "has_wise_lc_by_id": has_wise_lc_by_id,

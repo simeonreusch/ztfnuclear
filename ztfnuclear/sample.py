@@ -53,6 +53,8 @@ class NuclearSample(object):
                 self.populate_db_from_csv(
                     filepath=io.LOCALSOURCE_peak_mags, name="peak_mags"
                 )
+            if not db_check["has_distnr"]:
+                self.populate_db_from_csv(filepath=io.LOCALSOURCE_distnr, name="distnr")
             if not db_check["has_salt"]:
                 saltfit_res = io.parse_ampel_json(
                     filepath=os.path.join(io.LOCALSOURCE_fitres, "saltfit.json"),
@@ -96,6 +98,10 @@ class NuclearSample(object):
             if not db_check["has_peak_mags"]:
                 self.populate_db_from_csv(
                     filepath=io.LOCALSOURCE_bts_peak_mags, name="peak_mags"
+                )
+            if not db_check["has_distnr"]:
+                self.populate_db_from_csv(
+                    filepath=io.LOCALSOURCE_bts_distnr, name="distnr"
                 )
             if db_check["count"] == 0:
                 self.populate_db_from_csv(filepath=io.LOCALSOURCE_bts_info)
@@ -1052,9 +1058,10 @@ class Transient(object):
                 res_list.append(query_wise(ra_deg=self.ra, dec_deg=self.dec))
             if "tns" in crossmatch_types:
                 res_list.append(query_tns(ra_deg=self.ra, dec_deg=self.dec))
-
-            if "dist" in crossmatch_types:
-                res_list.append({"dist": {"dist": query_ampel_dist(ztfid=self.ztfid)}})
+            # if "dist" in crossmatch_types:
+            #     res_list.append(
+            #         {"distnr": {"dist": query_ampel_dist(ztfid=self.ztfid)}}
+            #     )
 
             for res in res_list:
                 results.update(res)
