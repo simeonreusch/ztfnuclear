@@ -1,4 +1,4 @@
-fritz_sn_ia:
+sn_ia:
   - Ia
   - Ia-pec
   - Ia-02cx
@@ -15,12 +15,15 @@ fritz_sn_ia:
   - Iax
   - Ia-03fg
   - Ia?
+  - Ia-91T-like
+  - Ia-pec
+  - Iax[02cx-like]
 
-fritz_tde:
+tde:
   - Tidal Disruption Event
   - TDE
 
-fritz_sn_other:
+sn_other:
   - IIP
   - II
   - Type II
@@ -49,8 +52,10 @@ fritz_sn_other:
   - SLSN-I.5
   - Icn
   - Ib?
+  - I
+  - SN
 
-fritz_bogus:
+bogus:
   - bogus
   - duplicate
   - bogus?
@@ -58,25 +63,29 @@ fritz_bogus:
   - varstar
   - rock
 
-fritz_unclass:
+unclass:
   - "-"
+  - None
 
-fritz_other:
+other:
   - FBOT
   - LRN
   - ILRT
   - Ca-rich
   - LRN?
   - afterglow
+  - Galaxy
 
-fritz_agn_star:
+agn_star:
   - nova
   - CV?
   - varstar
+  - Varstar
   - AGN
   - QSO
   - nova?
   - star
+  - LBV
   - NLSy1?
   - NLSy1
   - CLAGN
@@ -87,28 +96,6 @@ fritz_agn_star:
   - AM CVn
   - var
   - blazar
-
-tns_sn_ia:
-  - SN Ia
-  - SN Ia-91T-like
-  - SN Ia-pec
-  - SN Ia-CSM
-  - SN Iax[02cx-like]
-
-tns_sn_other:
-  - SN II
-  - SN IIn
-  - SLSN-II
-  - SN Ic
-  - SLSN-I
-  - SN IIP
-  - SN Ib
-  - SN Ic-BL
-  - SN Ib/c
-  - SN IIb
-  - SN I
-  - SN
-  - SN Ibn
 
 axislabels:
   temp: Temperature (log K)

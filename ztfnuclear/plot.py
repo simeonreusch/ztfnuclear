@@ -26,12 +26,8 @@ GOLDEN_RATIO = 1.62
 logger = logging.getLogger(__name__)
 
 config = io.load_config()
-config["fritz_sn_ia"] = config["fritz_sn_ia"] + [
-    f"SN {i}" for i in config["fritz_sn_ia"]
-]
-config["fritz_sn_other"] = config["fritz_sn_other"] + [
-    f"SN {i}" for i in config["fritz_sn_other"]
-]
+config["sn_ia"] = config["sn_ia"] + [f"SN {i}" for i in config["sn_ia"]]
+config["sn_other"] = config["sn_other"] + [f"SN {i}" for i in config["sn_other"]]
 
 
 def get_tde_selection(
@@ -220,7 +216,7 @@ def get_tde_selection(
     sample["peak_mags"] = peak_mags
 
     sample.query(
-        "fritz_class not in @config['fritz_bogus'] and fritz_class not in @config['fritz_unclass']",
+        "fritz_class not in @config['bogus'] and fritz_class not in @config['unclass']",
         inplace=True,
     )
 
@@ -344,15 +340,18 @@ def get_tde_selection(
         if purity_sel == "gold":
             if row["ztfid"] in gold_sample:
                 return "gold"
-        if row["fritz_class"] in config["fritz_tde"]:
+        if row["fritz_class"] in config["tde"] or row["tns_class"] in config["tde"]:
             return "tde"
-        if row["fritz_class"] in config["fritz_sn_ia"]:
+        if row["fritz_class"] in config["sn_ia"] or row["tns_class"] in config["sn_ia"]:
             return "snia"
-        if row["fritz_class"] in config["fritz_sn_other"]:
+        if (
+            row["fritz_class"] in config["sn_other"]
+            or row["tns_class"] in config["sn_other"]
+        ):
             return "sn_other"
-        if sampletype == "bts" and row["fritz_class"] in config["fritz_agn_star"]:
+        if sampletype == "bts" and row["fritz_class"] in config["agn_star"]:
             return "agn_star"
-        if row["fritz_class"] in config["fritz_other"]:
+        if row["fritz_class"] in config["other"]:
             return "other"
         return "unclass"
 
@@ -548,8 +547,8 @@ def plot_mag_hist(
     """
     info_db = SampleInfo(sampletype=sampletype)
 
-    sample_nuc = get_tde_selection(cuts=cuts, sampletype="nuclear", raw=True)
-    sample_bts = get_tde_selection(cuts=cuts, sampletype="bts", raw=True)
+    sample_nuc = get_tde_selection(cuts=cuts, sampletype="nuclear")
+    sample_bts = get_tde_selection(cuts=cuts, sampletype="bts")
 
     sample_nuc["sample"] = "nuclear"
     sample_bts["sample"] = "bts"
@@ -569,12 +568,11 @@ def plot_mag_hist(
     g = sns.FacetGrid(combined, col="sample", hue="classif", height=4, aspect=1)
     g.map(
         sns.histplot,
-        # combined,
         "peak_mag_g",
-        # hue=combined["classif"],
         multiple="stack",
         binrange=(16, 21),
         bins=12,
+        log_scale=(False, True),
     )
 
     # sns.histplot(
@@ -583,6 +581,7 @@ def plot_mag_hist(
     #     hue="classif",
     #     multiple="stack",
     #     binrange=(16, 21),
+    #     log_scale=(False, True),
     #     bins=12,
     # )
 
@@ -600,6 +599,7 @@ def plot_mag_hist(
 
     outfile = os.path.join(io.LOCALSOURCE_plots, f"maghist_{cuts}.pdf")
     plt.savefig(outfile)
+    plt.close()
 
 
 def plot_mag_cdf(cuts: str | None = "agn"):
