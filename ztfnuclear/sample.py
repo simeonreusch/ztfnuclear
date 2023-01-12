@@ -1025,7 +1025,7 @@ class Transient(object):
             query_ampel_dist,
         )
 
-        results = {}
+        results = self.meta["crossmatch"]
         res_list = []
 
         if crossmatch_types is None:
@@ -1054,7 +1054,7 @@ class Transient(object):
                 res_list.append(query_tns(ra_deg=self.ra, dec_deg=self.dec))
 
             if "dist" in crossmatch_types:
-                res_list.append(query_ampel_dist(ztfid=self.ztfid))
+                res_list.append({"dist": {"dist": query_ampel_dist(ztfid=self.ztfid)}})
 
             for res in res_list:
                 results.update(res)
