@@ -928,10 +928,13 @@ def plot_lightcurve(
             warnings.filterwarnings("ignore", category=RuntimeWarning)
             F0 = 10 ** (_df.magzp / 2.5)
             F0_err = F0 / 2.5 * np.log(10) * _df.magzpunc
-            flux = _df[ampl_column] / F0
-            flux_err = np.sqrt(
-                (_df[ampl_err_column] / F0) ** 2
-                + (_df[ampl_column] * F0_err / F0**2) ** 2
+            flux = _df[ampl_column] / F0 * 3630.78
+            flux_err = (
+                np.sqrt(
+                    (_df[ampl_err_column] / F0) ** 2
+                    + (_df[ampl_column] * F0_err / F0**2) ** 2
+                )
+                * 3630.78
             )
             abmag = -2.5 * np.log10(flux)
             abmag_err = 2.5 / np.log(10) * flux_err / flux
