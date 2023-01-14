@@ -163,6 +163,41 @@ class MetadataDB(object):
 
         return returndict
 
+    def get_dataframe(self, params: List[str]) -> pd.DataFrame:
+        """
+        Get a dataframe containing all the parameters specified
+        """
+        if "_id" not in params:
+            params.append("_id")
+
+        search_dict = {}
+
+        for param in params:
+            search_dict.update({param: 1})
+
+        res_dict = {}
+        search_res = self.coll.find({}, search_dict)
+
+        from collections.abc import MutableMapping
+
+        def flatten(d: dict, parent_key: str = "", sep: str = "_") -> dict:
+            items = []
+            for k, v in d.items():
+                new_key = parent_key + sep + k if parent_key else k
+                if isinstance(v, MutableMapping):
+                    items.extend(flatten(v, new_key, sep=sep).items())
+                else:
+                    items.append((new_key, v))
+            return dict(items)
+
+        for i in search_res:
+            flattened = flatten(i)
+            res_dict.update({flattened.pop("_id"): flattened})
+
+        df = pd.DataFrame.from_dict(res_dict, orient="index")
+
+        return df
+
     def read_transient(self, ztfid: str) -> dict:
         """
         Read entry for given ztfid
