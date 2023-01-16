@@ -4,7 +4,7 @@
 
 import os, logging, warnings, typing
 
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 import astropy  # type: ignore
 from astropy import units as u  # type: ignore
@@ -536,6 +536,41 @@ def plot_tde_scatter_seaborn(
         info_db.ingest_ztfid_collection(
             ztfids=sample.ztfid.values, collection_name="tde_selection"
         )
+
+
+def plt_dist_hist(plotrange: List[float] = [0, 6]):
+    """
+    Plot the core-distance distribution for BTS and nuclear sample
+    """
+    from ztfnuclear.sample import NuclearSample
+
+    df_nuc = NuclearSample(sampletype="nuclear").meta.get_dataframe(params=["distnr"])
+    df_bts = NuclearSample(sampletype="bts").meta.get_dataframe(params=["distnr"])
+
+    fig, ax = plt.subplots(figsize=(5.5, 5.5 / 1.62))
+    ax.hist(
+        df_nuc["distnr_distnr"],
+        range=plotrange,
+        bins=100,
+        label="nuclear",
+        cumulative=True,
+        histtype="step",
+    )
+    ax.hist(
+        df_bts["distnr_distnr"],
+        range=plotrange,
+        bins=100,
+        label="bts",
+        cumulative=True,
+        histtype="step",
+    )
+
+    ax.set_yscale("log")
+    ax.set_xlabel("core distance (arcsec)")
+    plt.tight_layout()
+    plt.legend()
+    outfile = os.path.join(io.LOCALSOURCE_plots, f"dist_hist.pdf")
+    plt.savefig(outfile)
 
 
 def plot_mag_hist(

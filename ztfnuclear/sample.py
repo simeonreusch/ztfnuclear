@@ -1058,10 +1058,10 @@ class Transient(object):
                 res_list.append(query_wise(ra_deg=self.ra, dec_deg=self.dec))
             if "tns" in crossmatch_types:
                 res_list.append(query_tns(ra_deg=self.ra, dec_deg=self.dec))
-            # if "dist" in crossmatch_types:
-            #     res_list.append(
-            #         {"distnr": {"dist": query_ampel_dist(ztfid=self.ztfid)}}
-            #     )
+            if "dist" in crossmatch_types:
+                res_list.append(
+                    {"distnr": {"dist": query_ampel_dist(ztfid=self.ztfid)}}
+                )
 
             for res in res_list:
                 results.update(res)

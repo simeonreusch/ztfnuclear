@@ -6,9 +6,10 @@ import os, logging
 from json import JSONDecodeError
 
 import numpy as np
+import numpy.ma as ma
 
 import backoff
-import requests
+import requests  # type: ignore
 
 
 API_BASEURL = "https://ampel.zeuthen.desy.de/api"
