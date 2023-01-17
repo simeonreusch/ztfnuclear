@@ -143,7 +143,6 @@ selections: &id001
 
 cuts:
   full: 
-    - bogus
     - risedecay
     - chisq
     - temp
@@ -162,7 +161,10 @@ cuts:
     - flaring_chisq
     - flaring_temp
     - flaring_wise
+  bogus:
+    - bogus
   nocut:
+    - bogus
     - all
   boundary:
     - boundary

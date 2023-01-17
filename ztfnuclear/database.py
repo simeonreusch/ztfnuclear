@@ -199,9 +199,6 @@ class MetadataDB(object):
         if "tde_fit_exp_chisq" in df.keys():
             df["red_chisq"] = df.tde_fit_exp_chisq / df.tde_fit_exp_ndof
 
-        for k in df.keys():
-            print(k)
-
         if "salt_loose_bl" in df.keys():
             df["salt_red_chisq"] = df["salt_loose_bl_chisq"] / df["salt_loose_bl_ndof"]
 

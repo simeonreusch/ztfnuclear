@@ -4,7 +4,7 @@
 
 import os, logging, warnings, typing
 
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Any
 
 import astropy  # type: ignore
 from astropy import units as u  # type: ignore
@@ -34,19 +34,15 @@ def get_tde_selection(
     flaring_only: bool = False,
     cuts: None | list = ["nocut"],
     sampletype: str = "nuclear",
-    purity_sel: str = "tde",
+    purity_sel: str | None = "tde",
 ) -> pd.DataFrame | dict:
     """
     Apply selection cuts to a pandas dataframe
     """
+    from ztfnuclear.sample import NuclearSample
 
     def snia_diag_cut(x):
-        return 3.34 - 2.2 * x
-
-    def aggressive_snia_diag_cut(x):
         return 3.55 - 2.29 * x
-
-    from ztfnuclear.sample import NuclearSample
 
     if sampletype == "nuclear":
         salt_key = "salt_loose_bl"
@@ -54,6 +50,9 @@ def get_tde_selection(
     else:
         salt_key = "salt"
         class_key = "type"
+
+    if cuts is None:
+        cuts = ["nocut"]
 
     sample = NuclearSample(sampletype=sampletype).meta.get_dataframe(
         params=[
@@ -67,33 +66,9 @@ def get_tde_selection(
             "peak_mags",
         ]
     )
-    n_tot = len(sample)
-    n_nofit = len(sample.query("success.isnull()"))
-    n_fit = len(sample.query("not success.isnull()"))
-    n_fitfail = len(sample.query("success == False"))
 
-    # Only use transients with fit success
-    sample.query("success == True", inplace=True)
-    sample["snia_cut"] = aggressive_snia_diag_cut(sample["rise"])
-
-    logger.info(
-        f"Stats: has no fit entry: {n_nofit} / has fit entry: {n_fit} / fit fail: {n_fitfail} / fit success: {len(sample)}"
-    )
-
-    # Now we cut!
-    sample.query(
-        config["selections"]["bogus"],
-        inplace=True,
-    )
-
-    for c in cuts:
-        cut_aggregated = "".join(
-            [
-                config["selections"][k] if i == 0 else "and " + config["selections"][k]
-                for i, k in enumerate(config["cuts"][c])
-            ]
-        )
-        sample.query(cut_aggregated, inplace=True)
+    # cut everything flagged as bogus
+    sample.query(config["selections"]["bogus"], inplace=True)
 
     def simple_class(row, sampletype, purity_sel):
         """Add simple classification labels"""
@@ -119,7 +94,43 @@ def get_tde_selection(
         lambda row: simple_class(row, sampletype, purity_sel), axis=1
     )
 
-    return sample
+    n_tot = len(sample)
+    n_nofit = len(sample.query("success.isnull()"))
+    n_fit = len(sample.query("not success.isnull()"))
+    n_fitfail = len(sample.query("success == False"))
+
+    # Only use transients with fit success
+    sample.query("success == True", inplace=True)
+
+    stats = {Any: Any}
+
+    if purity_sel is not None:
+        n_orig = len(sample.query("classif == @purity_sel"))
+        stats["n_orig"] = n_orig
+
+    sample["snia_cut"] = snia_diag_cut(sample["rise"])
+
+    logger.info(
+        f"Stats: has no fit entry: {n_nofit} / has fit entry: {n_fit} / fit fail: {n_fitfail} / fit success: {len(sample)}"
+    )
+
+    # Now we cut!
+    for c in cuts:
+        cut_aggregated = "".join(
+            [
+                config["selections"][k] if i == 0 else "and " + config["selections"][k]
+                for i, k in enumerate(config["cuts"][c])
+            ]
+        )
+        logger.info(f"Cuts applied: {cut_aggregated}")
+        sample.query(cut_aggregated, inplace=True)
+
+    if purity_sel is not None:
+        n_after_cut = len(sample.query("classif == @purity_sel"))
+        stats["frac_pur"] = n_after_cut / len(sample) * 100
+        stats["frac_eff"] = n_after_cut / n_orig * 100
+
+    return sample, stats
 
 
 def plot_tde_scatter(
@@ -127,7 +138,7 @@ def plot_tde_scatter(
     ingest: bool = False,
     x_values: str = "rise",
     y_values: str = "decay",
-    cuts: str | None = None,
+    cuts: list | None = None,
     sampletype: str = "nuclear",
     xlim: tuple | None = None,
     ylim: tuple | None = None,
@@ -138,21 +149,16 @@ def plot_tde_scatter(
     """
     info_db = SampleInfo(sampletype=sampletype)
 
-    sample = get_tde_selection(cuts=cuts, sampletype=sampletype, purity_sel=purity_sel)
+    sample, stats = get_tde_selection(
+        cuts=cuts, sampletype=sampletype, purity_sel=purity_sel
+    )
 
     fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
 
     title = f"TDE fit {x_values} vs. {y_values} ({len(sample)} transients)"
 
-    if purity_sel is not None:
-        n = len(sample.query("classif == @purity_sel"))
-        _sample = get_tde_selection(
-            cuts=["nocut"], sampletype=sampletype, purity_sel=purity_sel
-        )
-        n_orig = len(_sample.query("classif == @purity_sel"))
-        frac_pur = n / len(sample) * 100
-        frac_eff = n / n_orig * 100
-        title += f"\nPurity: {frac_pur:.1f}% / Efficiency: {frac_eff:.1f} %"
+    if purity_sel is not None and stats is not None:
+        title += f"\nPurity: {stats['frac_pur']:.1f}% / Efficiency: {stats['frac_eff']:.1f} %"
 
     fig.suptitle(
         title,
