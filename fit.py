@@ -17,7 +17,7 @@ FIT_TYPE = "tde_fit_exp"
 RECREATE_BASELINE = False
 DEBUG = False
 SINGLECORE = False
-CORES = 16
+CORES = 32
 SAMPLE = "bts"
 
 if not CORES:
