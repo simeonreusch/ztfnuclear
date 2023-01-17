@@ -2,9 +2,9 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 import os, logging, re, json, multiprocessing, argparse
-import pandas as pd
-import matplotlib
-from tqdm import tqdm
+import pandas as pd  # type: ignore
+import matplotlib  # type: ignore
+from tqdm import tqdm  # type: ignore
 
 from ztfnuclear.database import MetadataDB
 from ztfnuclear.sample import NuclearSample, Transient
