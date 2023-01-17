@@ -163,7 +163,7 @@ class NuclearSample(object):
             self.meta.update_many(ztfids=ztfids, data=data)
             self.logger.info(f"Wrote {len(ztfids)} entries to db")
         else:
-            raise ValueError("File does not exist")
+            raise ValueError(f"File {filepath} does not exist")
 
     def populate_db_from_dict(self, data: dict):
         """
