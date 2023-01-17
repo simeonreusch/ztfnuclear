@@ -254,7 +254,7 @@ class TDESource_exp_flextemp(sncosmo.Source):
         peak_temp = 10 ** self._parameters[2]
         bol_corr = peak_temp**4 / T**4
 
-        bb = bb * u.sr  # * bol_corr
+        bb = bb * u.sr * bol_corr
 
         return bb
 
