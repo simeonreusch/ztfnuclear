@@ -116,10 +116,11 @@ fritz_queries:
     tde: fritz_class in @config['fritz_tde']
 
 selections: &id001
-  all: "rise > -1e99 "
+  all: "rise > -1e99 " # fake cut, no empty df.query is allowed
   # boundary: "rise>0.1 and rise < 3 and decay > 0.1 and decay<4 and wise_w2w3 < 900 and wise_w1w2 < 900 and red_chisq < 1000 and salt_red_chisq < 600 "
   boundary: "rise>0.1 and rise < 3 and decay > 0.1 and decay<4 "
   bogus: "fritz_class not in @config['bogus'] and fritz_class not in @config['unclass'] "
+  bogusbts: "type not in @config['bogus'] and type not in @config['unclass'] "
   risedecay: "rise>0.8 and rise<2.05 and decay>1.1 and decay<3 "
   chisq: "red_chisq<6 and red_chisq < salt_red_chisq "
   gold_chisq: "red_chisq < 5 and salt_red_chisq < 75 and red_chisq < salt_red_chisq "
@@ -161,10 +162,7 @@ cuts:
     - flaring_chisq
     - flaring_temp
     - flaring_wise
-  bogus:
-    - bogus
   nocut:
-    - bogus
     - all
   boundary:
     - boundary
@@ -198,6 +196,14 @@ cuts:
     - overlapping_regions
   flaring:
     - flaring
+
+classes:
+  snia: "classif == 'snia' "
+  unclass: "classif == 'unclass' "
+  sn_other: "classif == 'sn_other' "
+  tde: "classif == 'tde' "
+  other: "classif == 'other' "
+  agn_star: "classif == 'other' "
 
 pl_props:
     unclass: 

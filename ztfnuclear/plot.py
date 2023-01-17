@@ -4,7 +4,7 @@
 
 import os, logging, warnings, typing
 
-from typing import Optional, Union, List, Any
+from typing import Optional, Union, List, Any, Tuple
 
 import astropy  # type: ignore
 from astropy import units as u  # type: ignore
@@ -35,7 +35,7 @@ def get_tde_selection(
     cuts: None | list = ["nocut"],
     sampletype: str = "nuclear",
     purity_sel: str | None = "tde",
-) -> pd.DataFrame | dict:
+) -> Tuple[pd.DataFrame, dict]:
     """
     Apply selection cuts to a pandas dataframe
     """
@@ -58,6 +58,7 @@ def get_tde_selection(
         params=[
             "tde_fit_exp",
             "_id",
+            "distnr",
             class_key,
             "crossmatch",
             "WISE_bayesian",
@@ -68,25 +69,33 @@ def get_tde_selection(
     )
 
     # cut everything flagged as bogus
-    sample.query(config["selections"]["bogus"], inplace=True)
+    if sampletype == "nuclear":
+        sample.query(config["selections"]["bogus"], inplace=True)
+    else:
+        sample.query(config["selections"]["bogusbts"], inplace=True)
 
     def simple_class(row, sampletype, purity_sel):
         """Add simple classification labels"""
+        if sampletype == "nuclear":
+            class_key = "fritz_class"
+        else:
+            class_key = "type"
+
         if purity_sel == "gold":
             if row["ztfid"] in gold_sample:
                 return "gold"
-        if row["fritz_class"] in config["tde"] or row["tns_class"] in config["tde"]:
+        if row[class_key] in config["tde"] or row["tns_class"] in config["tde"]:
             return "tde"
-        if row["fritz_class"] in config["sn_ia"] or row["tns_class"] in config["sn_ia"]:
+        if row[class_key] in config["sn_ia"] or row["tns_class"] in config["sn_ia"]:
             return "snia"
         if (
-            row["fritz_class"] in config["sn_other"]
+            row[class_key] in config["sn_other"]
             or row["tns_class"] in config["sn_other"]
         ):
             return "sn_other"
-        if sampletype == "bts" and row["fritz_class"] in config["agn_star"]:
+        if sampletype == "bts" and row[class_key] in config["agn_star"]:
             return "agn_star"
-        if row["fritz_class"] in config["other"]:
+        if row[class_key] in config["other"]:
             return "other"
         return "unclass"
 
@@ -203,6 +212,8 @@ def plot_tde_scatter(
 
     plt.savefig(outfile)
 
+    logger.info(f"Saved to {outfile}")
+
     plt.close()
 
     if ingest:
@@ -216,7 +227,7 @@ def plot_tde_scatter_seaborn(
     ingest: bool = False,
     x_values: str = "rise",
     y_values: str = "decay",
-    cuts: list | None = "boundary",
+    cuts: list | None = ["nocut"],
     sampletype: str = "nuclear",
     purity_sel: str | None = "tde",
 ):
@@ -225,7 +236,7 @@ def plot_tde_scatter_seaborn(
     """
     info_db = SampleInfo(sampletype=sampletype)
 
-    sample = get_tde_selection(cuts=cuts, sampletype=sampletype)
+    sample, stats = get_tde_selection(cuts=cuts, sampletype=sampletype)
 
     sample_reduced = sample.query("classif != 'tde' or ztfid == 'ZTF22aagyuao'")
     # we need one TDE to survive, so we have a handle for the legend (don't ask,
@@ -255,13 +266,8 @@ def plot_tde_scatter_seaborn(
 
     title = f"TDE fit {x_values} vs. {y_values} ({len(sample)} transients)"
 
-    if purity_sel is not None:
-        n = len(sample.query("classif == @purity_sel"))
-        _sample = get_tde_selection(cuts=None, sampletype=sampletype)
-        n_orig = len(_sample.query("classif == @purity_sel"))
-        frac_pur = n / len(sample) * 100
-        frac_eff = n / n_orig * 100
-        title += f"\nPurity: {frac_pur:.1f}% / Efficiency: {frac_eff:.1f} %"
+    if purity_sel is not None and stats is not None:
+        title += f"\nPurity: {stats['frac_pur']:.1f}% / Efficiency: {stats['frac_eff']:.1f} %"
 
     g.fig.suptitle(
         title,
@@ -297,6 +303,8 @@ def plot_tde_scatter_seaborn(
     g.fig.savefig(outfile)
     plt.close()
 
+    logger.info(f"Saved to {outfile}")
+
     if ingest:
 
         info_db.ingest_ztfid_collection(
@@ -304,33 +312,34 @@ def plot_tde_scatter_seaborn(
         )
 
 
-def plt_dist_hist(plotrange: List[float] = [0, 6]):
+def plot_dist_hist(classif="all", plotrange: List[float] | None = [0, 6]):
     """
     Plot the core-distance distribution for BTS and nuclear sample
     """
     from ztfnuclear.sample import NuclearSample
 
-    df_nuc = NuclearSample(sampletype="nuclear").meta.get_dataframe(
-        params=["distnr", "fritz_class"]
-    )
-    df_bts = NuclearSample(sampletype="bts").meta.get_dataframe(
-        params=["distnr", "fritz_class"]
-    )
+    sample_nuc, _ = get_tde_selection(cuts=["nocut"], sampletype="nuclear")
+    sample_bts, _ = get_tde_selection(cuts=["nocut"], sampletype="bts")
+
+    if classif != "all":
+        sample_nuc.query(config["classes"][classif], inplace=True)
+        sample_bts.query(config["classes"][classif], inplace=True)
 
     fig, ax = plt.subplots(figsize=(5.5, 5.5 / 1.62))
+    fig.suptitle(f"Classification: {classif}")
     ax.hist(
-        df_nuc["distnr_distnr"] ** 2,
+        sample_nuc["distnr_distnr"] ** 2,
         range=plotrange,
         bins=100,
-        label="nuclear",
+        label=f"nuclear ({len(sample_nuc)})",
         cumulative=False,
         histtype="step",
     )
     ax.hist(
-        df_bts["distnr_distnr"] ** 2,
+        sample_bts["distnr_distnr"] ** 2,
         range=plotrange,
         bins=100,
-        label="bts",
+        label=f"BTS ({len(sample_bts)})",
         cumulative=False,
         histtype="step",
     )
@@ -339,41 +348,39 @@ def plt_dist_hist(plotrange: List[float] = [0, 6]):
     ax.set_xlabel("core distance squared (arcsec**2)")
     plt.tight_layout()
     plt.legend()
-    outfile = os.path.join(io.LOCALSOURCE_plots, f"dist_hist.pdf")
-    plt.savefig(outfile)
+    outdir = os.path.join(io.LOCALSOURCE_plots, "dist")
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+    outfile = os.path.join(outdir, f"dist_hist_{classif}.png")
+    plt.savefig(outfile, dpi=300)
+    logger.info(f"Saved to {outfile}")
 
 
 def plot_mag_hist(
     cuts: list | None = None,
-    sampletype: str = "nuclear",
 ):
     """
     Plot the mag histogram
     """
-    info_db = SampleInfo(sampletype=sampletype)
+    # info_db = SampleInfo(sampletype=sampletype)
 
-    sample_nuc = get_tde_selection(cuts=cuts, sampletype="nuclear")
-    sample_bts = get_tde_selection(cuts=cuts, sampletype="bts")
+    sample_nuc, _ = get_tde_selection(cuts=cuts, sampletype="nuclear")
+    sample_bts, _ = get_tde_selection(cuts=cuts, sampletype="bts")
 
     sample_nuc["sample"] = "nuclear"
     sample_bts["sample"] = "bts"
 
     combined = pd.concat([sample_nuc, sample_bts])
+    combined.query("not peak_mags_g.isnull()", inplace=True)
 
-    peak_gmag = []
-
-    for entry in combined.peak_mags.values:
-        if entry.get("g"):
-            peak_gmag.append(entry["g"])
-
-    combined["peak_mag_g"] = peak_gmag
+    combined.rename(columns={"peak_mags_g": "peak g-band mag (AB)"}, inplace=True)
 
     fig, ax = plt.subplots()
 
     g = sns.FacetGrid(combined, col="sample", hue="classif", height=4, aspect=1)
     g.map(
         sns.histplot,
-        "peak_mag_g",
+        "peak g-band mag (AB)",
         multiple="stack",
         binrange=(16, 21),
         bins=12,

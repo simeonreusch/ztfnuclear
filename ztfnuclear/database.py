@@ -207,6 +207,9 @@ class MetadataDB(object):
 
         df["ztfid"] = df.index
 
+        if "crossmatch_TNS_type" not in df.keys():
+            df["crossmatch_TNS_type"] = None
+
         df.rename(
             columns={
                 "tde_fit_exp_success": "success",
@@ -228,6 +231,9 @@ class MetadataDB(object):
             df["wise_w1w2"] = df["wise_w1w2"].fillna(999)
             df["wise_w2w3"] = df.wise_w2 - df.wise_w3
             df["wise_w2w3"] = df["wise_w2w3"].fillna(999)
+        else:
+            df["wise_w1w2"] = 999
+            df["wise_w2w3"] = 999
 
         if "salt_red_chisq" in df.keys():
             df["salt_red_chisq"] = df["salt_red_chisq"].fillna(99999)
