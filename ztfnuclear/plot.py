@@ -32,14 +32,21 @@ config["sn_other"] = config["sn_other"] + [f"SN {i}" for i in config["sn_other"]
 
 def get_tde_selection(
     flaring_only: bool = False,
-    cuts: None | list = None,
+    cuts: None | list = ["nocut"],
     sampletype: str = "nuclear",
     purity_sel: str = "tde",
 ) -> pd.DataFrame | dict:
     """
     Apply selection cuts to a pandas dataframe
     """
-    meta = MetadataDB(sampletype=sampletype)
+
+    def snia_diag_cut(x):
+        return 3.34 - 2.2 * x
+
+    def aggressive_snia_diag_cut(x):
+        return 3.55 - 2.29 * x
+
+    from ztfnuclear.sample import NuclearSample
 
     if sampletype == "nuclear":
         salt_key = "salt_loose_bl"
@@ -48,7 +55,7 @@ def get_tde_selection(
         salt_key = "salt"
         class_key = "type"
 
-    res = meta.read_parameters(
+    sample = NuclearSample(sampletype=sampletype).meta.get_dataframe(
         params=[
             "tde_fit_exp",
             "_id",
@@ -60,280 +67,33 @@ def get_tde_selection(
             "peak_mags",
         ]
     )
+    n_tot = len(sample)
+    n_nofit = len(sample.query("success.isnull()"))
+    n_fit = len(sample.query("not success.isnull()"))
+    n_fitfail = len(sample.query("success == False"))
 
-    def snia_diag_cut(x):
-        return 3.34 - 2.2 * x
-
-    def aggressive_snia_diag_cut(x):
-        return 3.55 - 2.29 * x
-
-    tde_res = res["tde_fit_exp"]
-    all_ztfids = res["_id"]
-    fritz_class_all = res[class_key]
-    crossmatch_all = res["crossmatch"]
-    wise_bayesian = res["WISE_bayesian"]
-    salt = res[salt_key]
-    ztf_bayesian = res["ZTF_bayesian"]
-    peak_mags_full = res["peak_mags"]
-
-    peak_mags = []
-    risetimes = []
-    decaytimes = []
-    temperatures = []
-    d_temps = []
-    red_chisqs = []
-    chisqs = []
-    wise_w1w2 = []
-    wise_w2w3 = []
-    salt_red_chisqs = []
-    plateaustarts = []
-    ztfids = []
-    fritz_class = []
-    tns_class = []
-    wise_strength1 = []
-    wise_strength2 = []
-    overlapping_regions = []
-    milliquas = []
-
-    info_db = SampleInfo()
-    flaring_ztfids = info_db.read()["flaring"]["ztfids"]
-
-    if flaring_only:
-        selected_subset = set(flaring_ztfids)
-    else:
-        selected_subset = set(info_db.read()["all"]["ztfids"])
-
-    has_wise = []
-    for i, entry in enumerate(wise_bayesian):
-        if entry is not None:
-            if entry["bayesian"] is not None:
-                if (
-                    "Wise_W1" in entry["bayesian"].keys()
-                    and "Wise_W2" in entry["bayesian"].keys()
-                ):
-                    has_wise.append(all_ztfids[i])
-
-    selected_subset = set(all_ztfids)
-
-    has_no_fit_entry = []
-    has_fit_entry = []
-    has_fit_success = []
-
-    for i, entry in enumerate(tde_res):
-        ztfid = all_ztfids[i]
-        if entry:
-            has_fit_entry.append(ztfid)
-            if "success" in entry.keys():
-                if entry["success"] == True:
-                    has_fit_success.append(ztfid)
-                    chisq = entry["chisq"]
-                    ndof = entry["ndof"]
-                    chisqs.append(chisq)
-                    red_chisq = chisq / ndof
-                    if ztfid in selected_subset:
-                        paramdict = entry["paramdict"]
-                        salt_res = salt[i]
-                        if salt_res != "failure" and salt_res != None:
-                            salt_red_chisq = salt_res["chisq"] / salt_res["ndof"]
-                            salt_red_chisqs.append(salt_red_chisq)
-                        else:
-                            salt_red_chisqs.append(99999)
-                        risetimes.append(paramdict["risetime"])
-                        decaytimes.append(paramdict["decaytime"])
-                        temperatures.append(paramdict["temperature"])
-                        d_temps.append(paramdict["d_temp"])
-                        plateaustarts.append(paramdict["plateaustart"])
-                        red_chisqs.append(red_chisq)
-                        ztfids.append(ztfid)
-                        peak_mags.append(peak_mags_full[i])
-                        if ztf_bayesian[i] == None:
-                            overlapping_regions.append(-99)
-                        else:
-                            overlapping_regions.append(
-                                ztf_bayesian[i]["bayesian"]["overlapping_regions_count"]
-                            )
-                        fritz_class.append(fritz_class_all[i])
-
-                        _tns_class = None
-                        if crossmatch_all[i] is not None:
-                            if "TNS" in crossmatch_all[i].keys():
-                                if "type" in crossmatch_all[i]["TNS"].keys():
-                                    _tns_class = crossmatch_all[i]["TNS"]["type"]
-                        tns_class.append(_tns_class)
-
-                        _milliquas_class = "noclass"
-                        if crossmatch_all[i] is not None:
-                            if "Milliquas" in crossmatch_all[i].keys():
-                                if "type" in crossmatch_all[i]["Milliquas"].keys():
-                                    _milliquas_class = crossmatch_all[i]["Milliquas"][
-                                        "type"
-                                    ]
-                        milliquas.append(_milliquas_class)
-
-                        _w1w2 = 999
-                        _w2w3 = 999
-
-                        if crossmatch_all[i] is not None:
-                            if "WISE_cat" in crossmatch_all[i].keys():
-                                if wise := crossmatch_all[i]["WISE_cat"]:
-                                    _w1w2 = wise["Mag_W1"] - wise["Mag_W2"]
-                                    _w2w3 = wise["Mag_W2"] - wise["Mag_W3"]
-
-                        wise_w1w2.append(_w1w2)
-                        wise_w2w3.append(_w2w3)
-        else:
-            has_no_fit_entry.append(ztfid)
+    # Only use transients with fit success
+    sample.query("success == True", inplace=True)
+    sample["snia_cut"] = aggressive_snia_diag_cut(sample["rise"])
 
     logger.info(
-        f"Stats: has no fit entry: {len(has_no_fit_entry)} / has fit entry: {len(has_fit_entry)} / fit success: {len(has_fit_success)}"
+        f"Stats: has no fit entry: {n_nofit} / has fit entry: {n_fit} / fit fail: {n_fitfail} / fit success: {len(sample)}"
     )
 
-    from ztfnuclear.sample import NuclearSample
-
-    gold_sample = []
-    nuc_sample = NuclearSample(sampletype="nuclear")
-    for t in nuc_sample.get_gold_transients():
-        gold_sample.append(t.ztfid)
-
-    sample = pd.DataFrame()
-    sample["ztfid"] = ztfids
-    sample["rise"] = risetimes
-    sample["decay"] = decaytimes
-    sample["temp"] = temperatures
-    sample["d_temp"] = d_temps
-    sample["fritz_class"] = fritz_class
-    sample["tns_class"] = tns_class
-    sample["red_chisq"] = red_chisqs
-    sample["wise_w1w2"] = wise_w1w2
-    sample["wise_w2w3"] = wise_w2w3
-    sample["chisq"] = chisqs
-    sample["salt_red_chisq"] = salt_red_chisqs
-    sample["d_temp_length"] = plateaustarts
-    sample["milliquas"] = milliquas
-    sample["overlapping_regions"] = overlapping_regions
-    sample["total_d_temp"] = np.asarray(plateaustarts) * np.asarray(d_temps)
-    sample["snia_cut"] = aggressive_snia_diag_cut(np.asarray(risetimes))
-    sample["peak_mags"] = peak_mags
-
+    # Now we cut!
     sample.query(
-        "fritz_class not in @config['bogus'] and fritz_class not in @config['unclass']",
+        config["selections"]["bogus"],
         inplace=True,
     )
 
-    wise_cut = "(wise_w1w2<0.3 or wise_w1w2>1.8) or (wise_w2w3 <1.5 or wise_w2w3>3.5)"
-
-    gold_wise_cut = (
-        "not (wise_w1w2<-0.1 or wise_w1w2>1.1 or wise_w2w3 <1.4 or wise_w2w3>4.3)"
-    )
-
-    flaring_wise_cut = (
-        "not (wise_w1w2<-0.1 or wise_w1w2>1.1 or wise_w2w3 <1.5 or wise_w2w3>4)"
-    )
-
-    boundary_cut = "rise>0.1 and rise < 3 and decay > 0.1 and decay<4 and wise_w2w3 < 900 and wise_w1w2 < 900 and red_chisq < 1000 and salt_red_chisq < 600"
-
-    # # that's the one for dtemp = 15k, evolution from peak, bolcorr
-    # tde_selection_finetuned = "temp > 3.93 and temp < 4.38 and d_temp>-90 and d_temp < 140 and rise>0.85 and rise<2.05 and decay>1.1 and decay<3 and red_chisq<6 and red_chisq < salt_red_chisq"
-
-    # tde_selection_full = "temp > 3.9 and temp < 4.4 and d_temp>-100 and d_temp < 150 and rise>0.8 and rise<2.05 and decay>1.1 and decay<3 and red_chisq<6 and red_chisq < salt_red_chisq"
-
-    rise_decay_selection = "rise>0.8 and rise<2.05 and decay>1.1 and decay<3"
-
-    gold_rise_decay_selection = "0.9<rise<2.5 and 1.5<decay<3.8"
-
-    flaring_rise_decay_selection = "1.4<decay<4 and 0.8<rise<2.5"
-
-    chisq_selection = "red_chisq<6 and red_chisq < salt_red_chisq"
-
-    gold_chisq_selection = (
-        "red_chisq < 5 and salt_red_chisq < 75 and red_chisq < salt_red_chisq"
-    )
-
-    flaring_chisq_selection = "red_chisq<12 and salt_red_chisq<120"
-
-    temp_selection = "temp > 3.9 and temp < 4.4 and d_temp>-100 and d_temp < 150"
-
-    gold_temp_selection = "3.5<temp<4.3 and -100<d_temp<120"
-
-    flaring_temp_selection = "3.5<temp<4.3 and -80<d_temp<200"
-
-    flaring_selection = "ztfid in @flaring_ztfids"
-
-    # RERUN OVERLAPPING REGION FOR EVERYTHING
-    if cuts:
-        if cuts != "nocut":
-            if "full" in cuts:
-                # sample.query(tde_selection_full, inplace=True)
-                sample.query(rise_decay_selection, inplace=True)
-                sample.query(chisq_selection, inplace=True)
-                sample.query(temp_selection, inplace=True)
-                sample.query("snia_cut < decay", inplace=True)
-                sample.query("overlapping_regions == 1", inplace=True)
-                sample.query("milliquas == 'noclass'", inplace=True)
-                sample.query(wise_cut, inplace=True)
-
-            if "goldfull" in cuts:
-                sample.query(gold_rise_decay_selection, inplace=True)
-                sample.query(gold_chisq_selection, inplace=True)
-                sample.query(gold_temp_selection, inplace=True)
-                sample.query("overlapping_regions == 1", inplace=True)
-                # sample.query("milliquas == 'noclass'", inplace=True)
-                sample.query(gold_wise_cut, inplace=True)
-
-            if "flaringfull" in cuts:
-                sample.query(flaring_selection, inplace=True)
-                sample.query(flaring_rise_decay_selection, inplace=True)
-                sample.query(flaring_chisq_selection, inplace=True)
-                sample.query(flaring_temp_selection, inplace=True)
-                sample.query(flaring_wise_cut, inplace=True)
-
-            if "flaring" in cuts:
-                sample.query(flaring_selection, inplace=True)
-
-            if "bayes" in cuts:
-                sample.query("overlapping_regions == 1", inplace=True)
-
-            if "chisq" in cuts:
-                sample.query(chisq_selection, inplace=True)
-
-            if "goldchisq" in cuts:
-                sample.query(gold_chisq_selection, inplace=True)
-
-            if "flaringchisq" in cuts:
-                sample.query(flaring_chisq_selection, inplace=True)
-
-            if "temp" in cuts:
-                sample.query(temp_selection, inplace=True)
-
-            if "goldtemp" in cuts:
-                sample.query(gold_temp_selection, inplace=True)
-
-            if "flaringtemp" in cuts:
-                sample.query(flaring_temp_selection, inplace=True)
-
-            if "risedecay" in cuts:
-                sample.query(rise_decay_selection, inplace=True)
-
-            if "goldrisedecay" in cuts:
-                sample.query(gold_rise_decay_selection, inplace=True)
-
-            if "flaringrisedecay" in cuts:
-                sample.query(flaring_rise_decay_selection, inplace=True)
-
-            if "snia" in cuts:
-                sample.query("snia_cut < decay", inplace=True)
-
-            if "boundary" in cuts:
-                sample.query(boundary_cut, inplace=True)
-
-            if "wise" in cuts:
-                sample.query(wise_cut, inplace=True)
-
-            if "goldwise" in cuts:
-                sample.query(gold_wise_cut, inplace=True)
-
-            if "flaringwise" in cuts:
-                sample.query(flaring_wise_cut, inplace=True)
+    for c in cuts:
+        cut_aggregated = "".join(
+            [
+                config["selections"][k] if i == 0 else "and " + config["selections"][k]
+                for i, k in enumerate(config["cuts"][c])
+            ]
+        )
+        sample.query(cut_aggregated, inplace=True)
 
     def simple_class(row, sampletype, purity_sel):
         """Add simple classification labels"""
@@ -387,7 +147,7 @@ def plot_tde_scatter(
     if purity_sel is not None:
         n = len(sample.query("classif == @purity_sel"))
         _sample = get_tde_selection(
-            cuts=None, sampletype=sampletype, purity_sel=purity_sel
+            cuts=["nocut"], sampletype=sampletype, purity_sel=purity_sel
         )
         n_orig = len(_sample.query("classif == @purity_sel"))
         frac_pur = n / len(sample) * 100
@@ -544,29 +304,33 @@ def plt_dist_hist(plotrange: List[float] = [0, 6]):
     """
     from ztfnuclear.sample import NuclearSample
 
-    df_nuc = NuclearSample(sampletype="nuclear").meta.get_dataframe(params=["distnr"])
-    df_bts = NuclearSample(sampletype="bts").meta.get_dataframe(params=["distnr"])
+    df_nuc = NuclearSample(sampletype="nuclear").meta.get_dataframe(
+        params=["distnr", "fritz_class"]
+    )
+    df_bts = NuclearSample(sampletype="bts").meta.get_dataframe(
+        params=["distnr", "fritz_class"]
+    )
 
     fig, ax = plt.subplots(figsize=(5.5, 5.5 / 1.62))
     ax.hist(
-        df_nuc["distnr_distnr"],
+        df_nuc["distnr_distnr"] ** 2,
         range=plotrange,
         bins=100,
         label="nuclear",
-        cumulative=True,
+        cumulative=False,
         histtype="step",
     )
     ax.hist(
-        df_bts["distnr_distnr"],
+        df_bts["distnr_distnr"] ** 2,
         range=plotrange,
         bins=100,
         label="bts",
-        cumulative=True,
+        cumulative=False,
         histtype="step",
     )
 
     ax.set_yscale("log")
-    ax.set_xlabel("core distance (arcsec)")
+    ax.set_xlabel("core distance squared (arcsec**2)")
     plt.tight_layout()
     plt.legend()
     outfile = os.path.join(io.LOCALSOURCE_plots, f"dist_hist.pdf")

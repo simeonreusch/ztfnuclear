@@ -196,6 +196,45 @@ class MetadataDB(object):
 
         df = pd.DataFrame.from_dict(res_dict, orient="index")
 
+        if "tde_fit_exp_chisq" in df.keys():
+            df["red_chisq"] = df.tde_fit_exp_chisq / df.tde_fit_exp_ndof
+
+        for k in df.keys():
+            print(k)
+
+        if "salt_loose_bl" in df.keys():
+            df["salt_red_chisq"] = df["salt_loose_bl_chisq"] / df["salt_loose_bl_ndof"]
+
+        elif "salt" in df.keys():
+            df["salt_red_chisq"] = df["salt_chisq"] / df["salt_ndof"]
+
+        df["ztfid"] = df.index
+
+        df.rename(
+            columns={
+                "tde_fit_exp_success": "success",
+                "tde_fit_exp_paramdict_risetime": "rise",
+                "tde_fit_exp_paramdict_decaytime": "decay",
+                "tde_fit_exp_paramdict_temperature": "temp",
+                "tde_fit_exp_paramdict_d_temp": "d_temp",
+                "crossmatch_TNS_type": "tns_class",
+                "ZTF_bayesian_bayesian_overlapping_regions_count": "overlapping_regions",
+                "crossmatch_WISE_cat_Mag_W1": "wise_w1",
+                "crossmatch_WISE_cat_Mag_W2": "wise_w2",
+                "crossmatch_WISE_cat_Mag_W3": "wise_w3",
+            },
+            inplace=True,
+        )
+
+        if "wise_w1" in df.keys():
+            df["wise_w1w2"] = df.wise_w1 - df.wise_w2
+            df["wise_w1w2"] = df["wise_w1w2"].fillna(999)
+            df["wise_w2w3"] = df.wise_w2 - df.wise_w3
+            df["wise_w2w3"] = df["wise_w2w3"].fillna(999)
+
+        if "salt_red_chisq" in df.keys():
+            df["salt_red_chisq"] = df["salt_red_chisq"].fillna(99999)
+
         return df
 
     def read_transient(self, ztfid: str) -> dict:

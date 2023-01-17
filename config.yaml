@@ -115,6 +115,88 @@ fritz_queries:
     other: fritz_class in @config['fritz_other']
     tde: fritz_class in @config['fritz_tde']
 
+selections: &id001
+  all: "rise > -1e99 "
+  # boundary: "rise>0.1 and rise < 3 and decay > 0.1 and decay<4 and wise_w2w3 < 900 and wise_w1w2 < 900 and red_chisq < 1000 and salt_red_chisq < 600 "
+  boundary: "rise>0.1 and rise < 3 and decay > 0.1 and decay<4 "
+  bogus: "fritz_class not in @config['bogus'] and fritz_class not in @config['unclass'] "
+  risedecay: "rise>0.8 and rise<2.05 and decay>1.1 and decay<3 "
+  chisq: "red_chisq<6 and red_chisq < salt_red_chisq "
+  gold_chisq: "red_chisq < 5 and salt_red_chisq < 75 and red_chisq < salt_red_chisq "
+  flaring_chisq: "red_chisq<12 and salt_red_chisq<120 "
+  temp: "temp > 3.9 and temp < 4.4 and d_temp>-100 and d_temp < 150 "
+  gold_temp: "3.5<temp<4.3 and -100<d_temp<120 "
+  flaring_temp: "3.5<temp<4.3 and -80<d_temp<200 "
+  snia: "snia_cut < decay "
+  overlapping_regions: "overlapping_regions == 1 "
+  wise: "((wise_w1w2<0.3 or wise_w1w2>1.8) or (wise_w2w3 <1.5 or wise_w2w3>3.5)) "
+  gold_wise: "(not (wise_w1w2<-0.1 or wise_w1w2>1.1 or wise_w2w3 <1.4 or wise_w2w3>4.3)) "
+  flaring_wise: "(not (wise_w1w2<-0.1 or wise_w1w2>1.1 or wise_w2w3 <1.5 or wise_w2w3>4) "
+  gold_risedecay: "0.9<rise<2.5 and 1.5<decay<3.8 "
+  flaring_risedecay: "1.4<decay<4 and 0.8<rise<2.5 "
+  flaring: "ztfid in @flaring_ztfids "
+
+    # # that's the one for dtemp = 15k, evolution from peak, bolcorr
+    # tde_selection_finetuned = "temp > 3.93 and temp < 4.38 and d_temp>-90 and d_temp < 140 and rise>0.85 and rise<2.05 and decay>1.1 and decay<3 and red_chisq<6 and red_chisq < salt_red_chisq"
+
+    # tde_selection_full = "temp > 3.9 and temp < 4.4 and d_temp>-100 and d_temp < 150 and rise>0.8 and rise<2.05 and decay>1.1 and decay<3 and red_chisq<6 and red_chisq < salt_red_chisq"
+
+cuts:
+  full: 
+    - bogus
+    - risedecay
+    - chisq
+    - temp
+    - snia
+    - overlapping_regions
+    - wise
+  goldfull:
+    - gold_risedecay
+    - gold_chisq
+    - gold_temp
+    - overlapping_regions
+    - gold_wise
+  flaringfull:
+    - flaring
+    - flaring_risedecay
+    - flaring_chisq
+    - flaring_temp
+    - flaring_wise
+  nocut:
+    - all
+  boundary:
+    - boundary
+  wise:
+    - wise
+  goldwise:
+    - gold_wise
+  flaringwise:
+    - flaring_wise
+  snia:
+    - snia
+  temp:
+    - temp
+  goldtemp:
+    - gold_temp
+  flaringtemp:
+    - flaring_temp
+  risedecay:
+    - risedecay
+  goldrisedecay:
+    - gold_risedecay
+  flaringrisedecay:
+    - flaring_risedecay
+  chisq:
+    - chisq
+  goldchisq:
+    - gold_chisq
+  flaringchisq:
+    - flaring_chisq
+  bayes:
+    - overlapping_regions
+  flaring:
+    - flaring
+
 pl_props:
     unclass: 
       m: .
