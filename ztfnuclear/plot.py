@@ -356,13 +356,22 @@ def plot_dist_hist(classif="all", plotrange: List[float] | None = [0, 6]):
     logger.info(f"Saved to {outfile}")
 
 
-def plot_mag_hist(
-    cuts: list | None = None,
-):
+def plot_mag_hist(cuts: list | None = None, logplot=True):
     """
     Plot the mag histogram
     """
     # info_db = SampleInfo(sampletype=sampletype)
+
+    classifs = ["tde", "other", "agn_star", "sn_other", "snia", "unclass"]
+    colordict = {
+        "unclass": "#5799c7",
+        "other": "#ff9f4a",
+        "snia": "#61b861",
+        "tde": "#e15d5e",
+        "sn_other": "#af8dce",
+        "agn_star": "#a98078",
+    }
+    legendpos = {"nuclear": "upper left", "bts": "upper right"}
 
     sample_nuc, _ = get_tde_selection(cuts=cuts, sampletype="nuclear")
     sample_bts, _ = get_tde_selection(cuts=cuts, sampletype="bts")
@@ -371,45 +380,77 @@ def plot_mag_hist(
     sample_bts["sample"] = "bts"
 
     combined = pd.concat([sample_nuc, sample_bts])
-    combined.query("not peak_mags_g.isnull()", inplace=True)
 
-    combined.rename(columns={"peak_mags_g": "peak g-band mag (AB)"}, inplace=True)
+    combined["peak_mag"] = [
+        k if not np.isnan(k) else combined.peak_mags_r.values[i]
+        for i, k in enumerate(combined.peak_mags_g.values)
+    ]
+    combined.query("not peak_mag.isnull()", inplace=True)
 
-    fig, ax = plt.subplots()
+    if logplot:
+        figsize = (9, 4.5)
+    else:
+        figsize = (9, 9)
 
-    g = sns.FacetGrid(combined, col="sample", hue="classif", height=4, aspect=1)
-    g.map(
-        sns.histplot,
-        "peak g-band mag (AB)",
-        multiple="stack",
-        binrange=(16, 21),
-        bins=12,
-        log_scale=(False, True),
-    )
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize, sharey=True)
 
-    # sns.histplot(
-    #     data=sample_nuc,
-    #     x="peak_mag_g",
-    #     hue="classif",
-    #     multiple="stack",
-    #     binrange=(16, 21),
-    #     log_scale=(False, True),
-    #     bins=12,
-    # )
+    sample_ax = {ax1: "nuclear", ax2: "bts"}
 
-    # title = f"cuts: {cuts}, nuc={len(peak_gmag)}, bts={len(peak_gmag_bts)}"
+    for ax in [ax1, ax2]:
 
-    # fig.suptitle(
-    #     title,
-    #     fontsize=14,
-    # )
+        ax.spines["right"].set_visible(False)
+        ax.spines["top"].set_visible(False)
 
-    # ax.hist(peak_gmag_bts, bins=12, range=[16, 21], label="bts", fill=False, ec="blue")
-    # ax.hist(peak_gmag_nuc, bins=12, range=[16, 21], label="nuc", fill=False, ec="red")
+        peak_mags = []
 
-    plt.legend()
+        colors_used = []
+        classifs_used = []
+        sample_title = sample_ax[ax]
 
-    outfile = os.path.join(io.LOCALSOURCE_plots, f"maghist_{cuts}.pdf")
+        for c in classifs:
+            df = combined.query(f"classif == @c and sample == @sample_title")
+            if len(df) > 0:
+                peak_mags.append(df["peak_mag"].values)
+                colors_used.append(colordict[c])
+                classifs_used.append(c + f" ({len(df)})")
+
+        ax.set_title(
+            f"sample = {sample_title} ({len(combined.query('sample == @sample_title'))})"
+        )
+
+        ax.hist(
+            peak_mags,
+            bins=12,
+            edgecolor="black",
+            density=False,
+            histtype="bar",
+            stacked=True,
+            range=(16, 21),
+            color=colors_used,
+            label=classifs_used,
+        )
+        if logplot:
+            ax.set_yscale("log")
+
+        if sample_title == "nuclear":
+            ax.set_ylabel("Count", fontsize=11)
+        ax.set_xlabel("Peak mag (AB)", fontsize=11)
+        if logplot:
+            ax.set_ylim((1, 1500))
+
+        ax.legend(fontsize=11, loc=legendpos[sample_title])
+
+    plt.tight_layout()
+
+    if logplot:
+        outfile = os.path.join(
+            io.LOCALSOURCE_plots, "maghist", f"maghist_{cuts}_log.pdf"
+        )
+    else:
+        outfile = os.path.join(
+            io.LOCALSOURCE_plots, "maghist", f"maghist_{cuts}_lin.pdf"
+        )
+    print(outfile)
     plt.savefig(outfile)
     plt.close()
 

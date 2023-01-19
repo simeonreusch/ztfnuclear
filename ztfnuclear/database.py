@@ -10,6 +10,7 @@ from pymongo.database import Database
 import pandas as pd
 from healpy import ang2pix  # type: ignore
 from extcats import CatalogPusher, CatalogQuery  # type: ignore
+import astropy
 
 from ztfnuclear import io
 
@@ -441,7 +442,7 @@ class WISE(object):
         os.remove(os.path.join(io.LOCALSOURCE_WISE, "WISE.csv"))
 
     def query(
-        self, ra_deg: float, dec_deg: float, searchradius_arcsec: float
+        self, ra_deg: float, dec_deg: float, searchradius_arcsec: float = 3
     ) -> Optional[dict]:
         mqc_query = CatalogQuery.CatalogQuery(
             cat_name="allwise",
@@ -466,3 +467,113 @@ class WISE(object):
 
         else:
             return None
+
+
+class SarahAGN(object):
+    """
+    Interface with WISE MongoDB
+    """
+
+    def __init__(self):
+        super(SarahAGN, self).__init__()
+
+        self.logger = logging.getLogger(__name__)
+        items_in_coll = self.get_statistics()
+        if items_in_coll == 0:
+            self.logger.warn(
+                "Sarah Mechbal's AGN catalogue needs to be ingested. Proceeding to do so"
+            )
+            self.ingest_agncat()
+
+    def get_statistics(self):
+        """
+        Test the connection to the database
+        """
+        mongo_client: MongoClient = MongoClient("localhost", MONGO_PORT)
+        client = mongo_client
+        db = client.sarah_agn
+        items_in_coll = db.command("collstats", "sources")["count"]
+        self.logger.debug(f"Database contains {items_in_coll} entries")
+        return items_in_coll
+
+    def ingest_agncat(self):
+        """
+        Ingest the WISE catalogue from the parquet file
+        """
+        self.logger.info("Ingesting AGN catalogue by Sarah Mechbal")
+
+        mqp = CatalogPusher.CatalogPusher(
+            catalog_name="sarah_agn",
+            # data_source=hdul[1].data,
+            data_source=io.LOCALSOURCE_sarah_agn,
+            file_type=".fits",
+        )
+
+        mqp.assign_file_reader(
+            reader_func=astropy.table.Table,
+            read_chunks=False,
+        )
+
+        def _mqc_modifier(srcdict: dict):
+            """
+            format coordinates into geoJSON type:
+            # unfortunately mongo needs the RA to be folded into -180, +180
+            """
+            ra = srcdict["RA"] if srcdict["RA"] < 180.0 else srcdict["RA"] - 360.0
+            srcdict["pos"] = {
+                "type": "Point",
+                "coordinates": [ra, srcdict["DEC"]],
+            }
+
+            # add healpix index
+            srcdict["hpxid_16"] = int(
+                ang2pix(2**16, srcdict["RA"], srcdict["DEC"], lonlat=True, nest=True)
+            )
+
+            return srcdict
+
+        # Modify the the source dictionary with the above defined function
+        mqp.assign_dict_modifier(_mqc_modifier)
+
+        # And now we push to Mongo
+        mqp.push_to_db(
+            coll_name="sources",
+            index_on=["hpxid_16", [("pos", GEOSPHERE)]],
+            index_args=[{}, {}],
+            overwrite_coll=True,
+            append_to_coll=False,
+            tableindex=1,
+        )
+
+        mqp.healpix_meta(
+            healpix_id_key="hpxid_16", order=16, is_indexed=True, nest=True
+        )
+        mqp.science_meta(
+            contact="Sarah Mechbal",
+            email="sarah.mechbal@desy.de",
+            description="A ML-reconstructed AGN catalogue",
+            reference="S. Mechbal, M. Ackermann, M. Kowalski, Applications of machine learning tools in the study of AGN physical properties, A&A 2023",
+        )
+
+    def query(
+        self, ra_deg: float, dec_deg: float, searchradius_arcsec: float = 3
+    ) -> dict | None:
+        mqc_query = CatalogQuery.CatalogQuery(
+            cat_name="sarah_agn",
+            coll_name="sources",
+            ra_key="RA",
+            dec_key="DEC",
+            dbclient=None,
+        )
+
+        res = mqc_query.findwithin(
+            ra=ra_deg, dec=dec_deg, rs_arcsec=searchradius_arcsec, method="healpix"
+        )
+        if res:
+            df = res.to_pandas()
+            df.rename(columns={"DEC": "Dec"}, inplace=True)
+            res = df.to_dict()
+        else:
+            res = None
+
+        return res

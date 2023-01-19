@@ -6,7 +6,7 @@ authors = ["simeonreusch <simeon.reusch@desy.de>"]
 license = "BSD-3-Clause"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.12"
+python = ">=3.10,<3.12"
 pandas = "^1.4.3"
 numpy = "^1.23.2"
 tqdm = "^4.64.0"

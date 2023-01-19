@@ -41,6 +41,9 @@ if os.getenv("ZTFDATA"):
     LOCALSOURCE_bts_peak_mags = os.path.join(LOCALSOURCE, "BTS", "peak_mag.csv")
     LOCALSOURCE_ZTF_tdes = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "ztf_tdes.csv")
     LOCALSOURCE_WISE = os.path.join(LOCALSOURCE, "WISE")
+    LOCALSOURCE_sarah_agn = os.path.join(
+        LOCALSOURCE, "ML_reconstructed_AGN_catalogue.fits"
+    )
     LOCALSOURCE_WISE_lc_by_pos = os.path.join(
         LOCALSOURCE, "FINAL_SAMPLE", "wise_lightcurves_by_pos.json"
     )
