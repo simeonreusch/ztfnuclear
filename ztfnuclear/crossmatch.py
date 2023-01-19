@@ -240,6 +240,7 @@ def query_wise_cat(
                     "Dec": np.degrees(final_res["WISE_cat"]["Dec"]),
                 }
             )
+            logger.debug("WISE cat (AMPEL): Match found")
             return final_res
 
     return {"WISE_cat": {}}
@@ -258,8 +259,8 @@ def query_wise(ra_deg: float, dec_deg: float, searchradius_arcsec: float = 20) -
     if res:
         logger.debug("WISE: Match found")
         return {"WISE": res}
-    else:
-        return {"WISE": {}}
+
+    return {"WISE": {}}
 
 
 def query_sarah_agn(
@@ -275,8 +276,8 @@ def query_sarah_agn(
     if res:
         logger.debug("Sarah AGN: Match found")
         return {"Sarah_agn": res}
-    else:
-        return {"Sarah_agn": {}}
+
+    return {"Sarah_agn": {}}
 
 
 def query_ampel_dist(ztfid: str) -> dict:

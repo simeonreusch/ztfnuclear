@@ -520,15 +520,25 @@ class SarahAGN(object):
             format coordinates into geoJSON type:
             # unfortunately mongo needs the RA to be folded into -180, +180
             """
-            ra = srcdict["RA"] if srcdict["RA"] < 180.0 else srcdict["RA"] - 360.0
+            ra = (
+                srcdict["ALLW_RA"]
+                if srcdict["ALLW_RA"] < 180.0
+                else srcdict["ALLW_RA"] - 360.0
+            )
             srcdict["pos"] = {
                 "type": "Point",
-                "coordinates": [ra, srcdict["DEC"]],
+                "coordinates": [ra, srcdict["ALLW_DEC"]],
             }
 
             # add healpix index
             srcdict["hpxid_16"] = int(
-                ang2pix(2**16, srcdict["RA"], srcdict["DEC"], lonlat=True, nest=True)
+                ang2pix(
+                    2**16,
+                    srcdict["ALLW_RA"],
+                    srcdict["ALLW_DEC"],
+                    lonlat=True,
+                    nest=True,
+                )
             )
 
             return srcdict
@@ -563,8 +573,8 @@ class SarahAGN(object):
         mqc_query = CatalogQuery.CatalogQuery(
             cat_name="sarah_agn",
             coll_name="sources",
-            ra_key="RA",
-            dec_key="DEC",
+            ra_key="ALLW_RA",
+            dec_key="ALLW_DEC",
             dbclient=None,
         )
 
@@ -573,7 +583,7 @@ class SarahAGN(object):
         )
         if res:
             df = res.to_pandas()
-            df.rename(columns={"DEC": "Dec"}, inplace=True)
+            df.rename(columns={"ALLW_RA": "RA", "ALLW_DEC": "Dec"}, inplace=True)
             res = df.to_dict()
         else:
             res = None
