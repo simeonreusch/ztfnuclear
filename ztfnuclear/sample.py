@@ -1029,6 +1029,7 @@ class Transient(object):
             query_tns,
             query_wise_cat,
             query_ampel_dist,
+            query_sarah_agn,
         )
 
         results = self.meta["crossmatch"]
@@ -1042,6 +1043,7 @@ class Transient(object):
             res_list.append(query_gaia(ra_deg=self.ra, dec_deg=self.dec))
             res_list.append(query_wise(ra_deg=self.ra, dec_deg=self.dec))
             res_list.append(query_tns(ra_deg=self.ra, dec_deg=self.dec))
+            res_list.apend(query_sarah_agn(ra_deg=self.ra, dec_deg=self.dec))
 
         else:
             if "crts" in crossmatch_types:
@@ -1062,6 +1064,8 @@ class Transient(object):
                 res_list.append(
                     {"distnr": {"dist": query_ampel_dist(ztfid=self.ztfid)}}
                 )
+            if "sarah_agn" in crossmatch_types:
+                res_list.append(query_sarah_agn(ra_deg=self.ra, dec_deg=self.dec))
 
             for res in res_list:
                 results.update(res)

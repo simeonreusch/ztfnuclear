@@ -8,7 +8,7 @@ import pandas as pd
 
 from ztfnuclear.ampel_api import ampel_api_catalog, ampel_api_distnr
 from ztfnuclear import io
-from ztfnuclear.database import WISE
+from ztfnuclear.database import WISE, SarahAGN
 
 logger = logging.getLogger(__name__)
 
@@ -212,7 +212,7 @@ def query_tns(
 
 
 def query_wise_cat(
-    ra_deg: float, dec_deg: float, searchradius_arcsec: float = 1.5
+    ra_deg: float, dec_deg: float, searchradius_arcsec: float = 3
 ) -> dict | None:
     """
     Query the AMPEL-hosted WISE catalogue
@@ -260,6 +260,23 @@ def query_wise(ra_deg: float, dec_deg: float, searchradius_arcsec: float = 20) -
         return {"WISE": res}
     else:
         return {"WISE": {}}
+
+
+def query_sarah_agn(
+    ra_deg: float, dec_deg: float, searchradius_arcsec: float = 3
+) -> dict:
+    """
+    Query the local AGN catalog that Sarah curated
+    """
+    agn = SarahAGN()
+    res = agn.query(
+        ra_deg=ra_deg, dec_deg=-dec_deg, searchradius_arcsec=searchradius_arcsec
+    )
+    if res:
+        logger.debug("Sarah AGN: Match found")
+        return {"Sarah_agn": res}
+    else:
+        return {"Sarah_agn": {}}
 
 
 def query_ampel_dist(ztfid: str) -> dict:
