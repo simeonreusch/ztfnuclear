@@ -423,6 +423,7 @@ class WISE(object):
 
         # And now we push to Mongo
         mqp.push_to_db(
+            dbclient=MongoClient("localhost", MONGO_PORT),
             coll_name="allwise",
             index_on=["hpxid_16", [("pos", GEOSPHERE)]],
             index_args=[{}, {}],
@@ -537,6 +538,7 @@ class SarahAGN(object):
 
         # And now we push to Mongo
         mqp.push_to_db(
+            dbclient=MongoClient("localhost", MONGO_PORT),
             coll_name="sources",
             index_on=["hpxid_16", [("pos", GEOSPHERE)]],
             index_args=[{}, {}],
