@@ -1032,7 +1032,7 @@ class Transient(object):
             query_sarah_agn,
         )
 
-        results = self.meta["crossmatch"]
+        results = self.meta.get("crossmatch", {})
         res_list = []
 
         if crossmatch_types is None:

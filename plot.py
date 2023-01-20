@@ -61,7 +61,7 @@ def aggregate_cuts(
                 ylim=ylim,
             )
         if plottype == "mag":
-            plot_mag_hist(cuts=cuts_now, logplot=False)
+            plot_mag_hist(cuts=cuts_now, logplot=True, plotext="pdf")
 
 
 def iterate_classes(

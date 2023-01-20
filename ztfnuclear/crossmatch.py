@@ -264,7 +264,7 @@ def query_wise(ra_deg: float, dec_deg: float, searchradius_arcsec: float = 20) -
 
 
 def query_sarah_agn(
-    ra_deg: float, dec_deg: float, searchradius_arcsec: float = 3
+    ra_deg: float, dec_deg: float, searchradius_arcsec: float = 5
 ) -> dict:
     """
     Query the local AGN catalog that Sarah curated

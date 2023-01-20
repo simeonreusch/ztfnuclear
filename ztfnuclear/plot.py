@@ -356,7 +356,7 @@ def plot_dist_hist(classif="all", plotrange: List[float] | None = [0, 6]):
     logger.info(f"Saved to {outfile}")
 
 
-def plot_mag_hist(cuts: list | None = None, logplot=True):
+def plot_mag_hist(cuts: list | None = None, logplot=True, plotext="pdf"):
     """
     Plot the mag histogram
     """
@@ -414,9 +414,10 @@ def plot_mag_hist(cuts: list | None = None, logplot=True):
                 colors_used.append(colordict[c])
                 classifs_used.append(c + f" ({len(df)})")
 
-        ax.set_title(
-            f"sample = {sample_title} ({len(combined.query('sample == @sample_title'))})"
-        )
+        title = f"sample = {sample_title} ({len(combined.query('sample == @sample_title'))})\n"
+
+        title += f"cut stage: {cuts[-1]} "
+        ax.set_title(title)
 
         ax.hist(
             peak_mags,
@@ -444,11 +445,11 @@ def plot_mag_hist(cuts: list | None = None, logplot=True):
 
     if logplot:
         outfile = os.path.join(
-            io.LOCALSOURCE_plots, "maghist", f"maghist_{cuts}_log.pdf"
+            io.LOCALSOURCE_plots, "maghist", f"maghist_{cuts}_log.{plotext}"
         )
     else:
         outfile = os.path.join(
-            io.LOCALSOURCE_plots, "maghist", f"maghist_{cuts}_lin.pdf"
+            io.LOCALSOURCE_plots, "maghist", f"maghist_{cuts}_lin.{plotext}"
         )
     print(outfile)
     plt.savefig(outfile)
