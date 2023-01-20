@@ -35,6 +35,7 @@ def get_tde_selection(
     cuts: None | list = ["nocut"],
     sampletype: str = "nuclear",
     purity_sel: str | None = "tde",
+    ingest: bool = False,
 ) -> Tuple[pd.DataFrame, dict]:
     """
     Apply selection cuts to a pandas dataframe
@@ -139,6 +140,13 @@ def get_tde_selection(
         stats["frac_pur"] = n_after_cut / len(sample) * 100
         stats["frac_eff"] = n_after_cut / n_orig * 100
 
+    if ingest:
+        info_db = SampleInfo(sampletype=sampletype)
+        info_db.ingest_ztfid_collection(
+            ztfids=sample.ztfid.values, collection_name="tde_selection"
+        )
+        logger.info("ingested TDE selection")
+
     return sample, stats
 
 
@@ -215,12 +223,6 @@ def plot_tde_scatter(
     logger.info(f"Saved to {outfile}")
 
     plt.close()
-
-    if ingest:
-
-        info_db.ingest_ztfid_collection(
-            ztfids=sample.ztfid.values, collection_name="tde_selection"
-        )
 
 
 def plot_tde_scatter_seaborn(
@@ -304,12 +306,6 @@ def plot_tde_scatter_seaborn(
     plt.close()
 
     logger.info(f"Saved to {outfile}")
-
-    if ingest:
-
-        info_db.ingest_ztfid_collection(
-            ztfids=sample.ztfid.values, collection_name="tde_selection"
-        )
 
 
 def plot_dist_hist(classif="all", plotrange: List[float] | None = [0, 6]):
@@ -432,7 +428,7 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plotext="pdf"):
             ax.set_ylabel("Count", fontsize=11)
         ax.set_xlabel("Peak mag (AB)", fontsize=11)
         if logplot:
-            ax.set_ylim((1, 1500))
+            ax.set_ylim((0.9, 1500))
 
         ax.legend(fontsize=11, loc=legendpos[sample_title])
 

@@ -108,16 +108,16 @@ axislabels:
   wise_w2w3: Wise W2-W3
 
 cutlabels:
-  temp: temperature
+  temp: temperature (based on TDE fit)
   wise: AGN cut (WISE color)
   bayes: "exactly 1 flare"
   nocut: "no cuts applied (only bogus and TDE fit success)"
   snia: "rise/decay based Ia cut"
   chisq: "chisq. cut (TDE < SALT)"
   risedecay: "TDE-fit rise & decay time"
-  coredist: "Core distance <= 0.4 arcsec"
-  milliquas_noagn: "remove AGN based on Milliquas match"
-  milliquas_keepagn: "keep only AGN based on Milliquas match"
+  coredist: "core distance <= 0.4 arcsec"
+  milliquas_noagn: "remove AGN (based on Milliquas match)"
+  milliquas_keepagn: "retain only AGN (based on Milliquas match)"
 
 fritz_queries:
     snia: fritz_class in @config['fritz_sn_ia']

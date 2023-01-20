@@ -39,7 +39,7 @@ def aggregate_cuts(
         cuts_to_use = [
             "nocut",
             "coredist",
-            "milliquas_keepagn",
+            "milliquas_noagn",
             "snia",
             "temp",
             "risedecay",
@@ -62,7 +62,7 @@ def aggregate_cuts(
                 ylim=ylim,
             )
         if plottype == "mag":
-            plot_mag_hist(cuts=cuts_now, logplot=True, plotext="pdf")
+            plot_mag_hist(cuts=cuts_now, logplot=True, plotext="png")
 
 
 def iterate_classes(
