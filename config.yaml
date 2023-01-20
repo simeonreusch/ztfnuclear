@@ -177,13 +177,14 @@ cuts:
     - flaring_chisq
     - flaring_temp
     - flaring_wise
+  coredist:
+    - coredist
   nocut:
     - all
-    - coredist
   milliquas_noagn:
     - milliquas_no_agn
-  milliquas_keep_agn:
-    - milliquas_keepagn
+  milliquas_keepagn:
+    - milliquas_keep_agn
   boundary:
     - boundary
   wise:
