@@ -414,11 +414,6 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plotext="pdf"):
                 colors_used.append(colordict[c])
                 classifs_used.append(c + f" ({len(df)})")
 
-        title = f"sample = {sample_title} ({len(combined.query('sample == @sample_title'))})\n"
-
-        title += f"cut stage: {cuts[-1]} "
-        ax.set_title(title)
-
         ax.hist(
             peak_mags,
             bins=12,
@@ -441,6 +436,13 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plotext="pdf"):
 
         ax.legend(fontsize=11, loc=legendpos[sample_title])
 
+    len_nuc = len(combined.query("sample == 'nuclear'"))
+    len_bts = len(combined.query("sample == 'bts'"))
+    title = f"Nuclear: {len_nuc} / BTS: {len_bts}\n"
+
+    title += f"cut stage: {config['cutlabels'][cuts[-1]]} "
+    fig.suptitle(title)
+
     plt.tight_layout()
 
     if logplot:
@@ -451,7 +453,6 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plotext="pdf"):
         outfile = os.path.join(
             io.LOCALSOURCE_plots, "maghist", f"maghist_{cuts}_lin.{plotext}"
         )
-    print(outfile)
     plt.savefig(outfile)
     plt.close()
 

@@ -38,7 +38,8 @@ def aggregate_cuts(
     if cuts is None:
         cuts_to_use = [
             "nocut",
-            "wise",
+            "coredist",
+            "milliquas_noagn",
             "snia",
             "temp",
             "risedecay",

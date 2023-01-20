@@ -107,6 +107,18 @@ axislabels:
   wise_w1w2: Wise W1-W2
   wise_w2w3: Wise W2-W3
 
+cutlabels:
+  temp: temperature
+  wise: AGN cut (WISE color)
+  bayes: "exactly 1 flare"
+  nocut: "no cuts applied (only bogus and TDE fit success)"
+  snia: "rise/decay based Ia cut"
+  chisq: "chisq. cut (TDE < SALT)"
+  risedecay: "TDE-fit rise & decay time"
+  coredist: "Core distance <= 0.4 arcsec"
+  milliquas_noagn: "remove AGN based on Milliquas match"
+  milliquas_keepagn: "keep only AGN based on Milliquas match"
+
 fritz_queries:
     snia: fritz_class in @config['fritz_sn_ia']
     unclass: fritz_class not in @config['fritz_sn_ia'] and fritz_class not in @config['fritz_tde'] and fritz_class not in @config['fritz_sn_other'] and fritz_class not in @config['fritz_other'] and fritz_class not in @config['fritz_agn_star']
@@ -131,11 +143,14 @@ selections: &id001
   snia: "snia_cut < decay "
   overlapping_regions: "overlapping_regions == 1 "
   wise: "((wise_w1w2<0.3 or wise_w1w2>1.8) or (wise_w2w3 <1.5 or wise_w2w3>3.5)) "
+  milliquas_no_agn: "crossmatch_Milliquas_type.isnull() "
+  milliquas_keep_agn: "not crossmatch_Milliquas_type.isnull() "
   gold_wise: "(not (wise_w1w2<-0.1 or wise_w1w2>1.1 or wise_w2w3 <1.4 or wise_w2w3>4.3)) "
   flaring_wise: "(not (wise_w1w2<-0.1 or wise_w1w2>1.1 or wise_w2w3 <1.5 or wise_w2w3>4) "
   gold_risedecay: "0.9<rise<2.5 and 1.5<decay<3.8 "
   flaring_risedecay: "1.4<decay<4 and 0.8<rise<2.5 "
   flaring: "ztfid in @flaring_ztfids "
+  coredist: "distnr_distnr <= 0.4"
 
     # # that's the one for dtemp = 15k, evolution from peak, bolcorr
     # tde_selection_finetuned = "temp > 3.93 and temp < 4.38 and d_temp>-90 and d_temp < 140 and rise>0.85 and rise<2.05 and decay>1.1 and decay<3 and red_chisq<6 and red_chisq < salt_red_chisq"
@@ -164,6 +179,11 @@ cuts:
     - flaring_wise
   nocut:
     - all
+    - coredist
+  milliquas_noagn:
+    - milliquas_no_agn
+  milliquas_keep_agn:
+    - milliquas_keepagn
   boundary:
     - boundary
   wise:
