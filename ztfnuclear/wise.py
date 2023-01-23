@@ -10,8 +10,6 @@ import numpy as np
 from timewise.parent_sample_base import ParentSampleBase
 from timewise.wise_data_by_visit import WiseDataByVisit
 
-test_sample = pd.read_csv("test_sample.csv", index_col=0)
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logging.getLogger("timewise.wise_data_by_visit").setLevel(logging.DEBUG)
@@ -42,12 +40,11 @@ def get_wise_photometry(
         n_chunks=1,
     )
 
-    wise_lcs = tw_sample_init.load_binned_lcs(service=SERVICE)
+    wise_lcs = tw_sample_init.load_data_product(service=SERVICE)
     if not wise_lcs:
         logger.info("No data present, issuing WISE query for the sample.")
         tw_sample_init.get_photometric_data(service=SERVICE, nthreads=1)
-        wise_lcs = tw_sample_init.load_binned_lcs(service=SERVICE)
-
+        wise_lcs = tw_sample_init.load_data_product(service=SERVICE)
 
     # Now we reindex with the proper ZTF IDs
     _wise_lcs = copy.deepcopy(wise_lcs)
@@ -57,14 +54,15 @@ def get_wise_photometry(
 
     for vegamag_key in ["W1_mean_mag", "W2_mean_mag"]:
         for ztfid in wise_lcs.keys():
-            vegamags = wise_lcs[ztfid][vegamag_key]
+            # print(wise_lcs[ztfid]["timewise_lightcurve"].keys())
+            vegamags = wise_lcs[ztfid]["timewise_lightcurve"][vegamag_key]
             abmags = {}
             for epoch in vegamags.keys():
                 vegamag = vegamags[epoch]
                 abmag = vega_to_abmag(vegamag, vegamag_key[:2])
                 abmags.update({epoch: abmag})
 
-            wise_lcs[ztfid][vegamag_key + "_ab"] = abmags
+            wise_lcs[ztfid]["timewise_lightcurve"][vegamag_key + "_ab"] = abmags
 
     returndict = {}
 
@@ -93,12 +91,17 @@ if __name__ == "__main__":
     """
     Run the WISE query
     """
-    positional_search = False
+    positional_search = True
 
-    full_sample = pd.read_csv("full_sample.csv", index_col=0)
+    test_sample = pd.read_csv(
+        "/Users/simeon/ztfnuclear/wise_test_sample.csv", index_col=0
+    )
+    full_sample = pd.read_csv(
+        "/Users/simeon/ztfnuclear/wise_full_sample.csv", index_col=0
+    )
 
     wise_lcs = get_wise_photometry(
-        sample_df=full_sample, searchradius_arcsec=5, positional=positional_search
+        sample_df=test_sample, searchradius_arcsec=5, positional=positional_search
     )
 
     if positional_search:
