@@ -103,7 +103,7 @@ class User(UserMixin, db.Document):
 
 sample_ztfids = NuclearSample().ztfids
 info_db = SampleInfo()
-flaring_ztfids = info_db.read()["flaring"]["ztfids"]
+flaring_ztfids = info_db.read()["flaring"]
 
 
 @app.route("/")

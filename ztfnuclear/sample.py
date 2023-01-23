@@ -40,6 +40,26 @@ class NuclearSample(object):
         self.info_db = SampleInfo(sampletype=self.sampletype)
 
         if self.sampletype == "nuclear":
+            if self.info_db.read().get("flaring") is None:
+                flaring_ztfids = []
+                logger.info("Flaring info not found, ingesting")
+                for t in tqdm(self.get_transients(), total=len(self.ztfids)):
+                    flaring_status = None
+                    bayes = t.meta.get("WISE_bayesian", {})
+                    if bayes:
+                        dustecho = bayes.get("dustecho", {})
+                        if dustecho:
+                            flaring_status = dustecho.get("status")
+
+                    if flaring_status:
+                        if flaring_status != "No further investigation":
+                            # baseline_end_jd = dustecho["values"][0]["baseline_jd"][-1]
+                            # peak_optical = min(t.meta.get("peak_dates").values())
+                            # if baseline_end_jd > peak_optical:
+                            flaring_ztfids.append(t.ztfid)
+                self.info_db.ingest_ztfid_collection(flaring_ztfids, "flaring")
+
+        if self.sampletype == "nuclear":
             db_check = self.meta.get_statistics()
 
             if not db_check["has_ra"]:
@@ -310,7 +330,7 @@ class NuclearSample(object):
         Get the transient following the current one in the sample
         """
         if flaring:
-            flaring_ztfids = self.info_db.read()["flaring"]["ztfids"]
+            flaring_ztfids = self.info_db.read()["flaring"]
             idx = flaring_ztfids.index(ztfid)
 
             if idx == len(flaring_ztfids) - 1:
@@ -328,7 +348,7 @@ class NuclearSample(object):
         Get the transient following the current one in the sample
         """
         if flaring:
-            flaring_ztfids = self.info_db.read()["flaring"]["ztfids"]
+            flaring_ztfids = self.info_db.read()["flaring"]
             idx = flaring_ztfids.index(ztfid)
             return flaring_ztfids[idx - 1]
 

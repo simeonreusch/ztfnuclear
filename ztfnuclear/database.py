@@ -22,6 +22,8 @@ if hostname == "wgs33.zeuthen.desy.de":
 else:
     MONGO_PORT = 27017
 
+logger = logging.getLogger(__name__)
+
 
 class SampleInfo(object):
     """
