@@ -62,7 +62,7 @@ def aggregate_cuts(
                 ylim=ylim,
             )
         if plottype == "mag":
-            plot_mag_hist(cuts=cuts_now, logplot=True, plot_ext="png")
+            plot_mag_hist(cuts=cuts_now, logplot=True, plot_ext="png", rerun=False)
 
 
 def iterate_classes(
@@ -78,6 +78,6 @@ def iterate_classes(
         plot_dist_hist(classif=c)
 
 
-aggregate_cuts(plottype="scatter", sampletype=SAMPLE)
+aggregate_cuts(plottype="mag", sampletype=SAMPLE)  # , cuts=["milliquas_noagn"])
 # aggregate_cuts(sampletype=SAMPLE)
 # iterate_classes()

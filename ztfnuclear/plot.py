@@ -83,7 +83,7 @@ def get_tde_selection(
             else:
                 ztfids_surviving.update({name: cutres})
 
-    if len(cuts_to_do) > 1:
+    if len(cuts_to_do) > 0:
 
         s = NuclearSample(sampletype=sampletype)
         sample = s.meta.get_dataframe(
@@ -113,21 +113,37 @@ def get_tde_selection(
             else:
                 class_key = "type"
 
+            if "crossmatch_bts_class" in row.keys():
+                bts_crossmatch = row["crossmatch_bts_class"]
+            else:
+                bts_crossmatch = None
+
             if purity_sel == "gold":
                 if row["ztfid"] in gold_sample:
                     return "gold"
-            if row[class_key] in config["tde"] or row["tns_class"] in config["tde"]:
+            if (
+                row[class_key] in config["tde"]
+                or row["tns_class"] in config["tde"]
+                or bts_crossmatch in config["tde"]
+            ):
                 return "tde"
-            if row[class_key] in config["sn_ia"] or row["tns_class"] in config["sn_ia"]:
+            if (
+                row[class_key] in config["sn_ia"]
+                or row["tns_class"] in config["sn_ia"]
+                or bts_crossmatch in config["sn_ia"]
+            ):
                 return "snia"
             if (
                 row[class_key] in config["sn_other"]
                 or row["tns_class"] in config["sn_other"]
+                or bts_crossmatch in config["sn_other"]
             ):
                 return "sn_other"
-            if sampletype == "bts" and row[class_key] in config["agn_star"]:
+            if (
+                sampletype == "bts" and row[class_key] in config["agn_star"]
+            ) or bts_crossmatch in config["agn_star"]:
                 return "agn_star"
-            if row[class_key] in config["other"]:
+            if row[class_key] in config["other"] or bts_crossmatch in config["other"]:
                 return "other"
             return "unclass"
 
@@ -177,7 +193,14 @@ def get_tde_selection(
     surviving = list(set(ztfid_list[0]).intersection(*[set(i) for i in ztfid_list[1:]]))
 
     sample = NuclearSample(sampletype=sampletype).meta.get_dataframe(
-        params=["_id", "distnr", class_key, "peak_mags", "classif", "tde_fit_exp"],
+        params=[
+            "distnr",
+            class_key,
+            "peak_mags",
+            "classif",
+            "tde_fit_exp",
+            "crossmatch",
+        ],
         ztfids=surviving,
     )
 
@@ -397,7 +420,6 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plot_ext="pdf", rerun=
     """
     Plot the mag histogram
     """
-    # info_db = SampleInfo(sampletype=sampletype)
 
     classifs = ["tde", "other", "agn_star", "sn_other", "snia", "unclass"]
     colordict = {
@@ -409,6 +431,7 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plot_ext="pdf", rerun=
         "agn_star": "#a98078",
     }
     legendpos = {"nuclear": "upper left", "bts": "upper right"}
+
     sample_nuc = get_tde_selection(cuts=cuts, sampletype="nuclear", rerun=rerun)
     sample_bts = get_tde_selection(cuts=cuts, sampletype="bts", rerun=rerun)
 

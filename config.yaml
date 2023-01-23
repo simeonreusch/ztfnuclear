@@ -108,6 +108,7 @@ axislabels:
   wise_w2w3: Wise W2-W3
 
 cutlabels:
+  full: All cuts
   temp: temperature (based on TDE fit)
   wise: AGN cut (WISE color)
   bayes: "exactly 1 flare"
@@ -160,11 +161,12 @@ selections: &id001
 cuts:
   full: 
     - risedecay
+    - coredist
     - chisq
     - temp
     - snia
     - overlapping_regions
-    - wise
+    - milliquas_no_agn
   goldfull:
     - gold_risedecay
     - gold_chisq

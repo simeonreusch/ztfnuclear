@@ -280,6 +280,21 @@ def query_sarah_agn(
     return {"Sarah_agn": {}}
 
 
+def query_bts(ztfid) -> dict:
+    """
+    Query the local BTS csv file
+    """
+    bts_df = pd.read_csv(io.LOCALSOURCE_bts_info)
+    bts_df.query("ZTFID == @ztfid", inplace=True)
+
+    res = {}
+
+    if len(bts_df["type"]) > 0:
+        res.update({"class": bts_df["type"].values[0]})
+
+    return res
+
+
 def query_ampel_dist(ztfid: str) -> dict:
     """
     Gets the median core distance from Ampel alerts
