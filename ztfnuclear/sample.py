@@ -178,6 +178,19 @@ class NuclearSample(object):
 
         self.meta.update_many(ztfids=ztfids, data=data_list)
 
+    def populate_db_from_df(self, df: pd.DataFrame):
+        """
+        Use a pandas dataframe to update the MongoDB
+        """
+        self.logger.info("Populating the database from a pandas dataframe")
+
+        ztfids = df.index.values
+        data_dict = df.to_dict(orient="index")
+        data_list = []
+        for ztfid in ztfids:
+            data_list.append(data_dict[ztfid])
+        self.meta.update_many(ztfids=ztfids, data=data_list)
+
     def populate_db_from_ampel_json(self, json_path: str):
         """
         Use an AMPEL json export to populate the sample db

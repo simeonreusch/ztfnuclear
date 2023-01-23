@@ -35,7 +35,7 @@ def get_tde_selection(
     cuts: None | list = ["nocut"],
     sampletype: str = "nuclear",
     purity_sel: str | None = "tde",
-    ingest: bool = False,
+    rerun: bool = False,
 ) -> Tuple[pd.DataFrame, dict]:
     """
     Apply selection cuts to a pandas dataframe
@@ -44,6 +44,18 @@ def get_tde_selection(
 
     def snia_diag_cut(x):
         return 3.55 - 2.29 * x
+
+    def expand_cuts(cuts):
+        # subcuts = config["cuts"][cut]
+        cutdict = {}
+        for cut in cuts:
+            subcut_values = [config["selections"][k] for k in config["cuts"][cut]]
+            subcut_names = config["cuts"][cut]
+
+            for i, name in enumerate(subcut_names):
+                cutdict.update({name: subcut_values[i]})
+
+        return cutdict
 
     if sampletype == "nuclear":
         salt_key = "salt_loose_bl"
@@ -55,99 +67,134 @@ def get_tde_selection(
     if cuts is None:
         cuts = ["nocut"]
 
-    sample = NuclearSample(sampletype=sampletype).meta.get_dataframe(
-        params=[
-            "tde_fit_exp",
-            "_id",
-            "distnr",
-            class_key,
-            "crossmatch",
-            "WISE_bayesian",
-            salt_key,
-            "ZTF_bayesian",
-            "peak_mags",
-        ]
-    )
+    info_db = SampleInfo(sampletype=sampletype)
 
-    # cut everything flagged as bogus
-    if sampletype == "nuclear":
-        sample.query(config["selections"]["bogus"], inplace=True)
+    cutdict = expand_cuts(cuts)
+    ztfids_surviving = {}
+
+    if rerun:
+        cuts_to_do = cutdict
     else:
-        sample.query(config["selections"]["bogusbts"], inplace=True)
+        cuts_to_do = {}
+        for name, c in cutdict.items():
+            cutres = info_db.read_collection(f"cut_{sampletype}_{name}")
+            if cutres is None:
+                cuts_to_do.update({name: c})
+            else:
+                ztfids_surviving.update({name: cutres})
 
-    def simple_class(row, sampletype, purity_sel):
-        """Add simple classification labels"""
-        if sampletype == "nuclear":
-            class_key = "fritz_class"
-        else:
-            class_key = "type"
+    if len(cuts_to_do) > 1:
 
-        if purity_sel == "gold":
-            if row["ztfid"] in gold_sample:
-                return "gold"
-        if row[class_key] in config["tde"] or row["tns_class"] in config["tde"]:
-            return "tde"
-        if row[class_key] in config["sn_ia"] or row["tns_class"] in config["sn_ia"]:
-            return "snia"
-        if (
-            row[class_key] in config["sn_other"]
-            or row["tns_class"] in config["sn_other"]
-        ):
-            return "sn_other"
-        if sampletype == "bts" and row[class_key] in config["agn_star"]:
-            return "agn_star"
-        if row[class_key] in config["other"]:
-            return "other"
-        return "unclass"
-
-    sample["classif"] = sample.apply(
-        lambda row: simple_class(row, sampletype, purity_sel), axis=1
-    )
-
-    n_tot = len(sample)
-    n_nofit = len(sample.query("success.isnull()"))
-    n_fit = len(sample.query("not success.isnull()"))
-    n_fitfail = len(sample.query("success == False"))
-
-    # Only use transients with fit success
-    sample.query("success == True", inplace=True)
-
-    stats = {Any: Any}
-
-    if purity_sel is not None:
-        n_orig = len(sample.query("classif == @purity_sel"))
-        stats["n_orig"] = n_orig
-
-    sample["snia_cut"] = snia_diag_cut(sample["rise"])
-
-    logger.info(
-        f"Stats: has no fit entry: {n_nofit} / has fit entry: {n_fit} / fit fail: {n_fitfail} / fit success: {len(sample)}"
-    )
-
-    # Now we cut!
-    for c in cuts:
-        cut_aggregated = "".join(
-            [
-                config["selections"][k] if i == 0 else "and " + config["selections"][k]
-                for i, k in enumerate(config["cuts"][c])
+        s = NuclearSample(sampletype=sampletype)
+        sample = s.meta.get_dataframe(
+            params=[
+                "tde_fit_exp",
+                "_id",
+                "distnr",
+                class_key,
+                "crossmatch",
+                "WISE_bayesian",
+                salt_key,
+                "ZTF_bayesian",
+                "peak_mags",
             ]
         )
-        logger.info(f"Cuts applied: {cut_aggregated}")
-        sample.query(cut_aggregated, inplace=True)
 
-    if purity_sel is not None:
-        n_after_cut = len(sample.query("classif == @purity_sel"))
-        stats["frac_pur"] = n_after_cut / len(sample) * 100
-        stats["frac_eff"] = n_after_cut / n_orig * 100
+        # cut everything flagged as bogus
+        if sampletype == "nuclear":
+            sample.query(config["selections"]["bogus"], inplace=True)
+        else:
+            sample.query(config["selections"]["bogusbts"], inplace=True)
 
-    if ingest:
-        info_db = SampleInfo(sampletype=sampletype)
-        info_db.ingest_ztfid_collection(
-            ztfids=sample.ztfid.values, collection_name="tde_selection"
+        def simple_class(row, sampletype, purity_sel):
+            """Add simple classification labels"""
+            if sampletype == "nuclear":
+                class_key = "fritz_class"
+            else:
+                class_key = "type"
+
+            if purity_sel == "gold":
+                if row["ztfid"] in gold_sample:
+                    return "gold"
+            if row[class_key] in config["tde"] or row["tns_class"] in config["tde"]:
+                return "tde"
+            if row[class_key] in config["sn_ia"] or row["tns_class"] in config["sn_ia"]:
+                return "snia"
+            if (
+                row[class_key] in config["sn_other"]
+                or row["tns_class"] in config["sn_other"]
+            ):
+                return "sn_other"
+            if sampletype == "bts" and row[class_key] in config["agn_star"]:
+                return "agn_star"
+            if row[class_key] in config["other"]:
+                return "other"
+            return "unclass"
+
+        sample["classif"] = sample.apply(
+            lambda row: simple_class(row, sampletype, purity_sel), axis=1
         )
-        logger.info("ingested TDE selection")
+        s.populate_db_from_df(sample[["classif"]])
 
-    return sample, stats
+        n_tot = len(sample)
+        n_nofit = len(sample.query("success.isnull()"))
+        n_fit = len(sample.query("not success.isnull()"))
+        n_fitfail = len(sample.query("success == False"))
+
+        # Only use transients with fit success
+        sample.query("success == True", inplace=True)
+
+        # stats = {Any: Any}
+
+        # if purity_sel is not None:
+        #     n_orig = len(sample.query("classif == @purity_sel"))
+        #     stats["n_orig"] = n_orig
+
+        sample["snia_cut"] = snia_diag_cut(sample["rise"])
+        s.populate_db_from_df(sample[["snia_cut"]])
+
+        # logger.info(
+        #     f"Stats: has no fit entry: {n_nofit} / has fit entry: {n_fit} / fit fail: {n_fitfail} / fit success: {len(sample)}"
+        # )
+
+        # Now we cut!
+        for name, c in cuts_to_do.items():
+            # cut_aggregated = "".join(
+            #     [
+            #         config["selections"][k]
+            #         if i == 0
+            #         else "and " + config["selections"][k]
+            #         for i, k in enumerate(config["cuts"][c])
+            #     ]
+            # )
+            # logger.info(f"Cuts applied: {cut_aggregated}")
+            sample_cut = sample.query(c)
+
+            # if purity_sel is not None:
+            #     n_after_cut = len(sample.query("classif == @purity_sel"))
+            #     stats["frac_pur"] = n_after_cut / len(sample) * 100
+            #     stats["frac_eff"] = n_after_cut / n_orig * 100
+
+            info_db = SampleInfo(sampletype=sampletype)
+            info_db.ingest_ztfid_collection(
+                ztfids=sample_cut.ztfid.values,
+                collection_name=f"cut_{sampletype}_{name}",
+            )
+            logger.info(f"Ingested {name} cut ztfids")
+            ztfids_surviving.update({name: sample_cut.ztfid.values})
+
+    ztfid_list = []
+    for name, ztfids in ztfids_surviving.items():
+        ztfid_list.append(ztfids)
+
+    surviving = list(set(ztfid_list[0]).intersection(*[set(i) for i in ztfid_list[1:]]))
+
+    sample = NuclearSample(sampletype=sampletype).meta.get_dataframe(
+        params=["_id", "distnr", class_key, "peak_mags", "classif"],
+        ztfids=surviving,
+    )
+
+    return sample  # , stats
 
 
 def plot_tde_scatter(
@@ -160,6 +207,7 @@ def plot_tde_scatter(
     xlim: tuple | None = None,
     ylim: tuple | None = None,
     purity_sel: str | None = "tde",
+    rerun: bool = False,
 ):
     """
     Plot the rise vs. fadetime of the TDE fit results
@@ -167,7 +215,7 @@ def plot_tde_scatter(
     info_db = SampleInfo(sampletype=sampletype)
 
     sample, stats = get_tde_selection(
-        cuts=cuts, sampletype=sampletype, purity_sel=purity_sel
+        cuts=cuts, sampletype=sampletype, purity_sel=purity_sel, rerun=rerun
     )
 
     fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
@@ -232,13 +280,14 @@ def plot_tde_scatter_seaborn(
     cuts: list | None = ["nocut"],
     sampletype: str = "nuclear",
     purity_sel: str | None = "tde",
+    rerun=False,
 ):
     """
     Plot the rise vs. fadetime of the TDE fit results
     """
     info_db = SampleInfo(sampletype=sampletype)
 
-    sample, stats = get_tde_selection(cuts=cuts, sampletype=sampletype)
+    sample, stats = get_tde_selection(cuts=cuts, sampletype=sampletype, rerun=rerun)
 
     sample_reduced = sample.query("classif != 'tde' or ztfid == 'ZTF22aagyuao'")
     # we need one TDE to survive, so we have a handle for the legend (don't ask,
@@ -352,7 +401,7 @@ def plot_dist_hist(classif="all", plotrange: List[float] | None = [0, 6]):
     logger.info(f"Saved to {outfile}")
 
 
-def plot_mag_hist(cuts: list | None = None, logplot=True, plotext="pdf"):
+def plot_mag_hist(cuts: list | None = None, logplot=True, plot_ext="pdf", rerun=False):
     """
     Plot the mag histogram
     """
@@ -368,9 +417,8 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plotext="pdf"):
         "agn_star": "#a98078",
     }
     legendpos = {"nuclear": "upper left", "bts": "upper right"}
-
-    sample_nuc, _ = get_tde_selection(cuts=cuts, sampletype="nuclear")
-    sample_bts, _ = get_tde_selection(cuts=cuts, sampletype="bts")
+    sample_nuc = get_tde_selection(cuts=cuts, sampletype="nuclear", rerun=rerun)
+    sample_bts = get_tde_selection(cuts=cuts, sampletype="bts", rerun=rerun)
 
     sample_nuc["sample"] = "nuclear"
     sample_bts["sample"] = "bts"
@@ -443,11 +491,11 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plotext="pdf"):
 
     if logplot:
         outfile = os.path.join(
-            io.LOCALSOURCE_plots, "maghist", f"maghist_{cuts}_log.{plotext}"
+            io.LOCALSOURCE_plots, "maghist", f"maghist_{cuts}_log.{plot_ext}"
         )
     else:
         outfile = os.path.join(
-            io.LOCALSOURCE_plots, "maghist", f"maghist_{cuts}_lin.{plotext}"
+            io.LOCALSOURCE_plots, "maghist", f"maghist_{cuts}_lin.{plot_ext}"
         )
     plt.savefig(outfile)
     plt.close()

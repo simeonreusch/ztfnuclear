@@ -60,7 +60,9 @@ class SampleInfo(object):
         Read a collection of ztfids from db
         """
         info = self.read()
-        return info[collection_name]
+        if info is None:
+            return None
+        return info.get(collection_name)
 
     def ingest_ztfid_collection(self, ztfids: list, collection_name: str):
         """
@@ -164,20 +166,27 @@ class MetadataDB(object):
 
         return returndict
 
-    def get_dataframe(self, params: List[str]) -> pd.DataFrame:
+    def get_dataframe(
+        self, params: List[str] | None = None, ztfids: List[str] | None = None
+    ) -> pd.DataFrame:
         """
         Get a dataframe containing all the parameters specified
         """
-        if "_id" not in params:
-            params.append("_id")
-
         search_dict = {}
-
-        for param in params:
-            search_dict.update({param: 1})
+        if params:
+            if "_id" not in params:
+                params.append("_id")
+            for param in params:
+                search_dict.update({param: 1})
 
         res_dict = {}
-        search_res = self.coll.find({}, search_dict)
+
+        if not ztfids:
+            find_dict = {}
+        else:
+            find_dict = {"_id": {"$in": ztfids}}
+
+        search_res = self.coll.find(find_dict, search_dict)
 
         from collections.abc import MutableMapping
 
