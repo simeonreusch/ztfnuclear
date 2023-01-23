@@ -159,21 +159,8 @@ def get_tde_selection(
 
         # Now we cut!
         for name, c in cuts_to_do.items():
-            # cut_aggregated = "".join(
-            #     [
-            #         config["selections"][k]
-            #         if i == 0
-            #         else "and " + config["selections"][k]
-            #         for i, k in enumerate(config["cuts"][c])
-            #     ]
-            # )
-            # logger.info(f"Cuts applied: {cut_aggregated}")
-            sample_cut = sample.query(c)
 
-            # if purity_sel is not None:
-            #     n_after_cut = len(sample.query("classif == @purity_sel"))
-            #     stats["frac_pur"] = n_after_cut / len(sample) * 100
-            #     stats["frac_eff"] = n_after_cut / n_orig * 100
+            sample_cut = sample.query(c)
 
             info_db = SampleInfo(sampletype=sampletype)
             info_db.ingest_ztfid_collection(
@@ -190,9 +177,14 @@ def get_tde_selection(
     surviving = list(set(ztfid_list[0]).intersection(*[set(i) for i in ztfid_list[1:]]))
 
     sample = NuclearSample(sampletype=sampletype).meta.get_dataframe(
-        params=["_id", "distnr", class_key, "peak_mags", "classif"],
+        params=["_id", "distnr", class_key, "peak_mags", "classif", "tde_fit_exp"],
         ztfids=surviving,
     )
+
+    # if purity_sel is not None:
+    #     n_after_cut = len(sample.query("classif == @purity_sel"))
+    #     stats["frac_pur"] = n_after_cut / len(sample) * 100
+    #     stats["frac_eff"] = n_after_cut / n_orig * 100
 
     return sample  # , stats
 
@@ -206,7 +198,7 @@ def plot_tde_scatter(
     sampletype: str = "nuclear",
     xlim: tuple | None = None,
     ylim: tuple | None = None,
-    purity_sel: str | None = "tde",
+    purity_sel: str | None = None,
     rerun: bool = False,
 ):
     """
@@ -214,7 +206,7 @@ def plot_tde_scatter(
     """
     info_db = SampleInfo(sampletype=sampletype)
 
-    sample, stats = get_tde_selection(
+    sample = get_tde_selection(
         cuts=cuts, sampletype=sampletype, purity_sel=purity_sel, rerun=rerun
     )
 
@@ -268,7 +260,7 @@ def plot_tde_scatter(
 
     plt.savefig(outfile)
 
-    logger.info(f"Saved to {outfile}")
+    logger.debug(f"Saved to {outfile}")
 
     plt.close()
 

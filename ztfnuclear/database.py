@@ -71,6 +71,13 @@ class SampleInfo(object):
         data = {collection_name: list(ztfids)}
         self.update(data=data)
 
+    def ingest_selection_stats(self, collection_name: str, stats: dict):
+        """
+        Save a cut statistics for a collection
+        """
+        data = {collection_name: stats}
+        self.update(data=data)
+
 
 class MetadataDB(object):
     """

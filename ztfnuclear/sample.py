@@ -30,7 +30,7 @@ class NuclearSample(object):
     def __init__(self, sampletype="nuclear"):
         super(NuclearSample, self).__init__()
         self.logger = logging.getLogger(__name__)
-        self.logger.info("Initializing sample")
+        self.logger.debug("Initializing sample")
         self.sampletype = sampletype
         io.download_if_neccessary(sampletype=self.sampletype)
 

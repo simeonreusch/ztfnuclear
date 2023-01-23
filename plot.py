@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 logging.getLogger("ztfnuclear.baseline").setLevel(logging.WARN)
 matplotlib.pyplot.switch_backend("Agg")
 
-SAMPLE = "bts"
+SAMPLE = "nuclear"
 
 
 def aggregate_cuts(
@@ -78,6 +78,6 @@ def iterate_classes(
         plot_dist_hist(classif=c)
 
 
-aggregate_cuts(plottype="mag")
+aggregate_cuts(plottype="scatter", sampletype=SAMPLE)
 # aggregate_cuts(sampletype=SAMPLE)
 # iterate_classes()

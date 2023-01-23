@@ -102,7 +102,7 @@ def download_if_neccessary(sampletype="nuclear"):
             if name[-4:] == ".csv":
                 csvs.append(name)
         number_of_files = len(csvs)
-        logger.info(f"{number_of_files} dataframes found.")
+        logger.debug(f"{number_of_files} dataframes found.")
 
     else:
         logger.info("Dataframe directory is not present, proceed to download files.")
