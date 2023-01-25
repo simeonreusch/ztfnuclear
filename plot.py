@@ -4,6 +4,7 @@
 import os, logging
 from typing import Tuple, List
 
+import numpy as np
 import matplotlib  # type: ignore
 from tqdm import tqdm  # type: ignore
 
@@ -79,8 +80,33 @@ def iterate_classes(
         plot_dist_hist(classif=c)
 
 
-# aggregate_cuts(plottype="mag", sampletype=SAMPLE, rerun=False)
+def plot_all_in_selection(
+    sampletype: str = "nuclear", cuts: list = ["full"], rerun=False
+):
+    sample = get_tde_selection(cuts=cuts, sampletype=sampletype, rerun=rerun)
 
-aggregate_cuts(plottype="mag", sampletype=SAMPLE, cuts=["milliquas_noagn"], rerun=False)
-# aggregate_cuts(sampletype=SAMPLE)
-# iterate_classes()
+    for i in tqdm(sample.index.values):
+        t = Transient(i)
+        t.plot(magplot=True, plot_raw=False, snt_threshold=5, no_magrange=False)
+
+
+def plot_bright(rerun=False):
+    sample = get_tde_selection(
+        cuts=["milliquas_noagn"], sampletype="nuclear", rerun=rerun
+    )
+    sample["peak_mag"] = [
+        k if not np.isnan(k) else sample.peak_mags_r.values[i]
+        for i, k in enumerate(sample.peak_mags_g.values)
+    ]
+    sample.query(
+        "peak_mag<16.5 and classif == 'unclass' and crossmatch_bts_class.isnull()",
+        inplace=True,
+    )
+    # print(sample.query("index == 'ZTF17aaagpwv'"))
+    for i in tqdm(sample.index.values):
+        t = Transient(i)
+        t.plot(magplot=True, plot_raw=True, snt_threshold=6, no_magrange=True)
+
+
+plot_bright()
+# plot_all_in_selection()
