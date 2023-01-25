@@ -318,6 +318,7 @@ class MetadataDB(object):
             has_ampel_z = True if "ampel_z" in testobj.keys() else False
             has_wise_lc = True if "WISE_lc" in testobj.keys() else False
             has_wise_bayesian = True if "WISE_bayesian" in testobj.keys() else False
+            has_wise_dust = True if "WISE_dust" in testobj.keys() else False
             has_tns = True if "TNS_name" in testobj.keys() else False
 
         else:
@@ -332,6 +333,7 @@ class MetadataDB(object):
             has_ampel_z = False
             has_wise_lc = False
             has_wise_bayesian = False
+            has_wise_dust = False
             has_tns = False
 
         return {
@@ -347,6 +349,7 @@ class MetadataDB(object):
             "has_ampel_z": has_ampel_z,
             "has_wise_lc": has_wise_lc,
             "has_wise_bayesian": has_wise_bayesian,
+            "has_wise_dust": has_wise_dust,
             "has_tns": has_tns,
         }
 

@@ -106,6 +106,14 @@ class NuclearSample(object):
                 )
                 self.populate_db_from_dict(data=wise_bayesian)
 
+            if not db_check["has_wise_dust"]:
+                wise_dust = io.parse_ampel_json(
+                    filepath=os.path.join(io.LOCALSOURCE_WISE_dust),
+                    parameter_name="wise_dust",
+                    sampletype="nuclear",
+                )
+                self.populate_db_from_dict(data=wise_dust)
+
             if not db_check["has_wise_lc"]:
                 wise_lcs = io.parse_json(filepath=io.LOCALSOURCE_timewise)
                 self.populate_db_from_dict(data=wise_lcs)
@@ -119,6 +127,13 @@ class NuclearSample(object):
                     sampletype="bts",
                 )
                 self.populate_db_from_dict(data=wise_bayesian)
+            if not db_check["has_wise_dust"]:
+                wise_dust = io.parse_ampel_json(
+                    filepath=os.path.join(io.LOCALSOURCE_WISE_dust_bts),
+                    parameter_name="wise_dust",
+                    sampletype="bts",
+                )
+                self.populate_db_from_dict(data=wise_dust)
             if not db_check["has_peak_mags"]:
                 self.populate_db_from_csv(
                     filepath=io.LOCALSOURCE_bts_peak_mags, name="peak_mags"

@@ -322,7 +322,7 @@ def parse_ampel_json(
 
     resultdict = {}
 
-    if parameter_name == "wise_bayesian":
+    if parameter_name in ["wise_bayesian", "wise_dust"]:
         airflares_to_ztf = airflares_stock_to_ztfid(sampletype=sampletype)
 
     with open(filepath) as json_file:
@@ -330,7 +330,7 @@ def parse_ampel_json(
         for entry in data:
             stockid = entry["stock"]
 
-            if parameter_name != "wise_bayesian":
+            if parameter_name not in ["wise_bayesian", "wise_dust"]:
                 ztfid = utils.stockid_to_ztfid(stockid)
             else:
                 ztfid = airflares_to_ztf[str(stockid)]
@@ -384,7 +384,7 @@ def parse_ampel_json(
                     else:
                         resultdict.update({ztfid: {"ampel_z": {}}})
 
-                elif parameter_name == "wise_bayesian":
+                elif parameter_name in ["wise_bayesian", "wise_dust"]:
                     unit = entry["unit"]
 
                     if unit == "T2BayesianBlocks":
@@ -393,14 +393,8 @@ def parse_ampel_json(
                         )
 
                     elif unit == "T2DustEchoEval":
-                        if "result" in body.keys():
-                            resultdict[ztfid]["WISE_bayesian"].update(
-                                {"dustecho": body["result"]}
-                            )
-                        else:
-                            resultdict[ztfid]["WISE_bayesian"].update(
-                                {"dustecho": None}
-                            )
+                        resultdict.update({ztfid: {"WISE_dust": {"dust": body}}})
+
                     else:
                         raise ValueError(
                             "There is something wrong with your mongo export file."
