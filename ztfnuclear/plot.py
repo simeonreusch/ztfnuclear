@@ -931,11 +931,35 @@ def plot_lightcurve(
                 ax2.set_ylabel(r"$\nu$ L$_\nu$ (erg s$^{-1}$)", fontsize=12)
 
     if magplot:
-        if wise_df is not None:
-            if len(wise_df) > 0:
+        if not no_magrange:
+            ax.set_ylim([23, 15])
+        else:
+            ax.invert_yaxis()
+
+    if wise_df is not None:
+        if len(wise_df) > 0:
+
+            flux_W1 = wise_df["W1_mean_flux_density_bl_corr"] / 1000
+            flux_W1_err = wise_df["W1_mean_flux_density_bl_corr_err"] / 1000
+            flux_W2 = wise_df["W2_mean_flux_density_bl_corr"] / 1000
+            flux_W2_err = wise_df["W2_mean_flux_density_bl_corr_err"] / 1000
+
+            nufnu_W1 = utils.band_frequency("W1") * flux_W1 * 1e-23
+            nufnu_W1_err = utils.band_frequency("W1") * flux_W1_err * 1e-23
+            nufnu_W2 = utils.band_frequency("W2") * flux_W2 * 1e-23
+            nufnu_W2_err = utils.band_frequency("W2") * flux_W2_err * 1e-23
+
+            abmag_W1 = -2.5 * np.log10(flux_W1 / 3630.78)
+            abmag_W1_err = np.abs(2.5 / np.log(10) * flux_W1_err / flux_W1)
+            abmag_W2 = -2.5 * np.log10(flux_W2 / 3630.78)
+            abmag_W2_err = np.abs(2.5 / np.log(10) * flux_W2_err / flux_W2)
+
+            if magplot:
                 ax.errorbar(
                     wise_df.mean_mjd,
-                    wise_df.W1_mean_mag_ab,
+                    # wise_df.W1_mean_mag_ab,
+                    abmag_W1,
+                    abmag_W1_err,
                     fmt="o",
                     mec="black",
                     ecolor="black",
@@ -946,7 +970,9 @@ def plot_lightcurve(
                 )
                 ax.errorbar(
                     wise_df.mean_mjd,
-                    wise_df.W2_mean_mag_ab,
+                    # wise_df.W2_mean_mag_ab,
+                    abmag_W2,
+                    abmag_W2_err,
                     fmt="o",
                     mec="gray",
                     mfc="gray",
@@ -955,20 +981,8 @@ def plot_lightcurve(
                     ms=5,
                     elinewidth=1,
                 )
-        if not no_magrange:
-            ax.set_ylim([23, 15])
-        else:
-            ax.invert_yaxis()
 
-    else:
-        if wise_df is not None:
-            if len(wise_df) > 0:
-
-                flux_W1 = wise_df["W1_mean_flux_density_bl_corr"] / 1000
-                flux_W1_err = wise_df["W1_mean_flux_density_bl_corr_err"] / 1000
-                flux_W2 = wise_df["W2_mean_flux_density_bl_corr"] / 1000
-                flux_W2_err = wise_df["W2_mean_flux_density_bl_corr_err"] / 1000
-
+            else:
                 if thumbnail:
                     ms = 3
                     elinewidth = 0.08
@@ -978,8 +992,8 @@ def plot_lightcurve(
 
                 ax.errorbar(
                     wise_df.mean_mjd,
-                    utils.band_frequency("W1") * flux_W1 * 1e-23,
-                    utils.band_frequency("W1") * flux_W1_err * 1e-23,
+                    nufnu_W1,
+                    nufnu_W1_err,
                     fmt="o",
                     mec="black",
                     ecolor="black",
@@ -991,8 +1005,8 @@ def plot_lightcurve(
                 )
                 ax.errorbar(
                     wise_df.mean_mjd,
-                    utils.band_frequency("W2") * flux_W2 * 1e-23,
-                    utils.band_frequency("W2") * flux_W2_err * 1e-23,
+                    nufnu_W2,
+                    nufnu_W2_err,
                     fmt="o",
                     mec="gray",
                     mfc="gray",
