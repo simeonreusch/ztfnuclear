@@ -18,45 +18,45 @@ if os.getenv("ZTFDATA"):
     _SOURCEDIR = os.path.dirname(os.path.realpath(__file__))
     LOCALSOURCE = os.path.join(str(os.getenv("ZTFDATA")), "nuclear_sample")
     LOCALSOURCE_pickle = os.path.join(
-        str(os.getenv("ZTFDATA")), "nuclear_sample", "FINAL_SAMPLE", "overview.pkl"
+        str(os.getenv("ZTFDATA")), "nuclear_sample", "NUCLEAR", "overview.pkl"
     )
     LOCALSOURCE_pickle_flaring = os.path.join(
         str(os.getenv("ZTFDATA")),
         "nuclear_sample",
-        "FINAL_SAMPLE",
+        "NUCLEAR",
         "overview_flaring.pkl",
     )
-    LOCALSOURCE_dfs = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "data")
+    LOCALSOURCE_dfs = os.path.join(LOCALSOURCE, "NUCLEAR", "data")
     LOCALSOURCE_bts_dfs = os.path.join(LOCALSOURCE, "BTS", "data")
-    LOCALSOURCE_irsa = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "irsa")
+    LOCALSOURCE_irsa = os.path.join(LOCALSOURCE, "NUCLEAR", "irsa")
     LOCALSOURCE_bts_irsa = os.path.join(LOCALSOURCE, "BTS", "irsa")
-    LOCALSOURCE_fitres = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "fitres")
-    LOCALSOURCE_ampelz = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "ampel_z.json")
-    LOCALSOURCE_location = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "location.csv")
+    LOCALSOURCE_fitres = os.path.join(LOCALSOURCE, "NUCLEAR", "fitres")
+    LOCALSOURCE_ampelz = os.path.join(LOCALSOURCE, "NUCLEAR", "ampel_z.json")
+    LOCALSOURCE_location = os.path.join(LOCALSOURCE, "NUCLEAR", "location.csv")
     LOCALSOURCE_bts_info = os.path.join(LOCALSOURCE, "BTS", "bts.csv")
-    LOCALSOURCE_peak_dates = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "peak_dates.csv")
-    LOCALSOURCE_distnr = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "distnr.csv")
+    LOCALSOURCE_peak_dates = os.path.join(LOCALSOURCE, "NUCLEAR", "peak_dates.csv")
+    LOCALSOURCE_distnr = os.path.join(LOCALSOURCE, "NUCLEAR", "distnr.csv")
     LOCALSOURCE_bts_distnr = os.path.join(LOCALSOURCE, "BTS", "distnr.csv")
-    LOCALSOURCE_peak_mags = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "peak_mag.csv")
+    LOCALSOURCE_peak_mags = os.path.join(LOCALSOURCE, "NUCLEAR", "peak_mag.csv")
     LOCALSOURCE_bts_peak_mags = os.path.join(LOCALSOURCE, "BTS", "peak_mag.csv")
-    LOCALSOURCE_ZTF_tdes = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "ztf_tdes.csv")
+    LOCALSOURCE_ZTF_tdes = os.path.join(LOCALSOURCE, "NUCLEAR", "ztf_tdes.csv")
     LOCALSOURCE_WISE = os.path.join(LOCALSOURCE, "WISE")
     LOCALSOURCE_sarah_agn = os.path.join(
         LOCALSOURCE, "ML_reconstructed_AGN_catalogue.fits"
     )
     LOCALSOURCE_timewise = os.path.join(
-        LOCALSOURCE, "FINAL_SAMPLE", "timewise", "timewise_lightcurves_nuclear.json"
+        LOCALSOURCE, "NUCLEAR", "timewise", "timewise_lightcurves_nuclear.json"
     )
     LOCALSOURCE_timewise_bts = os.path.join(
         LOCALSOURCE, "BTS", "timewise", "timewise_lightcurves_bts.json"
     )
     LOCALSOURCE_WISE_bayesian = os.path.join(
-        LOCALSOURCE, "FINAL_SAMPLE", "wise_bayesian_blocks.json"
+        LOCALSOURCE, "NUCLEAR", "wise_bayesian_blocks.json"
     )
     LOCALSOURCE_plots = os.path.join(LOCALSOURCE, "plots")
     LOCALSOURCE_bts_plots = os.path.join(LOCALSOURCE, "plots_bts")
     LOCALSOURCE_plots_irsa = os.path.join(LOCALSOURCE, "plots", "lightcurves_irsa")
-    LOCALSOURCE_baseline = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "baseline")
+    LOCALSOURCE_baseline = os.path.join(LOCALSOURCE, "NUCLEAR", "baseline")
     LOCALSOURCE_bts_baseline = os.path.join(LOCALSOURCE, "BTS", "baseline")
 
     DOWNLOAD_URL_SAMPLE = (
@@ -118,7 +118,7 @@ def download_sample():
     """
     Downloads the sample from DESY Syncandshare
     """
-    cmd = f"curl --create-dirs -J -O --output-dir {LOCALSOURCE} {DOWNLOAD_URL_SAMPLE}; unzip {LOCALSOURCE}/FINAL_SAMPLE.zip -d {LOCALSOURCE}; rm {LOCALSOURCE}/FINAL_SAMPLE.zip"
+    cmd = f"curl --create-dirs -J -O --output-dir {LOCALSOURCE} {DOWNLOAD_URL_SAMPLE}; unzip {LOCALSOURCE}/NUCLEAR.zip -d {LOCALSOURCE}; rm {LOCALSOURCE}/NUCLEAR.zip"
 
     subprocess.run(cmd, shell=True)
     logger.info("Sample download complete")

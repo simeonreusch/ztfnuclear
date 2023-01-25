@@ -117,7 +117,7 @@ if __name__ == "__main__":
     )
 
     if SAMPLE == "nuclear":
-        outpath = os.path.join(io.LOCALSOURCE, "FINAL_SAMPLE", "timewise")
+        outpath = os.path.join(io.LOCALSOURCE, "NUCLEAR", "timewise")
     else:
         outpath = os.path.join(io.LOCALSOURCE, "BTS", "timewise")
 

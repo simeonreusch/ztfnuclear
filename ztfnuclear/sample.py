@@ -115,6 +115,10 @@ class NuclearSample(object):
                 self.populate_db_from_csv(
                     filepath=io.LOCALSOURCE_bts_peak_mags, name="peak_mags"
                 )
+            if not db_check["has_wise_lc"]:
+                wise_lcs = io.parse_json(filepath=io.LOCALSOURCE_timewise_bts)
+                self.populate_db_from_dict(data=wise_lcs)
+
             if not db_check["has_distnr"]:
                 self.populate_db_from_csv(
                     filepath=io.LOCALSOURCE_bts_distnr, name="distnr"

@@ -957,7 +957,6 @@ def plot_lightcurve(
             if magplot:
                 ax.errorbar(
                     wise_df.mean_mjd,
-                    # wise_df.W1_mean_mag_ab,
                     abmag_W1,
                     abmag_W1_err,
                     fmt="o",
@@ -970,7 +969,6 @@ def plot_lightcurve(
                 )
                 ax.errorbar(
                     wise_df.mean_mjd,
-                    # wise_df.W2_mean_mag_ab,
                     abmag_W2,
                     abmag_W2_err,
                     fmt="o",
