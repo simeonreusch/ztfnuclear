@@ -446,12 +446,6 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plot_ext="pdf", rerun=
     ]
     combined.query("not peak_mag.isnull()", inplace=True)
 
-    test = combined.query(
-        "sample == 'nuclear' and peak_mag<16.5 and classif == 'unclass' and crossmatch_bts_class.isnull()"
-    )
-    print(test)
-    test.to_csv("/Users/simeon/Desktop/bright_unclass_nuclear.csv")
-
     if logplot:
         figsize = (9, 4.5)
     else:
@@ -778,6 +772,8 @@ def plot_lightcurve(
     wide: bool = False,
     thumbnail: bool = False,
     sampletype: str = "nuclear",
+    no_magrange: bool = False,
+    classif: str | None = None,
 ) -> list:
     """Plot a lightcurve"""
     if magplot:
@@ -827,10 +823,14 @@ def plot_lightcurve(
             if not thumbnail:
                 if tns_name:
                     fig.suptitle(
-                        f"{ztfid} ({tns_name}) - baseline corrected", fontsize=14
+                        f"{ztfid} ({tns_name}) - baseline corrected\nclassif = {classif}",
+                        fontsize=14,
                     )
                 else:
-                    fig.suptitle(f"{ztfid} - baseline corrected", fontsize=14)
+                    fig.suptitle(
+                        f"{ztfid} - baseline corrected\nclassif = {classif}",
+                        fontsize=14,
+                    )
         else:
             ampl_column = "ampl"
             ampl_err_column = "ampl.err"
@@ -870,11 +870,6 @@ def plot_lightcurve(
             obsmjd = ma.masked_array(obsmjd, mask=mask).compressed()
 
         if magplot:
-
-            if len(abmag) > 0:
-                print(bandname)
-                print(min(abmag))
-
             ax.errorbar(
                 obsmjd,
                 abmag,
@@ -888,7 +883,10 @@ def plot_lightcurve(
                 elinewidth=0.8,
                 label=filtername_dict[filterid],
             )
-            ax.set_ylim([23, 15])
+            if not no_magrange:
+                ax.set_ylim([23, 15])
+            else:
+                ax.invert_yaxis()
             ax.set_ylabel("Mag (AB)")
 
         else:
@@ -1028,7 +1026,6 @@ def plot_lightcurve(
     plt.close()
 
     xlim1, xlim2 = ax.get_xlim()
-    # ylim1, ylim2 = ax.get_ylim()
 
     axlims = {"xlim": [xlim1, xlim2]}
 

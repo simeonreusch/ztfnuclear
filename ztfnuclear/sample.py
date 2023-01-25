@@ -1144,6 +1144,7 @@ class Transient(object):
         plot_png: bool = False,
         wide: bool = False,
         thumbnail: bool = False,
+        no_magrange: bool = False,
     ):
         """
         Plot the transient lightcurve
@@ -1154,48 +1155,51 @@ class Transient(object):
 
             if wise_baseline_correction:
                 if "WISE_bayesian" in self.meta.keys():
-                    if (
-                        "bayesian" in self.meta["WISE_bayesian"].keys()
-                        and self.meta["WISE_bayesian"]["bayesian"] is not None
-                    ):
-                        bl_W1 = self.meta["WISE_bayesian"]["bayesian"]["Wise_W1"][
-                            "baseline"
-                        ][0]
-                        bl_W2 = self.meta["WISE_bayesian"]["bayesian"]["Wise_W2"][
-                            "baseline"
-                        ][0]
+                    if self.meta["WISE_bayesian"] is not None:
+                        if (
+                            "bayesian" in self.meta["WISE_bayesian"].keys()
+                            and self.meta["WISE_bayesian"]["bayesian"] is not None
+                        ):
+                            bl_W1 = self.meta["WISE_bayesian"]["bayesian"]["Wise_W1"][
+                                "baseline"
+                            ][0]
+                            bl_W2 = self.meta["WISE_bayesian"]["bayesian"]["Wise_W2"][
+                                "baseline"
+                            ][0]
 
-                        bl_W1_err = self.meta["WISE_bayesian"]["bayesian"]["Wise_W1"][
-                            "baseline_rms"
-                        ][0]
-                        bl_W2_err = self.meta["WISE_bayesian"]["bayesian"]["Wise_W2"][
-                            "baseline_rms"
-                        ][0]
+                            bl_W1_err = self.meta["WISE_bayesian"]["bayesian"][
+                                "Wise_W1"
+                            ]["baseline_rms"][0]
+                            bl_W2_err = self.meta["WISE_bayesian"]["bayesian"][
+                                "Wise_W2"
+                            ]["baseline_rms"][0]
 
-                        wise_df["W1_mean_flux_density_bl_corr"] = (
-                            wise_df["W1_mean_flux_density"] - bl_W1
-                        )
-                        wise_df["W2_mean_flux_density_bl_corr"] = (
-                            wise_df["W2_mean_flux_density"] - bl_W2
-                        )
-                        wise_df["W1_mean_flux_density_bl_corr_err"] = np.sqrt(
-                            wise_df["W1_flux_density_rms"].values ** 2 + bl_W1_err**2
-                        )
-                        wise_df["W2_mean_flux_density_bl_corr_err"] = np.sqrt(
-                            wise_df["W2_flux_density_rms"].values ** 2 + bl_W2_err**2
-                        )
+                            wise_df["W1_mean_flux_density_bl_corr"] = (
+                                wise_df["W1_mean_flux_density"] - bl_W1
+                            )
+                            wise_df["W2_mean_flux_density_bl_corr"] = (
+                                wise_df["W2_mean_flux_density"] - bl_W2
+                            )
+                            wise_df["W1_mean_flux_density_bl_corr_err"] = np.sqrt(
+                                wise_df["W1_flux_density_rms"].values ** 2
+                                + bl_W1_err**2
+                            )
+                            wise_df["W2_mean_flux_density_bl_corr_err"] = np.sqrt(
+                                wise_df["W2_flux_density_rms"].values ** 2
+                                + bl_W2_err**2
+                            )
 
-                        wise_df["W1_mean_mag_ab"] = utils.flux_density_to_abmag(
-                            flux_density=wise_df["W1_mean_flux_density_bl_corr"]
-                            / 1000,  # convert from mJy to Jy
-                            band="W1",
-                        )
-                        wise_df["W2_mean_mag_ab"] = utils.flux_density_to_abmag(
-                            flux_density=wise_df["W2_mean_flux_density_bl_corr"]
-                            / 1000,  # convert from mJy to Jy
-                            band="W2",
-                        )
-                        wise_df_to_plot = wise_df
+                            wise_df["W1_mean_mag_ab"] = utils.flux_density_to_abmag(
+                                flux_density=wise_df["W1_mean_flux_density_bl_corr"]
+                                / 1000,  # convert from mJy to Jy
+                                band="W1",
+                            )
+                            wise_df["W2_mean_mag_ab"] = utils.flux_density_to_abmag(
+                                flux_density=wise_df["W2_mean_flux_density_bl_corr"]
+                                / 1000,  # convert from mJy to Jy
+                                band="W2",
+                            )
+                            wise_df_to_plot = wise_df
 
         if force_baseline_correction:
             df_to_plot = self.baseline
@@ -1215,6 +1219,8 @@ class Transient(object):
 
         from ztfnuclear.plot import plot_lightcurve
 
+        cl = self.meta.get("classif")
+
         axlims = plot_lightcurve(
             df=df_to_plot,
             ztfid=self.ztfid,
@@ -1227,6 +1233,8 @@ class Transient(object):
             wide=wide,
             thumbnail=thumbnail,
             sampletype=self.sampletype,
+            no_magrange=no_magrange,
+            classif=cl,
         )
 
         return axlims

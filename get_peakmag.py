@@ -13,7 +13,7 @@ from ztfnuclear.sample import (
 from ztfnuclear import utils
 from ztfnuclear import io
 
-SAMPLE = "nuclear"
+SAMPLE = "bts"
 snt_threshold = 6
 
 resdict = {}
