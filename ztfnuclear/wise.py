@@ -7,6 +7,8 @@ import os, logging, json, copy
 import pandas as pd
 import numpy as np
 
+from ztfnuclear import io
+
 from timewise.parent_sample_base import ParentSampleBase
 from timewise.wise_data_by_visit import WiseDataByVisit
 
@@ -16,6 +18,8 @@ logging.getLogger("timewise.wise_data_by_visit").setLevel(logging.DEBUG)
 
 DEFAULT_KEYMAP = {"ra": "RA", "dec": "Dec", "id": "ztfid"}
 SERVICE = "tap"
+
+SAMPLE = "bts"
 
 
 def get_wise_photometry(
@@ -29,12 +33,12 @@ def get_wise_photometry(
         """The nuclear sample gets initialized here"""
 
         def __init__(self):
-            super(NuclearSampleInit, self).__init__(base_name="ztfnuclear")
+            super(NuclearSampleInit, self).__init__(base_name=SAMPLE)
             self.df = sample_df
             self.default_keymap = DEFAULT_KEYMAP
 
     tw_sample_init = WiseDataByVisit(
-        base_name="ztfnuclear",
+        base_name=SAMPLE,
         parent_sample_class=NuclearSampleInit,
         min_sep_arcsec=searchradius_arcsec,
         n_chunks=1,
@@ -93,20 +97,32 @@ if __name__ == "__main__":
     """
     positional_search = True
 
-    test_sample = pd.read_csv(
-        "/Users/simeon/ztfnuclear/wise_test_sample.csv", index_col=0
+    # test_sample_ztfnuclear = pd.read_csv(
+    #     "/Users/simeon/ztfnuclear/timewise_nuclear_test.csv", index_col=0
+    # )
+    full_sample_nuclear = pd.read_csv(
+        "/Users/simeon/ztfnuclear/timewise_nuclear.csv", index_col=0
     )
-    full_sample = pd.read_csv(
-        "/Users/simeon/ztfnuclear/wise_full_sample.csv", index_col=0
+    full_sample_bts = pd.read_csv(
+        "/Users/simeon/ztfnuclear/timewise_bts.csv", index_col=0
     )
+
+    if SAMPLE == "nuclear":
+        use_sample = full_sample_nuclear
+    else:
+        use_sample = full_sample_bts
 
     wise_lcs = get_wise_photometry(
-        sample_df=test_sample, searchradius_arcsec=5, positional=positional_search
+        sample_df=use_sample, searchradius_arcsec=5, positional=positional_search
     )
 
-    if positional_search:
-        with open("wise_lightcurves_by_pos.json", "w") as fp:
-            json.dump(wise_lcs, fp)
+    if SAMPLE == "nuclear":
+        outpath = os.path.join(io.LOCALSOURCE, "FINAL_SAMPLE", "timewise")
     else:
-        with open("wise_lightcurves_by_id.json", "w") as fp:
-            json.dump(wise_lcs, fp)
+        outpath = os.path.join(io.LOCALSOURCE, "BTS", "timewise")
+
+    if not os.path.exists(outpath):
+        os.makedirs(outpath)
+
+    with open(os.path.join(outpath, f"timewise_lightcurves_{SAMPLE}.json"), "w") as fp:
+        json.dump(wise_lcs, fp)

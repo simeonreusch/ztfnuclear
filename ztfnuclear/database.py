@@ -225,7 +225,6 @@ class MetadataDB(object):
             df["salt_red_chisq"] = df["salt_chisq"] / df["salt_ndof"]
 
         df["ztfid"] = df.index
-
         if "crossmatch_TNS_type" not in df.keys():
             df["crossmatch_TNS_type"] = None
 

@@ -446,6 +446,12 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plot_ext="pdf", rerun=
     ]
     combined.query("not peak_mag.isnull()", inplace=True)
 
+    test = combined.query(
+        "sample == 'nuclear' and peak_mag<16.5 and classif == 'unclass' and crossmatch_bts_class.isnull()"
+    )
+    print(test)
+    test.to_csv("/Users/simeon/Desktop/bright_unclass_nuclear.csv")
+
     if logplot:
         figsize = (9, 4.5)
     else:
@@ -850,9 +856,9 @@ def plot_lightcurve(
                 )
                 * 3630.78
             )
-            abmag = -2.5 * np.log10(flux)
+
+            abmag = -2.5 * np.log10(flux / 3630.78)
             abmag_err = 2.5 / np.log(10) * flux_err / flux
-            obsmjd = _df.obsmjd.values
 
         if snt_threshold:
             snt_limit = flux_err.values * snt_threshold
@@ -864,6 +870,10 @@ def plot_lightcurve(
             obsmjd = ma.masked_array(obsmjd, mask=mask).compressed()
 
         if magplot:
+
+            if len(abmag) > 0:
+                print(bandname)
+                print(min(abmag))
 
             ax.errorbar(
                 obsmjd,

@@ -26,14 +26,15 @@ SAMPLE = "nuclear"
 
 
 def aggregate_cuts(
-    plottype="scatter",
-    sampletype="nuclear",
-    cuts=None,
-    xval="rise",
+    plottype: str = "scatter",
+    sampletype: str = "nuclear",
+    cuts: bool = None,
+    xval: str = "rise",
     yval="decay",
-    xlim=(0.1, 3),
-    ylim=(0.1, 4),
+    xlim: Tuple[float] = (0.1, 3),
+    ylim: Tuple[float] = (0.1, 4),
     plotrange: List[float] | None = None,
+    rerun: bool = False,
 ):
     if cuts is None:
         cuts_to_use = [
@@ -62,7 +63,7 @@ def aggregate_cuts(
                 ylim=ylim,
             )
         if plottype == "mag":
-            plot_mag_hist(cuts=cuts_now, logplot=True, plot_ext="png", rerun=False)
+            plot_mag_hist(cuts=cuts_now, logplot=True, plot_ext="png", rerun=rerun)
 
 
 def iterate_classes(
@@ -78,6 +79,8 @@ def iterate_classes(
         plot_dist_hist(classif=c)
 
 
-aggregate_cuts(plottype="mag", sampletype=SAMPLE)  # , cuts=["milliquas_noagn"])
+# aggregate_cuts(plottype="mag", sampletype=SAMPLE, rerun=False)
+
+aggregate_cuts(plottype="mag", sampletype=SAMPLE, cuts=["milliquas_noagn"], rerun=False)
 # aggregate_cuts(sampletype=SAMPLE)
 # iterate_classes()
