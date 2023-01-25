@@ -35,6 +35,7 @@ iminuit = "^2.17.0"
 seaborn = "^0.12.1"
 mypy = "^0.991"
 keyring = "^23.13.1"
+bs4 = "^0.0.1"
 
 [tool.poetry.dev-dependencies]
 coveralls = "^3.3.1"

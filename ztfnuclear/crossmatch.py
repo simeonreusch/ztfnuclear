@@ -2,15 +2,55 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging
+import os, logging, requests, keyring, getpass
 
 import pandas as pd
 
 from ztfnuclear.ampel_api import ampel_api_catalog, ampel_api_distnr
 from ztfnuclear import io
 from ztfnuclear.database import WISE, SarahAGN
+import ztfquery
 
 logger = logging.getLogger(__name__)
+
+
+def query_marshal(ztfid):
+    """
+    I was thinking I would not need the Marshal. Sweet summerchild...
+    Anyway, with this we parse the html for a transient page
+    """
+    from bs4 import BeautifulSoup as bs
+
+    marshal_baseurl = (
+        "http://skipper.caltech.edu:8080/cgi-bin/growth/view_source.cgi?name="
+    )
+    logger.info(f"Querying the Growth Marshal for {ztfid}")
+    username = keyring.get_password("marshal", f"marshal_user")
+    password = keyring.get_password("marshal", f"marshal_password")
+
+    if username is None:
+        username = input(f"Enter your Growth Marshal login: ")
+        password = getpass.getpass(
+            prompt=f"Enter your Growth Marshal password: ", stream=None
+        )
+        keyring.set_password("marshal", f"marshal_user", username)
+        keyring.set_password("marshal", f"marshal_password", password)
+    auth = (username, password)
+
+    url = marshal_baseurl + ztfid
+
+    response = requests.get(url, auth=auth)
+    df = pd.read_html(response.text)[0]
+    rowid = df.apply(lambda row: row.astype(str).str.contains(ztfid).any(), axis=1)
+    useful_rows = df.loc[rowid]
+    if len(useful_rows) > 0:
+        maybe_class = useful_rows[1].values[0].split("  ")[1]
+        if len(maybe_class.split(":")) > 1:
+            return {"Marshal": {}}
+        else:
+            return {"Marshal": {"class": maybe_class}}
+    else:
+        return {"Marshal": {}}
 
 
 def query_ned_for_z(

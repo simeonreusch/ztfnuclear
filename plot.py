@@ -27,7 +27,7 @@ SAMPLE = "nuclear"
 
 
 def aggregate_cuts(
-    plottype: str = "scatter",
+    plottype: str = "mag",
     sampletype: str = "nuclear",
     cuts: bool = None,
     xval: str = "rise",
@@ -64,7 +64,7 @@ def aggregate_cuts(
                 ylim=ylim,
             )
         if plottype == "mag":
-            plot_mag_hist(cuts=cuts_now, logplot=True, plot_ext="png", rerun=rerun)
+            plot_mag_hist(cuts=cuts_now, logplot=True, plot_ext="pdf", rerun=rerun)
 
 
 def iterate_classes(
@@ -90,7 +90,7 @@ def plot_all_in_selection(
         t.plot(magplot=True, plot_raw=False, snt_threshold=5, no_magrange=False)
 
 
-def plot_bright(rerun=False):
+def plot_bright(rerun=False, bl=False):
     sample = get_tde_selection(
         cuts=["milliquas_noagn"], sampletype="nuclear", rerun=rerun
     )
@@ -99,14 +99,28 @@ def plot_bright(rerun=False):
         for i, k in enumerate(sample.peak_mags_g.values)
     ]
     sample.query(
-        "peak_mag<16.5 and classif == 'unclass' and crossmatch_bts_class.isnull()",
+        "16<peak_mag<17 and classif == 'unclass' and crossmatch_bts_class.isnull()",
         inplace=True,
     )
+    if bl:
+        plot_raw = False
+    else:
+        plot_raw = True
     # print(sample.query("index == 'ZTF17aaagpwv'"))
     for i in tqdm(sample.index.values):
         t = Transient(i)
-        t.plot(magplot=True, plot_raw=True, snt_threshold=6, no_magrange=True)
+        t.plot(magplot=True, plot_raw=plot_raw, snt_threshold=6, no_magrange=True)
 
 
-plot_bright()
+def plot_single(name):
+    t = Transient(name)
+    t.plot(
+        magplot=True, plot_raw=True, snt_threshold=6, no_magrange=True, plot_png=True
+    )
+
+
+# plot_single("ZTF19aafnogq")
+plot_bright(bl=False)
+# plot_mag_hist(cuts=["milliquas_noagn"], logplot=True, plot_ext="png", rerun=False)
 # plot_all_in_selection()
+# aggregate_cuts(rerun=False)

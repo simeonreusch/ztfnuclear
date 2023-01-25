@@ -765,6 +765,7 @@ def plot_lightcurve(
     z: float = None,
     tns_name: str = None,
     magplot: bool = True,
+    primary_grid: bool = False,
     wise_df: pd.DataFrame = None,
     wise_bayesian: dict = None,
     snt_threshold=3,
@@ -883,11 +884,7 @@ def plot_lightcurve(
                 elinewidth=0.8,
                 label=filtername_dict[filterid],
             )
-            if not no_magrange:
-                ax.set_ylim([23, 15])
-            else:
-                ax.invert_yaxis()
-            ax.set_ylabel("Mag (AB)")
+            ax.set_ylabel("Magnitude (AB)")
 
         else:
 
@@ -958,6 +955,10 @@ def plot_lightcurve(
                     ms=5,
                     elinewidth=1,
                 )
+        if not no_magrange:
+            ax.set_ylim([23, 15])
+        else:
+            ax.invert_yaxis()
 
     else:
         if wise_df is not None:
