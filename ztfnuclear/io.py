@@ -47,12 +47,25 @@ if os.getenv("ZTFDATA"):
     LOCALSOURCE_timewise = os.path.join(
         LOCALSOURCE, "NUCLEAR", "timewise", "timewise_lightcurves_nuclear.json"
     )
+    LOCALSOURCE_timewise_raw = os.path.join(
+        LOCALSOURCE, "NUCLEAR", "timewise", "timewise_data_product_tap__chunk0.json"
+    )
     LOCALSOURCE_timewise_bts = os.path.join(
         LOCALSOURCE, "BTS", "timewise", "timewise_lightcurves_bts.json"
     )
-    LOCALSOURCE_WISE_bayesian = os.path.join(
-        LOCALSOURCE, "NUCLEAR", "wise_bayesian_blocks.json"
+    LOCALSOURCE_timewise_bts_raw = os.path.join(
+        LOCALSOURCE, "BTS", "timewise", "timewise_data_product_tap__chunk0.json"
     )
+    LOCALSOURCE_WISE_bayesian = os.path.join(
+        LOCALSOURCE, "NUCLEAR", "wise_bayesian_nuclear.json"
+    )
+    LOCALSOURCE_WISE_bayesian_bts = os.path.join(
+        LOCALSOURCE, "BTS", "wise_bayesian_bts.json"
+    )
+    LOCALSOURCE_WISE_dust = os.path.join(
+        LOCALSOURCE, "NUCLEAR", "wise_dust_nuclear.json"
+    )
+    LOCALSOURCE_WISE_dust_bts = os.path.join(LOCALSOURCE, "BTS", "wise_dust_bts.json")
     LOCALSOURCE_plots = os.path.join(LOCALSOURCE, "plots")
     LOCALSOURCE_bts_plots = os.path.join(LOCALSOURCE, "plots_bts")
     LOCALSOURCE_plots_irsa = os.path.join(LOCALSOURCE, "plots", "lightcurves_irsa")
@@ -277,15 +290,16 @@ def parse_json(filepath: str) -> dict:
 def airflares_stock_to_ztfid(sampletype="nuclear"):
     """ """
     if sampletype == "nuclear":
-        infile = LOCALSOURCE_timewise
+        infile = LOCALSOURCE_timewise_raw
     else:
-        infile = LOCALSOURCE_timewise_bts
+        infile = LOCALSOURCE_timewise_bts_raw
+
     with open(infile, "r") as f:
         wise_lcs = json.load(f)
     stock_to_ztfid = {}
 
     for key in wise_lcs.keys():
-        stock_to_ztfid[key] = wise_lcs[key]["id"]
+        stock_to_ztfid[key] = wise_lcs[key].get("id")
 
     return stock_to_ztfid
 
@@ -299,14 +313,17 @@ def ztfid_to_airflares_stock(sampletype="nuclear"):
     return ztfid_to_stock
 
 
-def parse_ampel_json(filepath: str, parameter_name: str) -> dict:
+def parse_ampel_json(
+    filepath: str, parameter_name: str, sampletype: str = "nuclear"
+) -> dict:
     """Reads the mongodb export from Ampel"""
     if not os.path.isfile(filepath):
         raise ValueError("No file at given filepath")
 
     resultdict = {}
+
     if parameter_name == "wise_bayesian":
-        airflares_to_ztf = airflares_stock_to_ztfid()
+        airflares_to_ztf = airflares_stock_to_ztfid(sampletype=sampletype)
 
     with open(filepath) as json_file:
         data = json.load(json_file)

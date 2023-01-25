@@ -102,6 +102,7 @@ class NuclearSample(object):
                 wise_bayesian = io.parse_ampel_json(
                     filepath=os.path.join(io.LOCALSOURCE_WISE_bayesian),
                     parameter_name="wise_bayesian",
+                    sampletype="nuclear",
                 )
                 self.populate_db_from_dict(data=wise_bayesian)
 
@@ -111,6 +112,13 @@ class NuclearSample(object):
 
         elif self.sampletype == "bts":
             db_check = self.meta.get_statistics()
+            if not db_check["has_wise_bayesian"]:
+                wise_bayesian = io.parse_ampel_json(
+                    filepath=os.path.join(io.LOCALSOURCE_WISE_bayesian_bts),
+                    parameter_name="wise_bayesian",
+                    sampletype="bts",
+                )
+                self.populate_db_from_dict(data=wise_bayesian)
             if not db_check["has_peak_mags"]:
                 self.populate_db_from_csv(
                     filepath=io.LOCALSOURCE_bts_peak_mags, name="peak_mags"
