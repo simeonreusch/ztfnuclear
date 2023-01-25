@@ -105,13 +105,9 @@ class NuclearSample(object):
                 )
                 self.populate_db_from_dict(data=wise_bayesian)
 
-            if not db_check["has_wise_lc_by_pos"]:
-                wise_lcs_by_pos = io.parse_json(filepath=io.LOCALSOURCE_WISE_lc_by_pos)
-                self.populate_db_from_dict(data=wise_lcs_by_pos)
-
-            if not db_check["has_wise_lc_by_id"]:
-                wise_lcs_by_id = io.parse_json(filepath=io.LOCALSOURCE_WISE_lc_by_id)
-                self.populate_db_from_dict(data=wise_lcs_by_id)
+            if not db_check["has_wise_lc"]:
+                wise_lcs = io.parse_json(filepath=io.LOCALSOURCE_timewise)
+                self.populate_db_from_dict(data=wise_lcs)
 
         elif self.sampletype == "bts":
             db_check = self.meta.get_statistics()
@@ -195,6 +191,14 @@ class NuclearSample(object):
         data_list = []
         for ztfid in ztfids:
             data_list.append(data[ztfid])
+
+        if len(data_list) > 0:
+            if list(data_list[0].keys())[0] == "WISE_lc_by_pos":
+                data_reformatted = []
+                for entry in data_list:
+                    entry["WISE_lc"] = entry.pop("WISE_lc_by_pos")
+                    data_reformatted.append(entry)
+                data_list = data_reformatted
 
         self.meta.update_many(ztfids=ztfids, data=data_list)
 
@@ -815,7 +819,7 @@ class Transient(object):
         Get the corresponding WISE lightcurve (if available) as pandas df
         """
         df = None
-        wise_dict = self.meta.get("WISE_lc")
+        wise_dict = self.meta.get("WISE_lc", {}).get("timewise_lightcurve")
         if wise_dict is not None:
             df = pd.DataFrame.from_dict(wise_dict)
             if len(df) == 0:
