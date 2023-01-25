@@ -1064,6 +1064,7 @@ class Transient(object):
             query_ampel_dist,
             query_sarah_agn,
             query_bts,
+            query_marshal,
         )
 
         results = self.meta.get("crossmatch", {})
@@ -1103,6 +1104,8 @@ class Transient(object):
 
             if "bts" in crossmatch_types:
                 res_list.append({"bts": query_bts(ztfid=self.ztfid)})
+            if "marshal" in crossmatch_types:
+                res_list.append(query_marshal(ztfid=self.ztfid))
 
             for res in res_list:
                 results.update(res)

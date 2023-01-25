@@ -4,6 +4,7 @@
 
 import os, logging, requests, keyring, getpass
 
+import backoff
 import pandas as pd
 
 from ztfnuclear.ampel_api import ampel_api_catalog, ampel_api_distnr
@@ -14,6 +15,11 @@ import ztfquery
 logger = logging.getLogger(__name__)
 
 
+@backoff.on_exception(
+    backoff.expo,
+    requests.exceptions.RequestException,
+    max_time=600,
+)
 def query_marshal(ztfid):
     """
     I was thinking I would not need the Marshal. Sweet summerchild...
@@ -24,7 +30,7 @@ def query_marshal(ztfid):
     marshal_baseurl = (
         "http://skipper.caltech.edu:8080/cgi-bin/growth/view_source.cgi?name="
     )
-    logger.info(f"Querying the Growth Marshal for {ztfid}")
+    logger.debug(f"Querying the Growth Marshal for {ztfid}")
     username = keyring.get_password("marshal", f"marshal_user")
     password = keyring.get_password("marshal", f"marshal_password")
 
@@ -48,6 +54,7 @@ def query_marshal(ztfid):
         if len(maybe_class.split(":")) > 1:
             return {"Marshal": {}}
         else:
+            logger.debug(f"{ztfid}: Classification found ({maybe_class})")
             return {"Marshal": {"class": maybe_class}}
     else:
         return {"Marshal": {}}
