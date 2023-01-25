@@ -44,11 +44,11 @@ if os.getenv("ZTFDATA"):
     LOCALSOURCE_sarah_agn = os.path.join(
         LOCALSOURCE, "ML_reconstructed_AGN_catalogue.fits"
     )
-    LOCALSOURCE_WISE_lc_by_pos = os.path.join(
-        LOCALSOURCE, "FINAL_SAMPLE", "wise_lightcurves_by_pos.json"
+    LOCALSOURCE_timewise = os.path.join(
+        LOCALSOURCE, "FINAL_SAMPLE", "timewise", "timewise_lightcurves_nuclear.json"
     )
-    LOCALSOURCE_WISE_lc_by_id = os.path.join(
-        LOCALSOURCE, "FINAL_SAMPLE", "wise_lightcurves_by_id.json"
+    LOCALSOURCE_timewise_bts = os.path.join(
+        LOCALSOURCE, "BTS", "timewise", "timewise_lightcurves_bts.json"
     )
     LOCALSOURCE_WISE_bayesian = os.path.join(
         LOCALSOURCE, "FINAL_SAMPLE", "wise_bayesian_blocks.json"
@@ -274,9 +274,12 @@ def parse_json(filepath: str) -> dict:
     return data
 
 
-def airflares_stock_to_ztfid():
+def airflares_stock_to_ztfid(sampletype="nuclear"):
     """ """
-    infile = os.path.join(LOCALSOURCE, "FINAL_SAMPLE", "airflares_raw.json")
+    if sampletype == "nuclear":
+        infile = LOCALSOURCE_timewise
+    else:
+        infile = LOCALSOURCE_timewise_bts
     with open(infile, "r") as f:
         wise_lcs = json.load(f)
     stock_to_ztfid = {}
@@ -287,9 +290,9 @@ def airflares_stock_to_ztfid():
     return stock_to_ztfid
 
 
-def ztfid_to_airflares_stock():
+def ztfid_to_airflares_stock(sampletype="nuclear"):
     """ """
-    stock_to_ztfid = airflares_stock_to_ztfid()
+    stock_to_ztfid = airflares_stock_to_ztfid(sampletype=sampletype)
 
     ztfid_to_stock = {v: k for k, v in stock_to_ztfid.items()}
 
