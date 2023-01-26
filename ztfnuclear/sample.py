@@ -39,25 +39,8 @@ class NuclearSample(object):
         self.meta = MetadataDB(sampletype=self.sampletype)
         self.info_db = SampleInfo(sampletype=self.sampletype)
 
-        if self.sampletype == "nuclear":
-            if self.info_db.read().get("flaring") is None:
-                flaring_ztfids = []
-                logger.info("Flaring info not found, ingesting")
-                for t in tqdm(self.get_transients(), total=len(self.ztfids)):
-                    flaring_status = None
-                    bayes = t.meta.get("WISE_bayesian", {})
-                    if bayes:
-                        dustecho = bayes.get("dustecho", {})
-                        if dustecho:
-                            flaring_status = dustecho.get("status")
-
-                    if flaring_status:
-                        if flaring_status != "No further investigation":
-                            # baseline_end_jd = dustecho["values"][0]["baseline_jd"][-1]
-                            # peak_optical = min(t.meta.get("peak_dates").values())
-                            # if baseline_end_jd > peak_optical:
-                            flaring_ztfids.append(t.ztfid)
-                self.info_db.ingest_ztfid_collection(flaring_ztfids, "flaring")
+        if self.info_db.read().get("flaring") is None:
+            self.get_flaring()
 
         if self.sampletype == "nuclear":
             db_check = self.meta.get_statistics()
@@ -138,6 +121,10 @@ class NuclearSample(object):
                 self.populate_db_from_csv(
                     filepath=io.LOCALSOURCE_bts_peak_mags, name="peak_mags"
                 )
+            if not db_check["has_peak_dates"]:
+                self.populate_db_from_csv(
+                    filepath=io.LOCALSOURCE_bts_peak_dates, name="peak_dates"
+                )
             if not db_check["has_wise_lc"]:
                 wise_lcs = io.parse_json(filepath=io.LOCALSOURCE_timewise_bts)
                 self.populate_db_from_dict(data=wise_lcs)
@@ -154,6 +141,39 @@ class NuclearSample(object):
             assert db_check["count"] == 11687
         else:
             assert db_check["count"] == 7131 or db_check["count"] == 7130
+
+    def get_flaring(self):
+        """
+        Get all the IR flares after optical peak
+        """
+        flaring_ztfids = []
+        logger.info("Flaring info not found, ingesting")
+        for t in tqdm(self.get_transients(), total=len(self.ztfids)):
+            flaring_status = None
+            flaring_status = t.meta.get("WISE_dust", {}).get("dust", {}).get("status")
+            if flaring_status:
+                if flaring_status != "No further investigation":
+                    bayes = t.meta.get("WISE_bayesian", {}).get("bayesian", {})
+                    peaks = []
+                    for wise_filter in ["Wise_W1", "Wise_W2"]:
+                        jd_excess_regions = bayes.get(wise_filter, {}).get(
+                            "jd_excess_regions"
+                        )
+                        max_mag_excess_region = bayes.get(wise_filter, {}).get(
+                            "max_mag_excess_region"
+                        )
+                        peakindex = np.argmax(max_mag_excess_region)
+                        start_peak_region = min(jd_excess_regions[peakindex])
+                        peaks.append(start_peak_region)
+                    wise_peak = np.max(peaks)
+                    if t.meta.get("peak_dates") is not None:
+                        ztf_peak = min(list(t.meta.get("peak_dates").values()))
+                        # we allow for 100 days before optical peak to have some wiggle room
+                        if wise_peak > (ztf_peak - 30):
+                            flaring_ztfids.append(t.ztfid)
+
+        self.logger.info(f"Found {len(flaring_ztfids)} flaring transients")
+        self.info_db.ingest_ztfid_collection(flaring_ztfids, "flaring")
 
     def get_transient(self, ztfid: str):
         df = io.get_ztfid_dataframe(ztfid=ztfid)
@@ -1192,7 +1212,10 @@ class Transient(object):
 
             if wise_baseline_correction:
                 if "WISE_bayesian" in self.meta.keys():
-                    if self.meta.get("WISE_bayesian", {}).get("baseline") is not None:
+                    if (
+                        self.meta.get("WISE_bayesian", {}).get("bayesian", {})
+                        is not None
+                    ):
                         if (
                             "bayesian" in self.meta["WISE_bayesian"].keys()
                             and self.meta["WISE_bayesian"]["bayesian"] is not None

@@ -35,6 +35,7 @@ if os.getenv("ZTFDATA"):
     LOCALSOURCE_location = os.path.join(LOCALSOURCE, "NUCLEAR", "location.csv")
     LOCALSOURCE_bts_info = os.path.join(LOCALSOURCE, "BTS", "bts.csv")
     LOCALSOURCE_peak_dates = os.path.join(LOCALSOURCE, "NUCLEAR", "peak_dates.csv")
+    LOCALSOURCE_bts_peak_dates = os.path.join(LOCALSOURCE, "BTS", "peak_dates.csv")
     LOCALSOURCE_distnr = os.path.join(LOCALSOURCE, "NUCLEAR", "distnr.csv")
     LOCALSOURCE_bts_distnr = os.path.join(LOCALSOURCE, "BTS", "distnr.csv")
     LOCALSOURCE_peak_mags = os.path.join(LOCALSOURCE, "NUCLEAR", "peak_mag.csv")
