@@ -40,6 +40,7 @@ class NuclearSample(object):
         self.info_db = SampleInfo(sampletype=self.sampletype)
 
         if self.info_db.read().get("flaring") is None:
+            logger.info("Flaring info not found, ingesting")
             self.get_flaring()
 
         if self.sampletype == "nuclear":
@@ -149,7 +150,7 @@ class NuclearSample(object):
         from ztfnuclear.utils import mjd_to_jd
 
         flaring_ztfids = []
-        logger.info("Flaring info not found, ingesting")
+        logger.info("Ingesting WISE flare data")
         for t in tqdm(self.get_transients(), total=len(self.ztfids)):
             flaring_status = None
             flaring_status = t.meta.get("WISE_dust", {}).get("dust", {}).get("status")
@@ -211,7 +212,7 @@ class NuclearSample(object):
         self.logger.info(failed)
 
     def populate_db_from_csv(self, filepath, name=None):
-        self.logger.info("Populating the database from a csv file")
+        self.logger.info(f"Populating the database from a csv file ({filepath})")
         if os.path.isfile(filepath):
             df = pd.read_csv(filepath, comment="#", index_col=0)
             ztfids = []
@@ -257,6 +258,7 @@ class NuclearSample(object):
         Use a pandas dataframe to update the MongoDB
         """
         self.logger.info("Populating the database from a pandas dataframe")
+        self.logger.debug(df)
 
         ztfids = df.index.values
         data_dict = df.to_dict(orient="index")

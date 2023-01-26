@@ -110,7 +110,8 @@ axislabels:
 cutlabels:
   full: All cuts
   temp: temperature (based on TDE fit)
-  wise: AGN cut (WISE color)
+  wise_noagn: remove AGN (based on WISE colors)
+  wise_keepagn: retain only AGN (based on WISE colors)
   bayes: "exactly 1 flare"
   nocut: "no cuts applied (only bogus and TDE fit success)"
   snia: "rise/decay based Ia cut"
@@ -119,6 +120,7 @@ cutlabels:
   coredist: "core distance <= 0.4 arcsec"
   milliquas_noagn: "remove AGN (based on Milliquas match)"
   milliquas_keepagn: "retain only AGN (based on Milliquas match)"
+
 
 fritz_queries:
     snia: fritz_class in @config['fritz_sn_ia']
@@ -143,7 +145,9 @@ selections: &id001
   flaring_temp: "3.5<temp<4.3 and -80<d_temp<200 "
   snia: "snia_cut < decay "
   overlapping_regions: "overlapping_regions == 1 "
-  wise: "((wise_w1w2<0.3 or wise_w1w2>1.8) or (wise_w2w3 <1.5 or wise_w2w3>3.5)) "
+  # wise: "((wise_w1w2<0.3 or wise_w1w2>1.8) or (wise_w2w3 <1.5 or wise_w2w3>3.5)) "
+  wise_outside_box: "in_wise_agn_box == False"
+  wise_in_box: "in_wise_agn_box == True"
   milliquas_no_agn: "crossmatch_Milliquas_type.isnull() "
   milliquas_keep_agn: "not crossmatch_Milliquas_type.isnull() "
   gold_wise: "(not (wise_w1w2<-0.1 or wise_w1w2>1.1 or wise_w2w3 <1.4 or wise_w2w3>4.3)) "
@@ -189,8 +193,10 @@ cuts:
     - milliquas_keep_agn
   boundary:
     - boundary
-  wise:
-    - wise
+  wise_noagn:
+    - wise_outside_box
+  wise_keepagn:
+    - wise_in_box
   goldwise:
     - gold_wise
   flaringwise:

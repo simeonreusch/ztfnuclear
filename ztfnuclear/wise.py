@@ -9,9 +9,6 @@ import numpy as np
 
 from ztfnuclear import io
 
-from timewise.parent_sample_base import ParentSampleBase
-from timewise.wise_data_by_visit import WiseDataByVisit
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logging.getLogger("timewise.wise_data_by_visit").setLevel(logging.DEBUG)
@@ -22,12 +19,62 @@ SERVICE = "tap"
 SAMPLE = "bts"
 
 
+def is_in_wise_agn_box(w1w2: float, w2w3: float) -> bool:
+    """
+    Code for AGN box by Jannis Necker
+    https://gitlab.desy.de/jannis.necker/air_flares
+    Cuts are taken from Hvding et al. (2022)
+    https://iopscience.iop.org/article/10.3847/1538-3881/ac5e33
+    """
+
+    # deal with mock values
+    if w1w2 > 998:
+        return False
+
+    agn_box = {
+        "W2-W3": [1.734, 3.916],
+        "W1-W2/W2-W3": [
+            [0.0771, 0.319],
+            [0.261, -0.260],
+        ],
+    }
+    if (
+        (w2w3 > agn_box["W2-W3"][0])
+        and (w2w3 < agn_box["W2-W3"][1])
+        and (
+            w1w2 > (agn_box["W1-W2/W2-W3"][0][0] * w2w3 + agn_box["W1-W2/W2-W3"][0][1])
+        )
+        and (
+            w1w2 > (agn_box["W1-W2/W2-W3"][1][0] * w2w3 + agn_box["W1-W2/W2-W3"][1][1])
+        )
+    ):
+        return True
+    else:
+        return False
+    # agn_mask =
+    #     (W2W3 > AGN_BOX["W2-W3"][0])
+    #     & (W2W3 < AGN_BOX["W2-W3"][1])
+    #     & (
+    #         W1W2
+    #         > AGN_BOX["W1-W2 / W2-W3 parameters"][0][0] * W2W3
+    #         + AGN_BOX["W1-W2 / W2-W3 parameters"][0][1]
+    #     )
+    #     & (
+    #         W1W2
+    #         > AGN_BOX["W1-W2 / W2-W3 parameters"][1][0] * W2W3
+    #         + AGN_BOX["W1-W2 / W2-W3 parameters"][1][1]
+    #     )
+    # )
+
+
 def get_wise_photometry(
     sample_df: pd.DataFrame, searchradius_arcsec: float = 5, positional: bool = True
 ) -> dict:
     """
     Execute two runs of Timewise. One to obtain the list of AllWISE IDs, one to obtain photometry given the list of IDs
     """
+    from timewise.parent_sample_base import ParentSampleBase
+    from timewise.wise_data_by_visit import WiseDataByVisit
 
     class NuclearSampleInit(ParentSampleBase):
         """The nuclear sample gets initialized here"""

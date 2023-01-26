@@ -20,6 +20,7 @@ import seaborn as sns
 
 from ztfnuclear import io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
+from ztfnuclear.wise import is_in_wise_agn_box
 
 GOLDEN_RATIO = 1.62
 
@@ -166,7 +167,19 @@ def get_tde_selection(
         #     n_orig = len(sample.query("classif == @purity_sel"))
         #     stats["n_orig"] = n_orig
 
+        fig, ax = plt.subplots()
+        ax.hist(sample.query("wise_w2w3 < 990")["wise_w2w3"].values)
+        plt.savefig("test.png")
+        # print(sample["wise_w2w3"])
+
         sample["snia_cut"] = snia_diag_cut(sample["rise"])
+        sample["in_wise_agn_box"] = sample.apply(
+            lambda row: is_in_wise_agn_box(
+                row["wise_w1w2"],
+                row["wise_w2w3"],
+            ),
+            axis=1,
+        )
         s.populate_db_from_df(sample[["snia_cut"]])
 
         # logger.info(

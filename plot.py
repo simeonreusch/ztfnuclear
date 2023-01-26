@@ -120,7 +120,7 @@ def plot_single(name):
 
 
 # plot_single("ZTF19aafnogq")
-plot_bright(bl=False)
-# plot_mag_hist(cuts=["milliquas_noagn"], logplot=True, plot_ext="png", rerun=False)
+# plot_bright(bl=False)
+plot_mag_hist(cuts=["milliquas_keepagn"], logplot=True, plot_ext="png", rerun=False)
 # plot_all_in_selection()
 # aggregate_cuts(rerun=False)
