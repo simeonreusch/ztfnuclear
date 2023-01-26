@@ -97,6 +97,16 @@ agn_star:
   - var
   - blazar
 
+star:
+  - nova
+  - CV?
+  - varstar
+  - Varstar
+  - nova?
+  - star
+  - LBV
+  - var
+
 axislabels:
   temp: Temperature (log K)
   d_temp: Temperature change (K)

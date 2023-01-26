@@ -35,6 +35,7 @@ def aggregate_cuts(
     xlim: Tuple[float] = (0.1, 3),
     ylim: Tuple[float] = (0.1, 4),
     plotrange: List[float] | None = None,
+    plot_ext: str = "pdf",
     rerun: bool = False,
 ):
     if cuts is None:
@@ -64,7 +65,7 @@ def aggregate_cuts(
                 ylim=ylim,
             )
         if plottype == "mag":
-            plot_mag_hist(cuts=cuts_now, logplot=True, plot_ext="pdf", rerun=rerun)
+            plot_mag_hist(cuts=cuts_now, logplot=True, plot_ext=plot_ext, rerun=rerun)
 
 
 def iterate_classes(
@@ -121,6 +122,6 @@ def plot_single(name):
 
 # plot_single("ZTF19aafnogq")
 # plot_bright(bl=False)
-plot_mag_hist(cuts=["milliquas_keepagn"], logplot=True, plot_ext="png", rerun=False)
+# plot_mag_hist(logplot=True, plot_ext="png", rerun=True)
 # plot_all_in_selection()
-# aggregate_cuts(rerun=False)
+aggregate_cuts(rerun=True, plottype="mag", plot_ext="png")

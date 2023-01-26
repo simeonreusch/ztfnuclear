@@ -119,6 +119,11 @@ def get_tde_selection(
             else:
                 bts_crossmatch = None
 
+            if "crossmatch_Marshal_class" in row.keys():
+                marshal_crossmatch = row["crossmatch_Marshal_class"]
+            else:
+                marshal_crossmatch = None
+
             if purity_sel == "gold":
                 if row["ztfid"] in gold_sample:
                     return "gold"
@@ -126,25 +131,34 @@ def get_tde_selection(
                 row[class_key] in config["tde"]
                 or row["tns_class"] in config["tde"]
                 or bts_crossmatch in config["tde"]
+                or marshal_crossmatch in config["tde"]
             ):
                 return "tde"
             if (
                 row[class_key] in config["sn_ia"]
                 or row["tns_class"] in config["sn_ia"]
                 or bts_crossmatch in config["sn_ia"]
+                or marshal_crossmatch in config["sn_ia"]
             ):
                 return "snia"
             if (
                 row[class_key] in config["sn_other"]
                 or row["tns_class"] in config["sn_other"]
                 or bts_crossmatch in config["sn_other"]
+                or marshal_crossmatch in config["sn_other"]
             ):
                 return "sn_other"
             if (
-                sampletype == "bts" and row[class_key] in config["agn_star"]
-            ) or bts_crossmatch in config["agn_star"]:
+                (sampletype == "bts" and row[class_key] in config["agn_star"])
+                or bts_crossmatch in config["agn_star"]
+                or marshal_crossmatch in config["star"]
+            ):
                 return "agn_star"
-            if row[class_key] in config["other"] or bts_crossmatch in config["other"]:
+            if (
+                row[class_key] in config["other"]
+                or bts_crossmatch in config["other"]
+                or marshal_crossmatch in config["other"]
+            ):
                 return "other"
             return "unclass"
 
@@ -235,6 +249,7 @@ def plot_tde_scatter(
     xlim: tuple | None = None,
     ylim: tuple | None = None,
     purity_sel: str | None = None,
+    plot_ext: str = "pdf",
     rerun: bool = False,
 ):
     """
@@ -282,10 +297,12 @@ def plot_tde_scatter(
         local = io.LOCALSOURCE_bts_plots
 
     if flaring_only:
-        outfile = os.path.join(local, f"tde_{x_values}_{y_values}_flaring_{cuts}.pdf")
+        outfile = os.path.join(
+            local, f"tde_{x_values}_{y_values}_flaring_{cuts}.{plot_ext}"
+        )
 
     else:
-        outfile = os.path.join(local, f"tde_{x_values}_{y_values}_{cuts}.pdf")
+        outfile = os.path.join(local, f"tde_{x_values}_{y_values}_{cuts}.{plot_ext}")
 
     if xlim is not None:
         ax.set_xlim(xlim)
