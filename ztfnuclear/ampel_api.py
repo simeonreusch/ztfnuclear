@@ -82,7 +82,7 @@ def ampel_api_catalog(
     requests.exceptions.RequestException,
     max_time=30,
 )
-def ampel_api_ztfid(ztfid: str, limit: int = 100) -> dict | None:
+def ampel_api_ztfid(ztfid: str, limit: int = 100, hist: bool = True) -> dict | None:
     """
     Query alerts via the Ampel API
     """
@@ -97,9 +97,14 @@ def ampel_api_ztfid(ztfid: str, limit: int = 100) -> dict | None:
 
     logger = logging.getLogger(__name__)
 
+    if hist:
+        with_hist = "true"
+    else:
+        with_hist = "false"
+
     queryurl_ztf_name = (
         API_ZTF_ARCHIVE_URL
-        + f"/object/{ztfid}/alerts?with_history=true&with_cutouts=false&limit={limit}"
+        + f"/object/{ztfid}/alerts?with_history={with_hist}&with_cutouts=false&limit={limit}"
     )
 
     logger.debug(queryurl_ztf_name)
@@ -148,6 +153,21 @@ def ampel_api_distnr(ztfid: str) -> float | None:
             distnr = np.median(distnrs)
             return distnr
 
+    else:
+        return None
+
+
+def ampel_api_sgscore(ztfid: str) -> float | None:
+    """
+    Calculate median distnr from alerts
+    """
+    query_res = ampel_api_ztfid(ztfid, hist=False)
+
+    sgscores = []
+
+    if len(query_res) > 0:
+        sgscore = query_res[0].get("candidate", {}).get("sgscore1")
+        return sgscore
     else:
         return None
 

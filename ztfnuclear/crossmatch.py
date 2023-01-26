@@ -7,7 +7,7 @@ import os, logging, requests, keyring, getpass
 import backoff
 import pandas as pd
 
-from ztfnuclear.ampel_api import ampel_api_catalog, ampel_api_distnr
+from ztfnuclear.ampel_api import ampel_api_catalog, ampel_api_distnr, ampel_api_sgscore
 from ztfnuclear import io
 from ztfnuclear.database import WISE, SarahAGN
 import ztfquery
@@ -340,6 +340,20 @@ def query_bts(ztfid) -> dict:
         res.update({"class": bts_df["type"].values[0]})
 
     return res
+
+
+def query_ampel_sgscore(ztfid: str) -> dict:
+    """
+    Gets the median core distance from Ampel alerts
+    """
+    res = ampel_api_sgscore(ztfid=ztfid)
+
+    if res:
+        logger.debug("Ampel sgscore: Match found")
+    else:
+        res = {}
+
+    return {"sgscore": res}
 
 
 def query_ampel_dist(ztfid: str) -> dict:

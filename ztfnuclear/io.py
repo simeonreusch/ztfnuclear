@@ -108,6 +108,8 @@ def download_if_neccessary(sampletype="nuclear"):
         local = LOCALSOURCE_dfs
     elif sampletype == "bts":
         local = LOCALSOURCE_bts_dfs
+    else:
+        raise ValueError("sampletype needs to be 'nuclear' or 'bts'")
 
     if os.path.exists(local):
         csvs = []

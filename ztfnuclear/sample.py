@@ -1093,6 +1093,7 @@ class Transient(object):
             query_tns,
             query_wise_cat,
             query_ampel_dist,
+            query_ampel_sgscore,
             query_sarah_agn,
             query_bts,
             query_marshal,
@@ -1130,6 +1131,8 @@ class Transient(object):
                 res_list.append(
                     {"distnr": {"dist": query_ampel_dist(ztfid=self.ztfid)}}
                 )
+            if "sgscore" in crossmatch_types:
+                res_list.append({"sgscore": query_ampel_sgscore(ztfid=self.ztfid)})
             if "sarah_agn" in crossmatch_types:
                 res_list.append(query_sarah_agn(ra_deg=self.ra, dec_deg=self.dec))
 
@@ -1189,25 +1192,24 @@ class Transient(object):
 
             if wise_baseline_correction:
                 if "WISE_bayesian" in self.meta.keys():
-                    if self.meta["WISE_bayesian"] is not None:
+                    if self.meta.get("WISE_bayesian", {}).get("baseline") is not None:
                         if (
                             "bayesian" in self.meta["WISE_bayesian"].keys()
                             and self.meta["WISE_bayesian"]["bayesian"] is not None
                         ):
                             bl_W1 = self.meta["WISE_bayesian"]["bayesian"]["Wise_W1"][
                                 "baseline"
-                            ][0]
+                            ]
                             bl_W2 = self.meta["WISE_bayesian"]["bayesian"]["Wise_W2"][
                                 "baseline"
-                            ][0]
+                            ]
 
                             bl_W1_err = self.meta["WISE_bayesian"]["bayesian"][
                                 "Wise_W1"
-                            ]["baseline_rms"][0]
+                            ]["baseline_rms"]
                             bl_W2_err = self.meta["WISE_bayesian"]["bayesian"][
                                 "Wise_W2"
-                            ]["baseline_rms"][0]
-
+                            ]["baseline_rms"]
                             wise_df["W1_mean_flux_density_bl_corr"] = (
                                 wise_df["W1_mean_flux_density"] - bl_W1
                             )
