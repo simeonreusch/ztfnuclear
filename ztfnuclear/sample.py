@@ -146,6 +146,8 @@ class NuclearSample(object):
         """
         Get all the IR flares after optical peak
         """
+        from ztfnuclear.utils import mjd_to_jd
+
         flaring_ztfids = []
         logger.info("Flaring info not found, ingesting")
         for t in tqdm(self.get_transients(), total=len(self.ztfids)):
@@ -167,9 +169,10 @@ class NuclearSample(object):
                         peaks.append(start_peak_region)
                     wise_peak = np.max(peaks)
                     if t.meta.get("peak_dates") is not None:
-                        ztf_peak = min(list(t.meta.get("peak_dates").values()))
-                        # we allow for 100 days before optical peak to have some wiggle room
-                        if wise_peak > (ztf_peak - 30):
+                        ztf_peak_mjd = min(list(t.meta.get("peak_dates").values()))
+                        ztf_peak_jd = mjd_to_jd(ztf_peak_mjd)
+                        # we allow for 50 days before optical peak to have some wiggle room
+                        if wise_peak > (ztf_peak_jd - 100):
                             flaring_ztfids.append(t.ztfid)
 
         self.logger.info(f"Found {len(flaring_ztfids)} flaring transients")

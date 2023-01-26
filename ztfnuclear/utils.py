@@ -35,6 +35,20 @@ def is_ztf_name(name) -> bool:
     return match
 
 
+def mjd_to_jd(mjd: float) -> float:
+    """
+    Convert MJD to JD
+    """
+    return mjd + 2400000.5
+
+
+def jd_to_mjd(jd: float) -> float:
+    """
+    Convert MJD to JD
+    """
+    return jd - 2400000.5
+
+
 def is_tns_name(name) -> bool:
     """
     Checks if a string adheres to the TNS naming scheme
