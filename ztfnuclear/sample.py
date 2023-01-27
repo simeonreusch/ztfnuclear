@@ -143,7 +143,7 @@ class NuclearSample(object):
         else:
             assert db_check["count"] == 7131 or db_check["count"] == 7130
 
-    def get_flaring(self):
+    def get_flaring(self, after_optical_peak: bool = True):
         """
         Get all the IR flares after optical peak
         """
@@ -169,12 +169,15 @@ class NuclearSample(object):
                         start_peak_region = min(jd_excess_regions[peakindex])
                         peaks.append(start_peak_region)
                     wise_peak = np.max(peaks)
-                    if t.meta.get("peak_dates") is not None:
-                        ztf_peak_mjd = min(list(t.meta.get("peak_dates").values()))
-                        ztf_peak_jd = mjd_to_jd(ztf_peak_mjd)
-                        # we allow for 50 days before optical peak to have some wiggle room
-                        if wise_peak > (ztf_peak_jd - 100):
-                            flaring_ztfids.append(t.ztfid)
+                    if after_optical_peak:
+                        if t.meta.get("peak_dates") is not None:
+                            ztf_peak_mjd = min(list(t.meta.get("peak_dates").values()))
+                            ztf_peak_jd = mjd_to_jd(ztf_peak_mjd)
+                            # we allow for 50 days before optical peak to have some wiggle room
+                            if wise_peak > (ztf_peak_jd - 100):
+                                flaring_ztfids.append(t.ztfid)
+                    else:
+                        flaring_ztfids.append(t.ztfid)
 
         self.logger.info(f"Found {len(flaring_ztfids)} flaring transients")
         self.info_db.ingest_ztfid_collection(flaring_ztfids, "flaring")
@@ -1207,6 +1210,7 @@ class Transient(object):
         wide: bool = False,
         thumbnail: bool = False,
         no_magrange: bool = False,
+        xlim: list[float] | None = None,
     ):
         """
         Plot the transient lightcurve
@@ -1299,6 +1303,7 @@ class Transient(object):
             sampletype=self.sampletype,
             no_magrange=no_magrange,
             classif=cl,
+            xlim=xlim,
         )
 
         return axlims

@@ -22,6 +22,15 @@ from ztfnuclear import io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.wise import is_in_wise_agn_box
 
+nice_fonts = {
+    "text.usetex": True,
+    "font.family": "serif",
+    "font.serif": "Helvetica",
+}
+matplotlib.rcParams.update(nice_fonts)
+matplotlib.rcParams["text.usetex"] = True
+matplotlib.rcParams["text.latex.preamble"] = r"\usepackage{amsmath}"
+
 GOLDEN_RATIO = 1.62
 
 logger = logging.getLogger(__name__)
@@ -263,7 +272,9 @@ def plot_tde_scatter(
 
     fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
 
-    title = f"TDE fit {x_values} vs. {y_values} ({len(sample)} transients)"
+    title = f"Nuclear sample: {len(sample)}\n"
+    title += f"cut stage: {config['cutlabels'][cuts[-1]]} "
+    fig.suptitle(title, fontsize=14)
 
     if purity_sel is not None and stats is not None:
         title += f"\nPurity: {stats['frac_pur']:.1f}% / Efficiency: {stats['frac_eff']:.1f} %"
@@ -280,8 +291,8 @@ def plot_tde_scatter(
             _df[y_values],
             marker=config["pl_props"][key]["m"],
             s=config["pl_props"][key]["s"],
-            c=config["pl_props"][key]["c"],
-            alpha=config["pl_props"][key]["a"],
+            c=config["colordict"][key],
+            # alpha=config["pl_props"][key]["a"],
             label=config["pl_props"][key]["l"] + f" ({len(_df[x_values])})",
             zorder=config["pl_props"][key]["order"],
         )
@@ -353,14 +364,16 @@ def plot_tde_scatter_seaborn(
     g.ax_joint.scatter(
         x=sample.query("classif == 'tde'")[x_values],
         y=sample.query("classif == 'tde'")[y_values],
-        c=config["pl_props"]["tde"]["c"],
+        c=config["colordict"]["tde"],
         s=config["pl_props"]["tde"]["s"],
         marker=config["pl_props"]["tde"]["m"],
     )
 
     leg = g.ax_joint.get_legend()
 
-    title = f"TDE fit {x_values} vs. {y_values} ({len(sample)} transients)"
+    title = f"Nuclear sample: {len(sample)}\n"
+    title += f"cut stage: {config['cutlabels'][cuts[-1]]} "
+    fig.suptitle(title, fontsize=14)
 
     if purity_sel is not None and stats is not None:
         title += f"\nPurity: {stats['frac_pur']:.1f}% / Efficiency: {stats['frac_eff']:.1f} %"
@@ -399,50 +412,6 @@ def plot_tde_scatter_seaborn(
     g.fig.savefig(outfile)
     plt.close()
 
-    logger.info(f"Saved to {outfile}")
-
-
-def plot_dist_hist(classif="all", plotrange: List[float] | None = [0, 6]):
-    """
-    Plot the core-distance distribution for BTS and nuclear sample
-    """
-    from ztfnuclear.sample import NuclearSample
-
-    sample_nuc, _ = get_tde_selection(cuts=["nocut"], sampletype="nuclear")
-    sample_bts, _ = get_tde_selection(cuts=["nocut"], sampletype="bts")
-
-    if classif != "all":
-        sample_nuc.query(config["classes"][classif], inplace=True)
-        sample_bts.query(config["classes"][classif], inplace=True)
-
-    fig, ax = plt.subplots(figsize=(5.5, 5.5 / 1.62))
-    fig.suptitle(f"Classification: {classif}")
-    ax.hist(
-        sample_nuc["distnr_distnr"] ** 2,
-        range=plotrange,
-        bins=100,
-        label=f"nuclear ({len(sample_nuc)})",
-        cumulative=False,
-        histtype="step",
-    )
-    ax.hist(
-        sample_bts["distnr_distnr"] ** 2,
-        range=plotrange,
-        bins=100,
-        label=f"BTS ({len(sample_bts)})",
-        cumulative=False,
-        histtype="step",
-    )
-
-    ax.set_yscale("log")
-    ax.set_xlabel("core distance squared (arcsec**2)")
-    plt.tight_layout()
-    plt.legend()
-    outdir = os.path.join(io.LOCALSOURCE_plots, "dist")
-    if not os.path.exists(outdir):
-        os.makedirs(outdir)
-    outfile = os.path.join(outdir, f"dist_hist_{classif}.png")
-    plt.savefig(outfile, dpi=300)
     logger.info(f"Saved to {outfile}")
 
 
@@ -500,8 +469,9 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plot_ext="pdf", rerun=
             df = combined.query(f"classif == @c and sample == @sample_title")
             if len(df) > 0:
                 peak_mags.append(df["peak_mag"].values)
-                colors_used.append(colordict[c])
-                classifs_used.append(c + f" ({len(df)})")
+                colors_used.append(config["colordict"][c])
+                classname_long = config["classlabels"][c]
+                classifs_used.append(classname_long + f" ({len(df)})")
 
         ax.hist(
             peak_mags,
@@ -530,7 +500,7 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plot_ext="pdf", rerun=
     title = f"Nuclear: {len_nuc} / BTS: {len_bts}\n"
 
     title += f"cut stage: {config['cutlabels'][cuts[-1]]} "
-    fig.suptitle(title)
+    fig.suptitle(title, fontsize=14)
 
     plt.tight_layout()
 
@@ -544,6 +514,97 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plot_ext="pdf", rerun=
         )
     plt.savefig(outfile)
     plt.close()
+
+
+def plot_dist_hist(
+    classif="all", plotrange: List[float] | None = [0, 5], plot_ext: str = "pdf"
+):
+    """
+    Plot the core-distance distribution for BTS and nuclear sample
+    """
+    from ztfnuclear.sample import NuclearSample
+
+    sample_nuc = get_tde_selection(cuts=["nocut"], sampletype="nuclear")
+    sample_bts = get_tde_selection(cuts=["nocut"], sampletype="bts")
+
+    if classif != "all":
+        sample_nuc.query(config["classes"][classif], inplace=True)
+        sample_bts.query(config["classes"][classif], inplace=True)
+
+    fig, ax = plt.subplots(figsize=(5.5, 5.5 / 1.62))
+    fig.suptitle(f"Classification: {config['classlabels'][classif]}")
+    ax.hist(
+        sample_nuc["distnr_distnr"] ** 2,
+        range=plotrange,
+        bins=100,
+        label=f"nuclear ({len(sample_nuc)})",
+        cumulative=False,
+        histtype="step",
+    )
+    ax.hist(
+        sample_bts["distnr_distnr"] ** 2,
+        range=plotrange,
+        bins=100,
+        label=f"BTS ({len(sample_bts)})",
+        cumulative=False,
+        histtype="step",
+    )
+
+    ax.set_yscale("log")
+    ax.set_ylabel("Counts")
+    ax.set_xlabel("Core distance (arcsec$^2$)")
+    plt.tight_layout()
+    plt.legend()
+    outdir = os.path.join(io.LOCALSOURCE_plots, "dist")
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+    outfile = os.path.join(outdir, f"dist_hist_{classif}.{plot_ext}")
+    plt.savefig(outfile, dpi=300)
+    logger.info(f"Saved to {outfile}")
+
+
+def plot_sgscore_hist(classif="all", plotrange: List[float] | None = [0, 1]):
+    """
+    Plot the core-distance distribution for BTS and nuclear sample
+    """
+    from ztfnuclear.sample import NuclearSample
+
+    sample_nuc = get_tde_selection(cuts=["nocut"], sampletype="nuclear")
+    sample_bts = get_tde_selection(cuts=["nocut"], sampletype="bts")
+
+    if classif != "all":
+        sample_nuc.query(config["classes"][classif], inplace=True)
+        sample_bts.query(config["classes"][classif], inplace=True)
+
+    fig, ax = plt.subplots(figsize=(5.5, 5.5 / 1.62))
+    fig.suptitle(f"Classification: {classif}")
+    ax.hist(
+        sample_nuc["crossmatch_sgscore_sgscore"],
+        range=plotrange,
+        bins=100,
+        label=f"nuclear ({len(sample_nuc)})",
+        cumulative=False,
+        histtype="step",
+    )
+    ax.hist(
+        sample_bts["crossmatch_sgscore_sgscore"] ** 2,
+        range=plotrange,
+        bins=100,
+        label=f"BTS ({len(sample_bts)})",
+        cumulative=False,
+        histtype="step",
+    )
+
+    ax.set_yscale("log")
+    ax.set_xlabel("sgscore (0 = galaxy, 1 = star)")
+    plt.tight_layout()
+    plt.legend()
+    outdir = os.path.join(io.LOCALSOURCE_plots, "sgscore")
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+    outfile = os.path.join(outdir, f"sgscore_hist_{classif}.png")
+    plt.savefig(outfile, dpi=300)
+    logger.info(f"Saved to {outfile}")
 
 
 def plot_mag_cdf(cuts: str | None = "agn"):
@@ -805,6 +866,7 @@ def plot_lightcurve(
     sampletype: str = "nuclear",
     no_magrange: bool = False,
     classif: str | None = None,
+    xlim: list[float] | None = None,
 ) -> list:
     """Plot a lightcurve"""
     if magplot:
@@ -1063,14 +1125,17 @@ def plot_lightcurve(
     else:
         outfile = os.path.join(plot_dir, ztfid + ".pdf")
 
+    if not xlim:
+        xlim1, xlim2 = ax.get_xlim()
+        axlims = {"xlim": [xlim1, xlim2]}
+    else:
+        ax.set_xlim(xlim)
+        axlims = {"xlim": xlim}
+
     plt.tight_layout()
 
     plt.savefig(outfile)
     plt.close()
-
-    xlim1, xlim2 = ax.get_xlim()
-
-    axlims = {"xlim": [xlim1, xlim2]}
 
     del fig, ax
 
