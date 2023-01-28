@@ -120,8 +120,8 @@ def plot_single(name):
     )
 
 
-# aggregate_cuts(rerun=False, plottype="scatter", plot_ext="pdf")
-iterate_classes()
+aggregate_cuts(rerun=False, plottype="scatter", plot_ext="pdf")
+# iterate_classes()
 # plot_single("ZTF19aafnogq")
 # plot_bright(bl=False)
 # plot_mag_hist(logplot=True, plot_ext="png", rerun=True)

@@ -264,6 +264,14 @@ colordict:
   sn_other: "#af8dce"
   agn_star: "#a98078"
 
+colordict_highlight:
+  unclass: "#5799c7"
+  other: "#ff9f4a"
+  snia: green
+  tde: red
+  sn_other: darkviolet
+  agn_star: peru
+
 pl_props:
     unclass: 
       m: +
@@ -280,7 +288,7 @@ pl_props:
       l: SN Ia
       order: 2
     sn_other:
-      m: .
+      m: s
       s: 8
       c: orange
       a: 1
@@ -308,7 +316,7 @@ pl_props:
       l: Other
       order: 3
     agn_star:
-      m: .
+      m: h
       s: 8
       c: black
       a: 1
