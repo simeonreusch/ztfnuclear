@@ -564,7 +564,9 @@ def plot_dist_hist(
     logger.info(f"Saved to {outfile}")
 
 
-def plot_sgscore_hist(classif="all", plotrange: List[float] | None = [0, 1]):
+def plot_sgscore_hist(
+    classif="all", plotrange: List[float] | None = [0, 1], plot_ext="pdf"
+):
     """
     Plot the core-distance distribution for BTS and nuclear sample
     """
@@ -603,7 +605,7 @@ def plot_sgscore_hist(classif="all", plotrange: List[float] | None = [0, 1]):
     outdir = os.path.join(io.LOCALSOURCE_plots, "sgscore")
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-    outfile = os.path.join(outdir, f"sgscore_hist_{classif}.png")
+    outfile = os.path.join(outdir, f"sgscore_hist_{classif}.{plot_ext}")
     plt.savefig(outfile, dpi=300)
     logger.info(f"Saved to {outfile}")
 

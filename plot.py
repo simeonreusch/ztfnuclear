@@ -15,6 +15,7 @@ from ztfnuclear.plot import (
     get_tde_selection,
     plot_mag_hist,
     plot_dist_hist,
+    plot_sgscore_hist,
 )
 from ztfnuclear.sample import NuclearSample, Transient
 
@@ -69,16 +70,20 @@ def aggregate_cuts(
 
 
 def iterate_classes(
+    plottype="dist",
     classes: List[str] = [
         "all",
         "snia",
         "tde",
         "sn_other",
         "unclass",
-    ]
+    ],
 ):
     for c in classes:
-        plot_dist_hist(classif=c)
+        if plottype == "dist":
+            plot_dist_hist(classif=c)
+        if plottype == "sgscore":
+            plot_sgscore_hist(classif=c)
 
 
 def plot_all_in_selection(
@@ -120,8 +125,8 @@ def plot_single(name):
     )
 
 
-aggregate_cuts(rerun=False, plottype="scatter", plot_ext="pdf")
-# iterate_classes()
+# aggregate_cuts(rerun=False, plottype="scatter", plot_ext="pdf")
+iterate_classes(plottype="sgscore")
 # plot_single("ZTF19aafnogq")
 # plot_bright(bl=False)
 # plot_mag_hist(logplot=True, plot_ext="png", rerun=True)
