@@ -46,6 +46,8 @@ def get_tde_selection(
     sampletype: str = "nuclear",
     purity_sel: str | None = "tde",
     rerun: bool = False,
+    require_fitsuccess: bool = True,
+    reject_bogus: bool = True,
 ) -> Tuple[pd.DataFrame, dict]:
     """
     Apply selection cuts to a pandas dataframe
@@ -111,10 +113,11 @@ def get_tde_selection(
         )
 
         # cut everything flagged as bogus
-        if sampletype == "nuclear":
-            sample.query(config["selections"]["bogus"], inplace=True)
-        else:
-            sample.query(config["selections"]["bogusbts"], inplace=True)
+        if reject_bogus:
+            if sampletype == "nuclear":
+                sample.query(config["selections"]["bogus"], inplace=True)
+            else:
+                sample.query(config["selections"]["bogusbts"], inplace=True)
 
         def simple_class(row, sampletype, purity_sel):
             """Add simple classification labels"""
@@ -182,18 +185,14 @@ def get_tde_selection(
         n_fitfail = len(sample.query("success == False"))
 
         # Only use transients with fit success
-        sample.query("success == True", inplace=True)
+        if require_fitsuccess:
+            sample.query("success == True", inplace=True)
 
         # stats = {Any: Any}
 
         # if purity_sel is not None:
         #     n_orig = len(sample.query("classif == @purity_sel"))
         #     stats["n_orig"] = n_orig
-
-        fig, ax = plt.subplots()
-        ax.hist(sample.query("wise_w2w3 < 990")["wise_w2w3"].values)
-        plt.savefig("test.png")
-        # print(sample["wise_w2w3"])
 
         sample["snia_cut"] = snia_diag_cut(sample["rise"])
         sample["in_wise_agn_box"] = sample.apply(
@@ -718,6 +717,48 @@ def plot_location():
     plt.tight_layout()
     plt.savefig(outfile)
     plt.close()
+
+
+def plot_bts_classes(plot_ext: str = "pdf"):
+    """
+    Plot the BTS classifications as pie chart
+    """
+    sample = get_tde_selection(
+        cuts=["nocut"],
+        sampletype="bts",
+        rerun=True,
+        reject_bogus=False,
+        require_fitsuccess=False,
+    )
+
+    sample.query("not classif.isnull()", inplace=True)
+
+    total = len(sample)
+
+    fig, ax = plt.subplots(figsize=(5.5, 5.5 / 1.62))
+    fig.suptitle(f"BTS Classifications")
+
+    entries = []
+    labels = []
+    colors = []
+    for cl in sample.classif.unique():
+        len_class = len(sample.query("classif == @cl"))
+        entries.append(len_class)
+        colors.append(config["colordict_highlight"][cl])
+        clabel = config["classlabels"][cl]
+        clabel += f"\n{len_class/total*100:.1f}\%"
+        labels.append(clabel)
+    ax.pie(entries, labels=labels, colors=colors)  # , autopct="%1.2f%%")
+    plt.tight_layout()
+    outfile = os.path.join(io.LOCALSOURCE_bts_plots, f"BTS_full.{plot_ext}")
+    plt.savefig(outfile)
+    sample = get_tde_selection(
+        cuts=["nocut"],
+        sampletype="bts",
+        rerun=True,
+        reject_bogus=True,
+        require_fitsuccess=True,
+    )
 
 
 def plot_salt():
