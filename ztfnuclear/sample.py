@@ -1083,26 +1083,27 @@ class Transient(object):
         else:
             return message
 
-    def get_crossmatch_info(self, exclude: list = ["WISE"]) -> Optional[str]:
+    def get_crossmatch_for_viewer(self, include: list = ["WISE"]) -> Optional[str]:
         """
-        Read the crossmatch results from the DB and return a dict with found values
+        Read the crossmatch results from the DB and return a string with found values
         """
         xmatch = self.meta["crossmatch"]
         message = ""
-        for key in xmatch.keys():
-            subdict = xmatch[key]
-            if len(subdict) > 0:
-                if (
-                    subdict is not None
-                    and key not in exclude
-                    and isinstance(subdict, dict)
-                ):
-                    message += key
-                    if "type" in subdict.keys():
-                        if key == "TNS" and subdict["type"] is not None:
-                            message += f" {subdict['type']}"
-                    if "dist" in subdict.keys():
-                        message += f" {subdict['dist']:.5f}  "
+        for key in ["Milliquas", "TNS", "Marshal"]:
+            entry = xmatch.get(key, {})
+            if len(entry) > 0:
+                # if key == "Milliquas":
+                #     print(entry)
+                if key == "TNS" or key == "Milliquas":
+                    classif = entry.get("type")
+                    if classif is not None:
+                        message += f"{key}: {classif}  "
+
+                if key == "Marshal":
+                    classif = entry.get("class")
+                    if classif is not None:
+                        message += f"{key}: {classif}"
+
         if len(message) == 0:
             return None
         else:

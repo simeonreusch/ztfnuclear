@@ -719,7 +719,7 @@ def plot_location():
     plt.close()
 
 
-def plot_bts_classes(plot_ext: str = "pdf"):
+def plot_bts_classes(plot_ext: str = "pdf", classified_only: bool = False):
     """
     Plot the BTS classifications as pie chart
     """
@@ -731,7 +731,12 @@ def plot_bts_classes(plot_ext: str = "pdf"):
         require_fitsuccess=False,
     )
 
+    # sample.sort_values(by="classif", inplace=True)
+
     sample.query("not classif.isnull()", inplace=True)
+
+    if classified_only:
+        sample.query("classif != 'unclass'", inplace=True)
 
     total = len(sample)
 

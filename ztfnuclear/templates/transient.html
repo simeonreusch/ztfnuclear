@@ -102,9 +102,9 @@
             {% endif %}
         </div>
         <div class="row">
-            {% if transient.get_crossmatch_info() != None %}
+            {% if transient.get_crossmatch_for_viewer() != None %}
                     <h5 style="color:#787878;">
-                      Crossmatch: {{ transient.get_crossmatch_info() }}
+                      Crossmatch: {{ transient.get_crossmatch_for_viewer() }}
                     </h5>
             {% else %}
                     <h5 style="color:#C9C9C9;">
