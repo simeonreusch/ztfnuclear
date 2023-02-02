@@ -823,6 +823,9 @@ class Transient(object):
         """
         Get the AMPEL redshift from the database
         """
+        if fritz_z := self.meta.get("fritz_z"):
+            return float(fritz_z)
+
         if "ampel_z" in self.meta.keys():
             if "z" in self.meta["ampel_z"].keys():
                 ampel_z = self.meta["ampel_z"]["z"]
@@ -833,12 +836,16 @@ class Transient(object):
     @cached_property
     def z_dist(self) -> Optional[float]:
         """
-        Get the AMPEL redshift distance from the database
+        Get the redshift distance from the database. In case we have a Fritz redshift, the distance is set to 0 (we trust Fritz)
         """
+        if self.meta.get("fritz_z"):
+            return 0.0
+
         if "ampel_z" in self.meta.keys():
             if "z_dist" in self.meta["ampel_z"].keys():
                 ampel_z_dist = self.meta["ampel_z"]["z_dist"]
                 return ampel_z_dist
+
         else:
             return None
 
