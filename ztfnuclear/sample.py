@@ -307,7 +307,9 @@ class NuclearSample(object):
         Query Fritz for the full sample
         """
         self.logger.info("Obtaining metadata on full sample from Fritz")
-        for i, ztfid in tqdm(enumerate(self.ztfids[startindex:])):
+        for i, ztfid in tqdm(
+            enumerate(self.ztfids[startindex:]), total=len(self.ztfids[startindex:])
+        ):
             self.logger.debug(f"{ztfid}: Querying Fritz")
             self.logger.debug(f"Transient {i+startindex} of {len(self.ztfids)}")
             t = Transient(ztfid)
