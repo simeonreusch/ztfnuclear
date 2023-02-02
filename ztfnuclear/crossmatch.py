@@ -348,7 +348,7 @@ def query_ampel_sgscore(ztfid: str) -> dict:
     """
     res = ampel_api_sgscore(ztfid=ztfid)
 
-    if res:
+    if res is not None:
         logger.debug("Ampel sgscore: Match found")
     else:
         res = {}
@@ -362,7 +362,7 @@ def query_ampel_dist(ztfid: str) -> dict:
     """
     res = ampel_api_distnr(ztfid=ztfid)
 
-    if res:
+    if res is not None:
         logger.debug("Ampel dist: Match found")
     else:
         res = {}

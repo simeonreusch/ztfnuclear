@@ -43,6 +43,7 @@ def aggregate_cuts(
         cuts_to_use = [
             "nocut",
             "coredist",
+            # "sgscore",
             "milliquas_noagn",
             "snia",
             "temp",
@@ -125,8 +126,8 @@ def plot_single(name):
     )
 
 
-# aggregate_cuts(rerun=False, plottype="scatter", plot_ext="pdf")
-iterate_classes(plottype="sgscore")
+aggregate_cuts(rerun=True, plottype="mag", plot_ext="pdf", cuts=["full"])
+# iterate_classes(plottype="sgscore")
 # plot_single("ZTF19aafnogq")
 # plot_bright(bl=False)
 # plot_mag_hist(logplot=True, plot_ext="png", rerun=True)

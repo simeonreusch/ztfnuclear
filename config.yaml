@@ -127,7 +127,8 @@ cutlabels:
   snia: "rise/decay based Ia cut"
   chisq: "chisq. cut (TDE $<$ SALT)"
   risedecay: "TDE-fit rise and decay time"
-  coredist: "core distance $<=$ 0.4 arcsec"
+  coredist: "core distance $<$ 0.4 arcsec"
+  sgscore: "sgscore $<$ 0.4"
   milliquas_noagn: "remove AGN (based on Milliquas match)"
   milliquas_keepagn: "retain only AGN (based on Milliquas match)"
 
@@ -174,8 +175,9 @@ selections: &id001
   gold_risedecay: "0.9<rise<2.5 and 1.5<decay<3.8 "
   flaring_risedecay: "1.4<decay<4 and 0.8<rise<2.5 "
   flaring: "ztfid in @flaring_ztfids "
-  coredist: "distnr_distnr <= 0.4 "
+  coredist: "distnr_distnr < 0.4 "
   sgscore: "crossmatch_sgscore_sgscore < 0.4 "
+  # sgscore: "rise > -1e99 or rise.isnull() "
 
     # # that's the one for dtemp = 15k, evolution from peak, bolcorr
     # tde_selection_finetuned = "temp > 3.93 and temp < 4.38 and d_temp>-90 and d_temp < 140 and rise>0.85 and rise<2.05 and decay>1.1 and decay<3 and red_chisq<6 and red_chisq < salt_red_chisq"
@@ -185,6 +187,7 @@ selections: &id001
 cuts:
   full: 
     - risedecay
+    - sgscore
     - coredist
     - chisq
     - temp
@@ -192,12 +195,15 @@ cuts:
     - overlapping_regions
     - milliquas_no_agn
   goldfull:
+    - coredist
+    - sgscore
     - gold_risedecay
     - gold_chisq
     - gold_temp
     - overlapping_regions
     - gold_wise
   flaringfull:
+    - coredist
     - flaring
     - flaring_risedecay
     - flaring_chisq
