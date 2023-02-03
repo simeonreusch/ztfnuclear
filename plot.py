@@ -43,7 +43,7 @@ def aggregate_cuts(
         cuts_to_use = [
             "nocut",
             "coredist",
-            # "sgscore",
+            "sgscore",
             "milliquas_noagn",
             "snia",
             "temp",
@@ -126,7 +126,7 @@ def plot_single(name):
     )
 
 
-aggregate_cuts(rerun=True, plottype="mag", plot_ext="pdf", cuts=["full"])
+aggregate_cuts(rerun=False, plottype="mag", plot_ext="pdf")
 # iterate_classes(plottype="sgscore")
 # plot_single("ZTF19aafnogq")
 # plot_bright(bl=False)
