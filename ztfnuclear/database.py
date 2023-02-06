@@ -40,8 +40,10 @@ class SampleInfo(object):
         self.db = self.client.ztfnuclear
         if self.sampletype == "nuclear":
             self.coll = self.db.info
-        else:
+        elif self.sampletype == "bts":
             self.coll = self.db.info_bts
+        elif self.sampletype == "train":
+            self.coll = self.db.info_train
 
     def update(self, data):
         """
@@ -96,8 +98,10 @@ class MetadataDB(object):
         self.db = self.client.ztfnuclear
         if self.sampletype == "nuclear":
             self.coll = self.db.metadata
-        else:
+        elif self.sampletype == "bts":
             self.coll = self.db.metadata_bts
+        elif self.sampletype == "train":
+            self.coll = self.db.metadata_train
 
     def update_transient(self, ztfid: str, data: dict):
         """
@@ -299,8 +303,10 @@ class MetadataDB(object):
         """
         if self.sampletype == "nuclear":
             items_in_coll = self.db.command("collstats", "metadata")["count"]
-        else:
+        elif self.sampletype == "bts":
             items_in_coll = self.db.command("collstats", "metadata_bts")["count"]
+        elif self.sampletype == "train":
+            items_in_coll = self.db.command("collstats", "metadata_train")["count"]
 
         testobj = self.read_transient(ztfid="ZTF19aatubsj")
 

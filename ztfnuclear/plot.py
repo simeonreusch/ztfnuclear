@@ -72,7 +72,7 @@ def get_tde_selection(
     if sampletype == "nuclear":
         salt_key = "salt_loose_bl"
         class_key = "fritz_class"
-    else:
+    elif sampletype == "bts":
         salt_key = "salt"
         class_key = "type"
 
@@ -116,14 +116,14 @@ def get_tde_selection(
         if reject_bogus:
             if sampletype == "nuclear":
                 sample.query(config["selections"]["bogus"], inplace=True)
-            else:
+            elif sampletype == "bts":
                 sample.query(config["selections"]["bogusbts"], inplace=True)
 
         def simple_class(row, sampletype, purity_sel):
             """Add simple classification labels"""
             if sampletype == "nuclear":
                 class_key = "fritz_class"
-            else:
+            elif sampletype == "bts":
                 class_key = "type"
 
             if "crossmatch_bts_class" in row.keys():
@@ -304,7 +304,7 @@ def plot_tde_scatter(
 
     if sampletype == "nuclear":
         local = io.LOCALSOURCE_plots
-    else:
+    elif sampletype == "bts":
         local = io.LOCALSOURCE_bts_plots
 
     if flaring_only:
@@ -404,7 +404,7 @@ def plot_tde_scatter_seaborn(
 
     if sampletype == "nuclear":
         local = io.LOCALSOURCE_plots
-    else:
+    elif sampletype == "bts":
         local = io.LOCALSOURCE_bts_plots
 
     outfile = os.path.join(local, f"tde_{x_values}_{y_values}_seaborn_{cuts}.pdf")
@@ -928,7 +928,7 @@ def plot_lightcurve(
 
     if sampletype == "nuclear":
         local = io.LOCALSOURCE_plots
-    else:
+    elif sampletype == "bts":
         local = io.LOCALSOURCE_bts_plots
 
     if magplot:
@@ -1319,7 +1319,7 @@ def plot_tde_fit(
 
     if sampletype == "nuclear":
         plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "tde_fit")
-    else:
+    elif sampletype == "bts":
         plot_dir = os.path.join(io.LOCALSOURCE_bts_plots, "lightcurves", "tde_fit")
 
     if not os.path.exists(plot_dir):

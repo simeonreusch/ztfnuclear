@@ -140,7 +140,7 @@ class NuclearSample(object):
 
         if self.sampletype == "nuclear":
             assert db_check["count"] == 11687
-        else:
+        elif self.sampletype == "bts":
             assert db_check["count"] == 7131 or db_check["count"] == 7130
 
     def get_flaring(self, after_optical_peak: bool = True):
@@ -674,7 +674,7 @@ class Transient(object):
 
         if self.sampletype == "nuclear":
             transient_info = meta.read_transient(self.ztfid)
-        else:
+        elif self.sampletype == "bts":
             transient_info = meta_bts.read_transient(self.ztfid)
 
         if transient_info is None:
@@ -707,7 +707,7 @@ class Transient(object):
         """
         if self.sampletype == "nuclear":
             bl_file = os.path.join(io.LOCALSOURCE_baseline, self.ztfid + "_bl.csv")
-        else:
+        elif self.sampletype == "bts":
             bl_file = os.path.join(io.LOCALSOURCE_bts_baseline, self.ztfid + "_bl.csv")
 
         if os.path.isfile(bl_file):
@@ -740,7 +740,7 @@ class Transient(object):
 
         if self.sampletype == "nuclear":
             meta.update_transient(self.ztfid, data={"bl_info": bl_info})
-        else:
+        elif self.sampletype == "bts":
             meta_bts.update_transient(self.ztfid, data={"bl_info": bl_info})
 
     @cached_property
@@ -750,7 +750,7 @@ class Transient(object):
         """
         if self.sampletype == "nuclear":
             lc_path = os.path.join(io.LOCALSOURCE_dfs, self.ztfid + ".csv")
-        else:
+        elif self.sampletype == "bts":
             lc_path = os.path.join(io.LOCALSOURCE_bts_dfs, self.ztfid + ".csv")
         lc = pd.read_csv(lc_path, comment="#")
 
@@ -870,7 +870,7 @@ class Transient(object):
         """
         if self.sampletype == "nuclear":
             transient_metadata = meta.read_transient(ztfid=self.ztfid)
-        else:
+        elif self.sampletype == "bts":
             transient_metadata = meta_bts.read_transient(ztfid=self.ztfid)
         if transient_metadata:
             return transient_metadata
@@ -898,7 +898,7 @@ class Transient(object):
         """
         if self.sampletype == "nuclear":
             plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "thumbnails")
-        else:
+        elif self.sampletype == "bts":
             plot_dir = os.path.join(
                 io.LOCALSOURCE_bts_bplots, "lightcurves", "thumbnails"
             )
@@ -919,7 +919,7 @@ class Transient(object):
         """
         if self.sampletype == "nuclear":
             path_to_lc = os.path.join(io.LOCALSOURCE_irsa, f"{self.ztfid}.csv")
-        else:
+        elif self.sampletype == "bts":
             path_to_lc = os.path.join(io.LOCALSOURCE_bts_irsa, f"{self.ztfid}.csv")
         if not os.path.isfile(path_to_lc):
             df = io.load_irsa(ra=self.ra, dec=self.dec, radius_arcsec=0.5)
@@ -1016,7 +1016,7 @@ class Transient(object):
 
         if self.sampletype == "nuclear":
             meta.update_transient(self.ztfid, data={"comments": all_comments})
-        else:
+        elif self.sampletype == "bts":
             meta_bts.update_transient(self.ztfid, data={"comments": all_comments})
 
     def delete_all_comments(self):
@@ -1025,7 +1025,7 @@ class Transient(object):
         """
         if self.sampletype == "nuclear":
             meta.update_transient(self.ztfid, data={"comments": {}})
-        else:
+        elif self.sampletype == "bts":
             meta_bts.update_transient(self.ztfid, data={"comments": {}})
 
     def get_comments_generator(self):
@@ -1061,7 +1061,7 @@ class Transient(object):
 
         if self.sampletype == "nuclear":
             meta.update_transient(self.ztfid, data={"comments": comments_dict})
-        else:
+        elif self.sampletype == "bts":
             meta_bts.update_transient(self.ztfid, data={"comments": comments_dict})
 
     @cached_property
@@ -1186,7 +1186,7 @@ class Transient(object):
 
         if self.sampletype == "nuclear":
             m_db = meta
-        else:
+        elif self.sampletype == "bts":
             m_db = meta_bts
 
         if "name" in self.crossmatch["crossmatch"].get("TNS", {}).keys():
@@ -1204,7 +1204,7 @@ class Transient(object):
         data = fritzinfo[self.ztfid]
         if self.sampletype == "nuclear":
             meta.update_transient(ztfid=self.ztfid, data=data)
-        else:
+        elif self.sampletype == "bts":
             meta_bts.update_transient(ztfid=self.ztfid, data=data)
 
     def plot(
@@ -1332,7 +1332,7 @@ class Transient(object):
 
         if self.sampletype == "nuclear":
             m_db = meta
-        else:
+        elif self.sampletype == "bts":
             m_db = meta_bts
 
         if len(self.baseline) > 0:

@@ -227,7 +227,7 @@ def get_ztfid_dataframe(
     if is_valid_ztfid(ztfid):
         if sampletype == "nuclear":
             filepath = os.path.join(LOCALSOURCE_dfs, f"{ztfid}.csv")
-        else:
+        elif sampletype == "bts":
             filepath = os.path.join(LOCALSOURCE_bts_dfs, f"{ztfid}.csv")
         try:
             df = pd.read_csv(filepath, comment="#")
@@ -294,7 +294,7 @@ def airflares_stock_to_ztfid(sampletype="nuclear"):
     """ """
     if sampletype == "nuclear":
         infile = LOCALSOURCE_timewise_raw
-    else:
+    elif sampletype == "bts":
         infile = LOCALSOURCE_timewise_bts_raw
 
     with open(infile, "r") as f:

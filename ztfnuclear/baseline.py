@@ -429,7 +429,7 @@ def baseline(
 
     if transient.sampletype == "nuclear":
         outpath = os.path.join(io.LOCALSOURCE_baseline, transient.ztfid + "_bl.csv")
-    else:
+    elif transient.sampletype == "bts":
         outpath = os.path.join(io.LOCALSOURCE_bts_baseline, transient.ztfid + "_bl.csv")
     df.to_csv(outpath)
 
