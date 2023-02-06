@@ -711,7 +711,7 @@ class Transient(object):
             bl_file = os.path.join(io.LOCALSOURCE_bts_baseline, self.ztfid + "_bl.csv")
 
         if os.path.isfile(bl_file):
-            bl = pd.read_csv(bl_file)
+            bl = pd.read_csv(bl_file, comment="#")
         else:
             # create empty df
             bl = pd.DataFrame()
@@ -735,6 +735,7 @@ class Transient(object):
         Recreate the baseline
         """
         bl, bl_info = baseline.baseline(transient=self, plot=False)
+
         self.baseline = bl
         self.baseline_info = bl_info
 

@@ -110,6 +110,7 @@ def baseline(
 
     """
     df = transient.df
+    header = transient.header
 
     if excl_poor_conditions:
         df = df[(df["pass"] == 1)]
@@ -431,7 +432,18 @@ def baseline(
         outpath = os.path.join(io.LOCALSOURCE_baseline, transient.ztfid + "_bl.csv")
     elif transient.sampletype == "bts":
         outpath = os.path.join(io.LOCALSOURCE_bts_baseline, transient.ztfid + "_bl.csv")
-    df.to_csv(outpath)
+
+    headerstr = ""
+    for i, val in header.items():
+        headerstr += f"#{i}={val}\n"
+
+    if os.path.isfile(outpath):
+        os.remove(outpath)
+
+    with open(outpath, "w") as f:
+        f.write(headerstr)
+        df.to_csv(f)
+        f.close()
 
     return df, fcqfid_dict
 

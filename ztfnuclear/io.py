@@ -16,65 +16,66 @@ import numpy as np
 if os.getenv("ZTFDATA"):
 
     _SOURCEDIR = os.path.dirname(os.path.realpath(__file__))
-    LOCALSOURCE = os.path.join(str(os.getenv("ZTFDATA")), "nuclear_sample")
-    LOCALSOURCE_pickle = os.path.join(
-        str(os.getenv("ZTFDATA")), "nuclear_sample", "NUCLEAR", "overview.pkl"
-    )
-    LOCALSOURCE_pickle_flaring = os.path.join(
-        str(os.getenv("ZTFDATA")),
-        "nuclear_sample",
-        "NUCLEAR",
+    BASE = os.path.join(str(os.getenv("ZTFDATA")), "nuclear_sample")
+    SRC_nuclear = os.path.join(BASE, "NUCLEAR")
+    SRC_bts = os.path.join(BASE, "BTS")
+    SRC_train = os.path.join(BASE, "TRAIN")
+
+    SRC_nuclear_pickle = os.path.join(SRC_nuclear, "overview.pkl")
+    SRC_nuclear_pickle_flaring = os.path.join(
+        SRC_nuclear,
         "overview_flaring.pkl",
     )
-    LOCALSOURCE_dfs = os.path.join(LOCALSOURCE, "NUCLEAR", "data")
-    LOCALSOURCE_bts_dfs = os.path.join(LOCALSOURCE, "BTS", "data")
-    LOCALSOURCE_irsa = os.path.join(LOCALSOURCE, "NUCLEAR", "irsa")
-    LOCALSOURCE_bts_irsa = os.path.join(LOCALSOURCE, "BTS", "irsa")
-    LOCALSOURCE_fitres = os.path.join(LOCALSOURCE, "NUCLEAR", "fitres")
-    LOCALSOURCE_ampelz = os.path.join(LOCALSOURCE, "NUCLEAR", "ampel_z.json")
-    LOCALSOURCE_location = os.path.join(LOCALSOURCE, "NUCLEAR", "location.csv")
-    LOCALSOURCE_bts_info = os.path.join(LOCALSOURCE, "BTS", "bts.csv")
-    LOCALSOURCE_peak_dates = os.path.join(LOCALSOURCE, "NUCLEAR", "peak_dates.csv")
-    LOCALSOURCE_bts_peak_dates = os.path.join(LOCALSOURCE, "BTS", "peak_dates.csv")
-    LOCALSOURCE_distnr = os.path.join(LOCALSOURCE, "NUCLEAR", "distnr.csv")
-    LOCALSOURCE_bts_distnr = os.path.join(LOCALSOURCE, "BTS", "distnr.csv")
-    LOCALSOURCE_peak_mags = os.path.join(LOCALSOURCE, "NUCLEAR", "peak_mag.csv")
-    LOCALSOURCE_bts_peak_mags = os.path.join(LOCALSOURCE, "BTS", "peak_mag.csv")
-    LOCALSOURCE_ZTF_tdes = os.path.join(LOCALSOURCE, "NUCLEAR", "ztf_tdes.csv")
+
+    LOCALSOURCE_dfs = os.path.join(SRC_nuclear, "data")
+    LOCALSOURCE_bts_dfs = os.path.join(SRC_bts, "data")
+    LOCALSOURCE_train_dfs = os.path.join(SRC_train, "data")
+
+    LOCALSOURCE_irsa = os.path.join(SRC_nuclear, "irsa")
+    LOCALSOURCE_bts_irsa = os.path.join(SRC_bts, "irsa")
+
+    LOCALSOURCE_fitres = os.path.join(SRC_nuclear, "fitres")
+    LOCALSOURCE_ampelz = os.path.join(SRC_nuclear, "ampel_z.json")
+    LOCALSOURCE_location = os.path.join(SRC_nuclear, "location.csv")
+    LOCALSOURCE_bts_info = os.path.join(SRC_bts, "bts.csv")
+    LOCALSOURCE_peak_dates = os.path.join(SRC_nuclear, "peak_dates.csv")
+    LOCALSOURCE_bts_peak_dates = os.path.join(SRC_bts, "peak_dates.csv")
+    LOCALSOURCE_distnr = os.path.join(SRC_nuclear, "distnr.csv")
+    LOCALSOURCE_bts_distnr = os.path.join(SRC_bts, "distnr.csv")
+    LOCALSOURCE_peak_mags = os.path.join(SRC_nuclear, "peak_mag.csv")
+    LOCALSOURCE_bts_peak_mags = os.path.join(SRC_bts, "peak_mag.csv")
+    LOCALSOURCE_ZTF_tdes = os.path.join(SRC_nuclear, "ztf_tdes.csv")
     LOCALSOURCE_WISE = os.path.join(LOCALSOURCE, "WISE")
     LOCALSOURCE_sarah_agn = os.path.join(
         LOCALSOURCE, "ML_reconstructed_AGN_catalogue.fits"
     )
     LOCALSOURCE_timewise = os.path.join(
-        LOCALSOURCE, "NUCLEAR", "timewise", "timewise_lightcurves_nuclear.json"
+        SRC_nuclear, "timewise", "timewise_lightcurves_nuclear.json"
     )
     LOCALSOURCE_timewise_raw = os.path.join(
-        LOCALSOURCE, "NUCLEAR", "timewise", "timewise_data_product_tap__chunk0.json"
+        SRC_nuclear, "timewise", "timewise_data_product_tap__chunk0.json"
     )
     LOCALSOURCE_timewise_bts = os.path.join(
-        LOCALSOURCE, "BTS", "timewise", "timewise_lightcurves_bts.json"
+        SRC_bts, "timewise", "timewise_lightcurves_bts.json"
     )
     LOCALSOURCE_timewise_bts_raw = os.path.join(
-        LOCALSOURCE, "BTS", "timewise", "timewise_data_product_tap__chunk0.json"
+        SRC_bts, "timewise", "timewise_data_product_tap__chunk0.json"
     )
-    LOCALSOURCE_WISE_bayesian = os.path.join(
-        LOCALSOURCE, "NUCLEAR", "wise_bayesian_nuclear.json"
-    )
-    LOCALSOURCE_WISE_bayesian_bts = os.path.join(
-        LOCALSOURCE, "BTS", "wise_bayesian_bts.json"
-    )
-    LOCALSOURCE_WISE_dust = os.path.join(
-        LOCALSOURCE, "NUCLEAR", "wise_dust_nuclear.json"
-    )
-    LOCALSOURCE_WISE_dust_bts = os.path.join(LOCALSOURCE, "BTS", "wise_dust_bts.json")
+    LOCALSOURCE_WISE_bayesian = os.path.join(SRC_nuclear, "wise_bayesian_nuclear.json")
+    LOCALSOURCE_WISE_bayesian_bts = os.path.join(SRC_bts, "wise_bayesian_bts.json")
+    LOCALSOURCE_WISE_dust = os.path.join(SRC_nuclear, "wise_dust_nuclear.json")
+    LOCALSOURCE_WISE_dust_bts = os.path.join(SRC_bts, "wise_dust_bts.json")
     LOCALSOURCE_plots = os.path.join(LOCALSOURCE, "plots")
     LOCALSOURCE_bts_plots = os.path.join(LOCALSOURCE, "plots_bts")
     LOCALSOURCE_plots_irsa = os.path.join(LOCALSOURCE, "plots", "lightcurves_irsa")
-    LOCALSOURCE_baseline = os.path.join(LOCALSOURCE, "NUCLEAR", "baseline")
-    LOCALSOURCE_bts_baseline = os.path.join(LOCALSOURCE, "BTS", "baseline")
+    LOCALSOURCE_baseline = os.path.join(SRC_nuclear, "baseline")
+    LOCALSOURCE_bts_baseline = os.path.join(SRC_bts, "baseline")
 
     DOWNLOAD_URL_SAMPLE = (
         "https://syncandshare.desy.de/index.php/s/GHeGQYxgk5FeToY/download"
+    )
+    DOWNLOAD_URL_BTS = (
+        "https://syncandshare.desy.de/index.php/s/xnr7GPSRieNCWkA/download"
     )
     DOWNLOAD_URL_WISE = (
         "https://syncandshare.desy.de/index.php/s/iweHsggyCaecSKE/download"
@@ -130,14 +131,17 @@ def download_if_neccessary(sampletype="nuclear"):
             download_wise()
 
 
-def download_sample():
+def download_sample(sampletype="nuclear"):
     """
     Downloads the sample from DESY Syncandshare
     """
-    cmd = f"curl --create-dirs -J -O --output-dir {LOCALSOURCE} {DOWNLOAD_URL_SAMPLE}; unzip {LOCALSOURCE}/NUCLEAR.zip -d {LOCALSOURCE}; rm {LOCALSOURCE}/NUCLEAR.zip"
+    if sampletype == "nuclear":
+        cmd = f"curl --create-dirs -J -O --output-dir {LOCALSOURCE} {DOWNLOAD_URL_SAMPLE}; unzip {LOCALSOURCE}/NUCLEAR.zip -d {LOCALSOURCE}; rm {LOCALSOURCE}/NUCLEAR.zip"
+    elif sampletype == "bts":
+        cmd = f"curl --create-dirs -J -O --output-dir {LOCALSOURCE} {DOWNLOAD_URL_SAMPLE}; unzip {LOCALSOURCE}/BTS.zip -d {LOCALSOURCE}; rm {LOCALSOURCE}/BTS.zip"
 
     subprocess.run(cmd, shell=True)
-    logger.info("Sample download complete")
+    logger.info(f"{sampletype} sample download complete")
 
 
 def download_wise():
@@ -246,7 +250,7 @@ def get_ztfid_header(ztfid: str, sampletype="nuclear") -> Optional[dict]:
     if is_valid_ztfid(ztfid):
         if sampletype == "nuclear":
             filepath = os.path.join(LOCALSOURCE_dfs, f"{ztfid}.csv")
-        else:
+        elif sampletype == "bts":
             filepath = os.path.join(LOCALSOURCE_bts_dfs, f"{ztfid}.csv")
 
         try:
@@ -257,6 +261,8 @@ def get_ztfid_header(ztfid: str, sampletype="nuclear") -> Optional[dict]:
                 for i, line in enumerate(input_file):
                     if len(line) >= 300:
                         break
+                    if line == "\n":
+                        break
                     key = line.split(",", 2)[0].split("=")[0].lstrip("#")
                     headerkeys.append(key)
                     val = line.split(",", 2)[0].split("=")[1][:-1]
@@ -266,7 +272,7 @@ def get_ztfid_header(ztfid: str, sampletype="nuclear") -> Optional[dict]:
                 for i, key in enumerate(headerkeys):
                     returndict.update({key: headervals[i]})
 
-                returndict["ztfid"] = returndict.pop("name")
+                returndict["ztfid"] = returndict.get("name")
 
                 return returndict
 
