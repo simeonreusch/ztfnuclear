@@ -45,10 +45,8 @@ if os.getenv("ZTFDATA"):
     LOCALSOURCE_peak_mags = os.path.join(SRC_nuclear, "peak_mag.csv")
     LOCALSOURCE_bts_peak_mags = os.path.join(SRC_bts, "peak_mag.csv")
     LOCALSOURCE_ZTF_tdes = os.path.join(SRC_nuclear, "ztf_tdes.csv")
-    LOCALSOURCE_WISE = os.path.join(LOCALSOURCE, "WISE")
-    LOCALSOURCE_sarah_agn = os.path.join(
-        LOCALSOURCE, "ML_reconstructed_AGN_catalogue.fits"
-    )
+    LOCALSOURCE_WISE = os.path.join(BASE, "WISE")
+    LOCALSOURCE_sarah_agn = os.path.join(BASE, "ML_reconstructed_AGN_catalogue.fits")
     LOCALSOURCE_timewise = os.path.join(
         SRC_nuclear, "timewise", "timewise_lightcurves_nuclear.json"
     )
@@ -65,9 +63,9 @@ if os.getenv("ZTFDATA"):
     LOCALSOURCE_WISE_bayesian_bts = os.path.join(SRC_bts, "wise_bayesian_bts.json")
     LOCALSOURCE_WISE_dust = os.path.join(SRC_nuclear, "wise_dust_nuclear.json")
     LOCALSOURCE_WISE_dust_bts = os.path.join(SRC_bts, "wise_dust_bts.json")
-    LOCALSOURCE_plots = os.path.join(LOCALSOURCE, "plots")
-    LOCALSOURCE_bts_plots = os.path.join(LOCALSOURCE, "plots_bts")
-    LOCALSOURCE_plots_irsa = os.path.join(LOCALSOURCE, "plots", "lightcurves_irsa")
+    LOCALSOURCE_plots = os.path.join(BASE, "plots")
+    LOCALSOURCE_bts_plots = os.path.join(BASE, "plots_bts")
+    LOCALSOURCE_plots_irsa = os.path.join(BASE, "plots", "lightcurves_irsa")
     LOCALSOURCE_baseline = os.path.join(SRC_nuclear, "baseline")
     LOCALSOURCE_bts_baseline = os.path.join(SRC_bts, "baseline")
 

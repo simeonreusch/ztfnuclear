@@ -188,6 +188,8 @@ def transient_page(ztfid):
     plot_file = os.path.join(base_dir, "plots", "lightcurves", "flux", f"{ztfid}.png")
 
     if not os.path.isfile(plot_file):
+        print("replotting")
+        print(plot_file)
         axlims = t.plot(plot_png=True, wide=True)
 
     plot_data = open(plot_file, "rb")
