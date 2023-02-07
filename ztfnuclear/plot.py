@@ -1002,9 +1002,6 @@ def plot_lightcurve(
             abmag = -2.5 * np.log10(flux / 3630.78)
             abmag_err = 2.5 / np.log(10) * flux_err / flux
 
-            print(abmag)
-            quit()
-
         if snt_threshold:
             snt_limit = flux_err.values * snt_threshold
             mask = np.less(flux.values, snt_limit)
