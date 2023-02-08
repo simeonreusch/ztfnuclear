@@ -235,8 +235,6 @@ def get_tde_selection(
 
     surviving = list(set(ztfid_list[0]).intersection(*[set(i) for i in ztfid_list[1:]]))
 
-    print(surviving)
-
     sample = NuclearSample(sampletype=sampletype).meta.get_dataframe(
         params=[
             "distnr",
