@@ -2,7 +2,7 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, warnings, typing
+import os, logging, warnings, typing, copy
 
 from typing import Optional, Union, List, Any, Tuple
 
@@ -161,11 +161,18 @@ def get_tde_selection(
             ):
                 return "sn_other"
             if (
-                (sampletype == "bts" and row[class_key] in config["agn_star"])
-                or bts_crossmatch in config["agn_star"]
+                (sampletype == "bts" and row[class_key] in config["agn"])
+                or bts_crossmatch in config["agn"]
+                or marshal_crossmatch in config["agn"]
+            ):
+                return "agn"
+            if (
+                row[class_key] in config["star"]
+                or row["tns_class"] in config["star"]
+                or bts_crossmatch in config["star"]
                 or marshal_crossmatch in config["star"]
             ):
-                return "agn_star"
+                return "star"
             if (
                 row[class_key] in config["other"]
                 or bts_crossmatch in config["other"]
@@ -177,6 +184,7 @@ def get_tde_selection(
         sample["classif"] = sample.apply(
             lambda row: simple_class(row, sampletype, purity_sel), axis=1
         )
+        sample.query("classif != 'other'", inplace=True)
         s.populate_db_from_df(sample[["classif"]])
 
         n_tot = len(sample)
@@ -226,6 +234,8 @@ def get_tde_selection(
         ztfid_list.append(ztfids)
 
     surviving = list(set(ztfid_list[0]).intersection(*[set(i) for i in ztfid_list[1:]]))
+
+    print(surviving)
 
     sample = NuclearSample(sampletype=sampletype).meta.get_dataframe(
         params=[
@@ -513,6 +523,149 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plot_ext="pdf", rerun=
             io.LOCALSOURCE_plots, "maghist", f"maghist_{cuts}_lin.{plot_ext}"
         )
     plt.savefig(outfile)
+    plt.close()
+
+
+def plot_mag_hist_2x2(
+    cuts: list | None = None, logplot=True, plot_ext="pdf", rerun=False
+):
+    """
+    Plot the mag histogram
+    """
+
+    classifs = ["tde", "other", "agn", "star", "sn_other", "snia", "unclass"]
+
+    colordict = {
+        "unclass": "#5799c7",
+        "other": "#ff9f4a",
+        "snia": "#61b861",
+        "tde": "#e15d5e",
+        "sn_other": "#af8dce",
+        "agn_star": "#a98078",
+    }
+    legendpos = {
+        "nuclear_noagn": "upper left",
+        "nuclear_keepagn": "upper left",
+        "bts_noagn": "upper right",
+        "bts_keepagn": "upper right",
+    }
+    titles = {
+        "nuclear_noagn": "Nuclear - veto AGN",
+        "nuclear_keepagn": "Nuclear - only AGN",
+        "bts_noagn": "BTS - veto AGN",
+        "bts_keepagn": "BTS - only AGN",
+    }
+
+    cuts_noagn = copy.deepcopy(cuts)
+    cuts_keepagn = copy.deepcopy(cuts)
+
+    cuts_noagn.append("milliquas_noagn")
+    cuts_keepagn.append("milliquas_keepagn")
+
+    sample_nuc_noagn = get_tde_selection(
+        cuts=cuts_noagn, sampletype="nuclear", rerun=rerun
+    )
+    sample_nuc_keepagn = get_tde_selection(
+        cuts=cuts_keepagn, sampletype="nuclear", rerun=rerun
+    )
+    sample_bts_noagn = get_tde_selection(cuts=cuts_noagn, sampletype="bts", rerun=rerun)
+
+    sample_bts_keepagn = get_tde_selection(
+        cuts=cuts_keepagn, sampletype="bts", rerun=rerun
+    )
+
+    sample_nuc_noagn["sample"] = "nuclear_noagn"
+    sample_nuc_keepagn["sample"] = "nuclear_keepagn"
+    sample_bts_noagn["sample"] = "bts_noagn"
+    sample_bts_keepagn["sample"] = "bts_keepagn"
+
+    combined = pd.concat(
+        [sample_nuc_noagn, sample_bts_noagn, sample_nuc_keepagn, sample_bts_keepagn]
+    )
+
+    combined["peak_mag"] = [
+        k if not np.isnan(k) else combined.peak_mags_r.values[i]
+        for i, k in enumerate(combined.peak_mags_g.values)
+    ]
+    combined.query("not peak_mag.isnull()", inplace=True)
+
+    figsize = (9, 7)
+
+    fig, axes = plt.subplots(2, 2, figsize=figsize, sharey=True)
+
+    sample_ax = {
+        axes[0, 0]: "nuclear_noagn",
+        axes[0, 1]: "bts_noagn",
+        axes[1, 0]: "nuclear_keepagn",
+        axes[1, 1]: "bts_keepagn",
+    }
+
+    for ax in axes.flat:
+
+        ax.spines["right"].set_visible(False)
+        ax.spines["top"].set_visible(False)
+
+        peak_mags = []
+
+        colors_used = []
+        classifs_used = []
+        sample_title = sample_ax[ax]
+
+        for c in classifs:
+            df = combined.query(f"classif == @c and sample == @sample_title")
+            if len(df) > 0:
+                peak_mags.append(df["peak_mag"].values)
+                colors_used.append(config["colordict"][c])
+                classname_long = config["classlabels"][c]
+                classifs_used.append(classname_long + f" ({len(df)})")
+
+        if len(colors_used) == 0:
+            colors_used = None
+
+        ax.hist(
+            peak_mags,
+            bins=12,
+            edgecolor="black",
+            density=False,
+            histtype="bar",
+            stacked=True,
+            range=(16, 21),
+            color=colors_used,
+            label=classifs_used,
+        )
+        ax.set_yscale("log")
+
+        if sample_title in ["nuclear_noagn", "nuclear_keepagn"]:
+            ax.set_ylabel("Count", fontsize=11)
+        ax.set_xlabel("Peak mag (AB)", fontsize=11)
+        ax.set_ylim((0.9, 1500))
+
+        ax.legend(fontsize=11, loc=legendpos[sample_title])
+        ax.set_title(
+            f"{titles[sample_title]} ({len(combined.query('sample == @sample_title'))})",
+            fontsize=13,
+        )
+
+    len_nuc = len(combined.query("sample == 'nuclear'"))
+    len_bts = len(combined.query("sample == 'bts'"))
+
+    title = f"cut stage: {config['cutlabels'][cuts[-1]]} "
+    fig.suptitle(title, fontsize=15)
+
+    plt.tight_layout()
+
+    # cuts.remove("milliquas_noagn")
+    # cuts.remove("milliquas_keepagn")
+
+    outfile = os.path.join(
+        io.LOCALSOURCE_plots, "maghist", f"maghist_{cuts}_comb.{plot_ext}"
+    )
+
+    if plot_ext == "png":
+        dpi = 400
+    else:
+        dpi = None
+    plt.savefig(outfile, dpi=dpi)
     plt.close()
 
 

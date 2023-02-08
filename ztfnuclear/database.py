@@ -194,7 +194,7 @@ class MetadataDB(object):
 
         res_dict = {}
 
-        if not ztfids:
+        if ztfids is None:
             find_dict = {}
         else:
             find_dict = {"_id": {"$in": ztfids}}

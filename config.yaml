@@ -74,7 +74,6 @@ other:
   - Ca-rich
   - LRN?
   - afterglow
-  - Galaxy
 
 agn_star:
   - nova
@@ -95,6 +94,18 @@ agn_star:
   - Seyfert
   - AM CVn
   - var
+  - blazar
+
+agn:
+  - AGN
+  - QSO
+  - NLSy1?
+  - NLSy1
+  - CLAGN
+  - AGN?
+  - NLS1
+  - galaxy
+  - Seyfert
   - blazar
 
 star:
@@ -136,7 +147,8 @@ classlabels:
   all: All classifications
   snia: SN Ia
   tde: TDE
-  agn_star: AGN/star
+  agn: AGN
+  star: Star
   sn_other: SN (no Ia)
   unclass: Unclass.
   other: Other
@@ -254,23 +266,24 @@ classes:
   sn_other: "classif == 'sn_other' "
   tde: "classif == 'tde' "
   other: "classif == 'other' "
-  agn_star: "classif == 'other' "
+  agn_star: "classif == 'agn_star' "
 
 colordict:
   unclass: "#5799c7"
-  other: "#ff9f4a"
+  star: "#ff9f4a"
   snia: "#61b861"
   tde: "#e15d5e"
   sn_other: "#af8dce"
-  agn_star: "#a98078"
+  agn: "#a98078"
+  other: "pink"
 
 colordict_highlight:
   unclass: "#5799c7"
-  other: "#ff9f4a"
+  star: "#ff9f4a"
   snia: green
   tde: red
   sn_other: darkviolet
-  agn_star: peru
+  agn: peru
 
 pl_props:
     unclass: 

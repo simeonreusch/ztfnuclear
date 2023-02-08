@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
-import os, logging
+import os, logging, argparse
 from typing import Tuple, List
 
 import numpy as np
@@ -16,6 +16,7 @@ from ztfnuclear.plot import (
     plot_mag_hist,
     plot_dist_hist,
     plot_sgscore_hist,
+    plot_mag_hist_2x2,
 )
 from ztfnuclear.sample import NuclearSample, Transient
 
@@ -51,6 +52,8 @@ def aggregate_cuts(
             "chisq",
             "bayes",
         ]
+        if plottype == "mag2x2":
+            cuts_to_use.remove("milliquas_noagn")
     else:
         cuts_to_use = cuts
     cuts_now = []
@@ -68,6 +71,13 @@ def aggregate_cuts(
             )
         if plottype == "mag":
             plot_mag_hist(cuts=cuts_now, logplot=True, plot_ext=plot_ext, rerun=rerun)
+        if plottype == "mag2x2":
+            plot_mag_hist_2x2(
+                cuts=cuts_now,
+                logplot=True,
+                plot_ext=plot_ext,
+                rerun=rerun,
+            )
 
 
 def iterate_classes(
@@ -126,9 +136,33 @@ def plot_single(name):
     )
 
 
-aggregate_cuts(rerun=False, plottype="mag", plot_ext="pdf")
-# iterate_classes(plottype="sgscore")
-# plot_single("ZTF19aafnogq")
-# plot_bright(bl=False)
-# plot_mag_hist(logplot=True, plot_ext="png", rerun=True)
-# plot_all_in_selection()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Plot the ZTF nuclear sample")
+    parser.add_argument(
+        "-type",
+        "-rd",
+        type=str,
+        default="mag",
+        help="Choose the plot type",
+    )
+    parser.add_argument("-rerun", "-r", action="store_true", help="Rerun cut ingestion")
+    cl = parser.parse_args()
+
+    if cl.type in ["mag", "mag2x2", "scatter"]:
+        aggregate_cuts(
+            rerun=cl.rerun,
+            plottype=cl.type,
+            plot_ext="png",
+            cuts=[
+                "nocut",
+                "coredist",
+                "sgscore",
+                "snia",
+                "temp",
+                "risedecay",
+                "chisq",
+                "bayes",
+            ],
+        )
+    if cl.type in ["dist", "sgscore"]:
+        iterate_classes(plottype=cl.type)
