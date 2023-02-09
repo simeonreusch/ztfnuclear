@@ -203,6 +203,7 @@ class MetadataDB(object):
                     "classif",
                     "ampel_z",
                     "peak_mags",
+                    "salt",
                 ]
             )
 
@@ -280,6 +281,11 @@ class MetadataDB(object):
 
         if "salt_red_chisq" in df.keys():
             df["salt_red_chisq"] = df["salt_red_chisq"].fillna(99999)
+
+        if for_training:
+            config = io.load_config()
+            df.query("success == True", inplace=True)
+            df = df[config["train_params"]]
 
         return df
 

@@ -335,3 +335,49 @@ pl_props:
       a: 1
       l: AGN/Star
       order: 4
+
+train_params:
+  - RA
+  - Dec
+  - tde_fit_exp_chisq
+  - tde_fit_exp_ndof
+  - tde_fit_exp_covariance
+  - tde_fit_exp_errors_t0
+  - tde_fit_exp_errors_risetime
+  - tde_fit_exp_errors_decaytime
+  - tde_fit_exp_errors_temperature
+  - tde_fit_exp_errors_amplitude
+  - tde_fit_exp_errors_d_temp
+  - tde_fit_exp_errors_plateaustart
+  - tde_fit_exp_paramdict_t0
+  - rise
+  - decay
+  - temp
+  - tde_fit_exp_paramdict_amplitude
+  - d_temp
+  - tde_fit_exp_paramdict_plateaustart
+  - tde_fit_exp_paramdict_mwebv
+  - overlapping_regions
+  - distnr_distnr
+  - crossmatch_sgscore_sgscore
+  - classif
+  - peak_mags_g
+  - peak_mags_r
+  - peak_mags_i
+  - sample
+  - wise_w1w2
+  - wise_w2w3
+  - salt_chisq
+  - salt_ndof
+  - salt_paramdict_z
+  - salt_paramdict_t0
+  - salt_paramdict_x0
+  - salt_paramdict_x1
+  - salt_paramdict_c
+  - salt_paramdict_mwebv
+  - salt_red_chisq
+
+
+
+
+
