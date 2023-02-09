@@ -161,7 +161,8 @@ def get_tde_selection(
             ):
                 return "sn_other"
             if (
-                (sampletype == "bts" and row[class_key] in config["agn"])
+                # (sampletype == "bts" and row[class_key] in config["agn"])
+                row[class_key] in config["agn"]
                 or bts_crossmatch in config["agn"]
                 or marshal_crossmatch in config["agn"]
             ):

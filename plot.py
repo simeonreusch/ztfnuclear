@@ -145,6 +145,13 @@ if __name__ == "__main__":
         default="mag",
         help="Choose the plot type",
     )
+    parser.add_argument(
+        "-ext",
+        "-e",
+        type=str,
+        default="pdf",
+        help="Choose the plot file extension",
+    )
     parser.add_argument("-rerun", "-r", action="store_true", help="Rerun cut ingestion")
     cl = parser.parse_args()
 
@@ -152,7 +159,7 @@ if __name__ == "__main__":
         aggregate_cuts(
             rerun=cl.rerun,
             plottype=cl.type,
-            plot_ext="png",
+            plot_ext=cl.ext,
             cuts=[
                 "nocut",
                 "coredist",
@@ -165,4 +172,4 @@ if __name__ == "__main__":
             ],
         )
     if cl.type in ["dist", "sgscore"]:
-        iterate_classes(plottype=cl.type)
+        iterate_classes(plottype=cl.type, plot_ext=cl.ext)

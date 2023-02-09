@@ -180,17 +180,34 @@ class MetadataDB(object):
         return returndict
 
     def get_dataframe(
-        self, params: List[str] | None = None, ztfids: List[str] | None = None
+        self,
+        params: List[str] = ["_id", "RA", "Dec"],
+        ztfids: List[str] | None = None,
+        for_training: bool = False,
     ) -> pd.DataFrame:
         """
         Get a dataframe containing all the parameters specified
         """
         search_dict = {}
-        if params:
-            if "_id" not in params:
-                params.append("_id")
-            for param in params:
-                search_dict.update({param: 1})
+
+        if "_id" not in params:
+            params.append("_id")
+
+        if for_training:
+            params.extend(
+                [
+                    "crossmatch",
+                    "tde_fit_exp",
+                    "distnr",
+                    "ZTF_bayesian",
+                    "classif",
+                    "ampel_z",
+                    "peak_mags",
+                ]
+            )
+
+        for param in params:
+            search_dict.update({param: 1})
 
         res_dict = {}
 
@@ -219,6 +236,9 @@ class MetadataDB(object):
 
         df = pd.DataFrame.from_dict(res_dict, orient="index")
 
+        if for_training:
+            df["sample"] = self.sampletype
+
         if "tde_fit_exp_chisq" in df.keys():
             df["red_chisq"] = df.tde_fit_exp_chisq / df.tde_fit_exp_ndof
 
@@ -229,8 +249,9 @@ class MetadataDB(object):
             df["salt_red_chisq"] = df["salt_chisq"] / df["salt_ndof"]
 
         df["ztfid"] = df.index
-        if "crossmatch_TNS_type" not in df.keys():
-            df["crossmatch_TNS_type"] = None
+
+        # if "crossmatch_TNS_type" not in df.keys():
+        # df["crossmatch_TNS_type"] = None
 
         df.rename(
             columns={
@@ -253,9 +274,9 @@ class MetadataDB(object):
             df["wise_w1w2"] = df["wise_w1w2"].fillna(999)
             df["wise_w2w3"] = df.wise_w2 - df.wise_w3
             df["wise_w2w3"] = df["wise_w2w3"].fillna(999)
-        else:
-            df["wise_w1w2"] = 999
-            df["wise_w2w3"] = 999
+        # else:
+        #     df["wise_w1w2"] = 999
+        #     df["wise_w2w3"] = 999
 
         if "salt_red_chisq" in df.keys():
             df["salt_red_chisq"] = df["salt_red_chisq"].fillna(99999)
