@@ -5,7 +5,7 @@
 import os, logging, datetime, base64, time, pickle
 
 from functools import cached_property
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 from tqdm import tqdm  # type: ignore
 import numpy as np
@@ -688,19 +688,41 @@ class Transient(object):
         self.location = {"RA": self.ra, "Dec": self.dec}
 
     @cached_property
-    def header(self):
+    def header(self) -> dict:
         header = io.get_ztfid_header(ztfid=self.ztfid, sampletype=self.sampletype)
         return header
 
     @cached_property
-    def df(self):
+    def df(self) -> pd.DataFrame:
         df = io.get_ztfid_dataframe(ztfid=self.ztfid, sampletype=self.sampletype)
         return df
 
     @cached_property
-    def sample_ids(self):
+    def sample_ids(self) -> List[str]:
         ids = NuclearSample(sampletype=self.sampletype).ztfids
         return ids
+
+    @cached_property
+    def peak_mag(self) -> Tuple[float | None, str | None]:
+        returnvals = None, None
+        peak_mags_dict = self.meta.get("peak_mags")
+        if peak_mags_dict is not None:
+            peak_mag_band = min(peak_mags_dict, key=peak_mags_dict.get)
+            if not np.isnan(peak_mags_dict[peak_mag_band]):
+                returnvals = peak_mags_dict[peak_mag_band], peak_mag_band
+
+        return returnvals
+
+    @cached_property
+    def peak_date(self) -> str | None:
+        peak_date = None
+        peak_dates_dict = self.meta.get("peak_dates")
+
+        peak_mag, peak_band = self.peak_mag
+        if peak_band is not None:
+            peak_date = peak_dates_dict[peak_band]
+
+        return peak_date
 
     @cached_property
     def baseline(self) -> Optional[pd.DataFrame]:

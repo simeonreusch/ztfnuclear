@@ -3,6 +3,7 @@
 # License: BSD-3-Clause
 
 import os, logging, re, subprocess, json, yaml
+from pathlib import Path
 from typing import Optional, List, Dict
 
 from ztfnuclear import utils
@@ -219,6 +220,23 @@ def get_thumbnail_count() -> int:
     return file_count
 
 
+def to_csv(df: pd.DataFrame, header: dict, outpath: Path):
+    """
+    Wrapper around pandas df.to_csv() to properly save header
+    """
+    headerstr = ""
+    for i, val in header.items():
+        headerstr += f"#{i}={val}\n"
+
+    if outpath.is_file():
+        os.remove(outpath)
+
+    with open(outpath, "w") as f:
+        f.write(headerstr)
+        df.to_csv(f)
+        f.close()
+
+
 def get_ztfid_dataframe(
     ztfid: str, sampletype: str = "nuclear"
 ) -> Optional[pd.DataFrame]:
@@ -241,7 +259,7 @@ def get_ztfid_dataframe(
 
 
 def get_ztfid_header(
-    ztfid: str, sampletype="nuclear", baseline=False
+    ztfid: str, sampletype="nuclear", baseline: bool = False
 ) -> Optional[dict]:
     """
     Returns the metadata contained in the csvs as dictionary

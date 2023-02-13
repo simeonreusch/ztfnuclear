@@ -1,5 +1,7 @@
 import logging, os, gc
 
+from pathlib import Path
+
 from matplotlib import pyplot as plt  # type: ignore
 
 from typing import Optional, Any
@@ -197,7 +199,6 @@ def baseline(
     For all field/ccd/fid combination where we have determined a peak, we can now check if the reference image end date is comfortably prior to the peak and remove this combo if not
     """
     if reference_days_before_peak:
-
         ufids_to_check = []
 
         for ufid, res in fcqfid_dict.items():
@@ -205,7 +206,6 @@ def baseline(
                 ufids_to_check.append(ufid)
 
         if ufids_to_check:
-
             ref_mjd_dict = get_reference_mjds(fcqfid_list=ufids_to_check)
 
             for ufid, ref_end_mjd in ref_mjd_dict.items():
@@ -358,7 +358,6 @@ def baseline(
     )
 
     if plot:
-
         logger.info(f"{transient.ztfid}: Plotting baseline")
 
         color_dict = {"1": "green", "2": "red", "3": "orange"}
@@ -429,21 +428,11 @@ def baseline(
     df["ampl_err_corr"] /= df["ampl_zp_scale"]
 
     if transient.sampletype == "nuclear":
-        outpath = os.path.join(io.LOCALSOURCE_baseline, transient.ztfid + "_bl.csv")
+        outpath = Path(io.LOCALSOURCE_baseline) / f"{transient.ztfid}_bl.csv"
     elif transient.sampletype == "bts":
-        outpath = os.path.join(io.LOCALSOURCE_bts_baseline, transient.ztfid + "_bl.csv")
+        outpath = Path(io.LOCALSOURCE_bts_baseline) / f"{transient.ztfid}_bl.csv"
 
-    headerstr = ""
-    for i, val in header.items():
-        headerstr += f"#{i}={val}\n"
-
-    if os.path.isfile(outpath):
-        os.remove(outpath)
-
-    with open(outpath, "w") as f:
-        f.write(headerstr)
-        df.to_csv(f)
-        f.close()
+    io.to_csv(df=df, header=header, outpath=outpath)
 
     return df, fcqfid_dict
 
