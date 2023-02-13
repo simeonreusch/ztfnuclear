@@ -906,7 +906,6 @@ class Transient(object):
         thumb_file = os.path.join(plot_dir, self.ztfid + "_thumbnail.png")
 
         if os.path.isfile(thumb_file):
-
             thumb_data = open(thumb_file, "rb")
             thumb_b64 = base64.b64encode(thumb_data.read()).decode("ascii")
             return thumb_b64
@@ -1073,6 +1072,7 @@ class Transient(object):
         exclude_list = ["WISE", "TNS", "WISE_cat"]
 
         xmatch = self.meta["crossmatch"]
+        print(xmatch)
         message = ""
         for key in xmatch.keys():
             subdict = xmatch[key]
@@ -1088,10 +1088,15 @@ class Transient(object):
                             message += f" {subdict['type']}"
                     if "dist" in subdict.keys():
                         message += f" {subdict['dist']:.5f}  "
+
         if len(message) == 0:
             return None
         else:
             return message
+
+    @cached_property
+    def crossmatch_dict(self) -> dict:
+        return self.meta.get("crossmatch", {})
 
     def get_crossmatch_for_viewer(self, include: list = ["WISE"]) -> Optional[str]:
         """
@@ -1102,8 +1107,6 @@ class Transient(object):
         for key in ["Milliquas", "TNS", "Marshal"]:
             entry = xmatch.get(key, {})
             if len(entry) > 0:
-                # if key == "Milliquas":
-                #     print(entry)
                 if key == "TNS" or key == "Milliquas":
                     classif = entry.get("type")
                     if classif is not None:

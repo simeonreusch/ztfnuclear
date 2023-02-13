@@ -85,7 +85,6 @@ def query_ned_for_z(
 def query_crts(
     ra_deg: float, dec_deg: float, searchradius_arcsec: float = 5
 ) -> dict | None:
-
     logger.debug(f"Querying CRTS DR1 if variable star")
 
     res = ampel_api_catalog(
@@ -250,10 +249,18 @@ def query_tns(
         name = res_body["objname"]
         prefix = res_body["name_prefix"]
         full_name = prefix + name
-        classification = res_body["object_type"]["name"]
+        classification = res_body.get("object_type", {}).get("name")
+        redshift = res_body.get("redshift")
         dist_arcsec = res["dist_arcsec"]
 
-        return {"TNS": {"name": full_name, "type": classification, "dist": dist_arcsec}}
+        return {
+            "TNS": {
+                "name": full_name,
+                "type": classification,
+                "dist": dist_arcsec,
+                "z": redshift,
+            },
+        }
 
     return {"TNS": {}}
 
