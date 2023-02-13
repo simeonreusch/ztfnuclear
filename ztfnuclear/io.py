@@ -14,7 +14,6 @@ import pandas as pd  # type: ignore
 import numpy as np
 
 if os.getenv("ZTFDATA"):
-
     _SOURCEDIR = os.path.dirname(os.path.realpath(__file__))
     BASE = os.path.join(str(os.getenv("ZTFDATA")), "nuclear_sample")
     SRC_nuclear = os.path.join(BASE, "NUCLEAR")
@@ -241,15 +240,23 @@ def get_ztfid_dataframe(
         raise ValueError(f"{ztfid} is not a valid ZTF ID")
 
 
-def get_ztfid_header(ztfid: str, sampletype="nuclear") -> Optional[dict]:
+def get_ztfid_header(
+    ztfid: str, sampletype="nuclear", baseline=False
+) -> Optional[dict]:
     """
     Returns the metadata contained in the csvs as dictionary
     """
     if is_valid_ztfid(ztfid):
         if sampletype == "nuclear":
-            filepath = os.path.join(LOCALSOURCE_dfs, f"{ztfid}.csv")
+            if not baseline:
+                filepath = os.path.join(LOCALSOURCE_dfs, f"{ztfid}.csv")
+            else:
+                filepath = os.path.join(LOCALSOURCE_baseline, f"{ztfid}_bl.csv")
         elif sampletype == "bts":
-            filepath = os.path.join(LOCALSOURCE_bts_dfs, f"{ztfid}.csv")
+            if not baseline:
+                filepath = os.path.join(LOCALSOURCE_bts_dfs, f"{ztfid}.csv")
+            else:
+                filepath = os.path.join(LOCALSOURCE_bts_baseline, f"{ztfid}_bl.csv")
 
         try:
             with open(filepath, "r") as input_file:
