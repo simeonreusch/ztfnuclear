@@ -293,7 +293,11 @@ def get_ztfid_header(
 
                 returndict = {}
                 for i, key in enumerate(headerkeys):
-                    returndict.update({key: headervals[i]})
+                    if headervals[i] == "-":
+                        returnval = None
+                    else:
+                        returnval = headervals[i]
+                    returndict.update({key: returnval})
 
                 returndict["ztfid"] = returndict.get("name")
 
