@@ -433,7 +433,9 @@ class NuclearSample(object):
                 end = len(ztfids)
 
         if ztfids is None:
-            for ztfid in self.ztfids[start:end]:
+            for ztfid in tqdm(
+                self.ztfids[start:end], total=len(self.ztfids[start:end])
+            ):
                 t = Transient(ztfid, sampletype=self.sampletype)
                 yield t
 
