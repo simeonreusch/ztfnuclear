@@ -58,7 +58,6 @@ def get_tde_selection(
         return 3.55 - 2.29 * x
 
     def expand_cuts(cuts):
-        # subcuts = config["cuts"][cut]
         cutdict = {}
         for cut in cuts:
             subcut_values = [config["selections"][k] for k in config["cuts"][cut]]
@@ -96,7 +95,6 @@ def get_tde_selection(
                 ztfids_surviving.update({name: cutres})
 
     if len(cuts_to_do) > 0:
-
         s = NuclearSample(sampletype=sampletype)
         sample = s.meta.get_dataframe(
             params=[
@@ -161,7 +159,6 @@ def get_tde_selection(
             ):
                 return "sn_other"
             if (
-                # (sampletype == "bts" and row[class_key] in config["agn"])
                 row[class_key] in config["agn"]
                 or bts_crossmatch in config["agn"]
                 or marshal_crossmatch in config["agn"]
@@ -197,12 +194,6 @@ def get_tde_selection(
         if require_fitsuccess:
             sample.query("success == True", inplace=True)
 
-        # stats = {Any: Any}
-
-        # if purity_sel is not None:
-        #     n_orig = len(sample.query("classif == @purity_sel"))
-        #     stats["n_orig"] = n_orig
-
         sample["snia_cut"] = snia_diag_cut(sample["rise"])
         sample["in_wise_agn_box"] = sample.apply(
             lambda row: is_in_wise_agn_box(
@@ -213,13 +204,8 @@ def get_tde_selection(
         )
         s.populate_db_from_df(sample[["snia_cut"]])
 
-        # logger.info(
-        #     f"Stats: has no fit entry: {n_nofit} / has fit entry: {n_fit} / fit fail: {n_fitfail} / fit success: {len(sample)}"
-        # )
-
         # Now we cut!
         for name, c in cuts_to_do.items():
-
             sample_cut = sample.query(c)
 
             info_db = SampleInfo(sampletype=sampletype)
@@ -249,12 +235,7 @@ def get_tde_selection(
         ztfids=surviving,
     )
 
-    # if purity_sel is not None:
-    #     n_after_cut = len(sample.query("classif == @purity_sel"))
-    #     stats["frac_pur"] = n_after_cut / len(sample) * 100
-    #     stats["frac_eff"] = n_after_cut / n_orig * 100
-
-    return sample  # , stats
+    return sample
 
 
 def plot_tde_scatter(
@@ -464,7 +445,6 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plot_ext="pdf", rerun=
     sample_ax = {ax1: "nuclear", ax2: "bts"}
 
     for ax in [ax1, ax2]:
-
         ax.spines["right"].set_visible(False)
         ax.spines["top"].set_visible(False)
 
@@ -600,7 +580,6 @@ def plot_mag_hist_2x2(
     }
 
     for ax in axes.flat:
-
         ax.spines["right"].set_visible(False)
         ax.spines["top"].set_visible(False)
 
@@ -1180,7 +1159,6 @@ def plot_lightcurve(
             ax.set_ylabel("Magnitude (AB)")
 
         else:
-
             nu_fnu = utils.band_frequency(bandname) * flux * 1e-23
             nu_fnu_err = utils.band_frequency(bandname) * flux_err * 1e-23
 
@@ -1208,7 +1186,6 @@ def plot_lightcurve(
             ax.set_ylabel(r"$\nu$ F$_\nu$ (erg s$^{-1}$ cm$^{-2}$)", fontsize=12)
 
             if z is not None and thumbnail is False:
-
                 from astropy.cosmology import FlatLambdaCDM
 
                 cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
@@ -1231,7 +1208,6 @@ def plot_lightcurve(
 
     if wise_df is not None:
         if len(wise_df) > 0:
-
             flux_W1 = wise_df["W1_mean_flux_density_bl_corr"] / 1000
             flux_W1_err = wise_df["W1_mean_flux_density_bl_corr_err"] / 1000
             flux_W2 = wise_df["W2_mean_flux_density_bl_corr"] / 1000
@@ -1400,7 +1376,6 @@ def plot_lightcurve_irsa(
             )
 
         else:
-
             flux_j = mags.to(u.Jansky)
 
             f = (const.c / (wl[fc] * u.nm)).to("Hz")
@@ -1592,7 +1567,6 @@ def plot_tde_fit(
         ax.plot(x_range, modelflux, c=color_dict[filterid], alpha=0.8)
 
     if z is not None:
-
         from astropy.cosmology import FlatLambdaCDM
 
         cosmo = FlatLambdaCDM(H0=70, Om0=0.3)

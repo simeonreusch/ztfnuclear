@@ -2,7 +2,7 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, shutil
+import logging
 
 from pathlib import Path
 import pandas as pd  # type: ignore
@@ -66,6 +66,3 @@ for ztfid in sample.ztfid.values:
             df = pd.read_csv(path, comment="#", index_col=0)
             outpath = outdir / f"{ztfid}_bl.csv"
             io.to_csv(df=df, header=header, outpath=outpath)
-            quit()
-            # if path.is_file():
-            # shutil.copy2(path, outdir)
