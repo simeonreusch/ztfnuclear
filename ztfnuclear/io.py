@@ -65,6 +65,7 @@ if os.getenv("ZTFDATA"):
     LOCALSOURCE_WISE_dust_bts = os.path.join(SRC_bts, "wise_dust_bts.json")
     LOCALSOURCE_plots = os.path.join(BASE, "plots")
     LOCALSOURCE_bts_plots = os.path.join(BASE, "plots_bts")
+    LOCALSOURCE_train_plots = os.path.join(BASE, "plots_train")
     LOCALSOURCE_plots_irsa = os.path.join(BASE, "plots", "lightcurves_irsa")
     LOCALSOURCE_baseline = os.path.join(SRC_nuclear, "baseline")
     LOCALSOURCE_bts_baseline = os.path.join(SRC_bts, "baseline")

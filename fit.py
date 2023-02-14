@@ -17,8 +17,8 @@ FIT_TYPE = "tde_fit_exp"
 RECREATE_BASELINE = False
 DEBUG = False
 SINGLECORE = False
-CORES = 32
-SAMPLE = "bts"
+CORES = 16
+SAMPLE = "train"
 
 if not CORES:
     nprocess = int(multiprocessing.cpu_count() / 2)
@@ -42,7 +42,6 @@ def _tde_fitter(ztfid):
 
 
 if __name__ == "__main__":
-
     logger = logging.getLogger(__name__)
     parser = argparse.ArgumentParser(description="Fit TDE lightcurves")
     parser.add_argument(

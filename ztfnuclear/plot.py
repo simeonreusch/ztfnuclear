@@ -4,6 +4,8 @@
 
 import os, logging, warnings, typing, copy
 
+from pathlib import Path
+
 from typing import Optional, Union, List, Any, Tuple
 
 import astropy  # type: ignore
@@ -1061,6 +1063,8 @@ def plot_lightcurve(
         local = io.LOCALSOURCE_plots
     elif sampletype == "bts":
         local = io.LOCALSOURCE_bts_plots
+    elif sampletype == "train":
+        local = io.LOCALSOURCE_train_plots
 
     if magplot:
         plot_dir = os.path.join(local, "lightcurves", "mag")
@@ -1085,8 +1089,13 @@ def plot_lightcurve(
 
     bl_correction = True if "ampl_corr" in df.keys() else False
 
-    for filterid in sorted(df["filterid"].unique()):
-        _df = df.query("filterid == @filterid")
+    if "fid" in list(df.keys()):
+        fid_key = "fid"
+    else:
+        fid_key = "filterid"
+
+    for filterid in sorted(df[fid_key].unique()):
+        _df = df.query(f"{fid_key} == @filterid")
 
         bandname = utils.ztf_filterid_to_band(filterid, short=True)
 
@@ -1445,11 +1454,13 @@ def plot_tde_fit(
     filtername_dict = {1: "ZTF g", 2: "ZTF r", 3: "ZTF i"}
 
     if sampletype == "nuclear":
-        plot_dir = os.path.join(io.LOCALSOURCE_plots, "lightcurves", "tde_fit")
+        plot_dir = Path(io.LOCALSOURCE_plots) / "lightcurves" / "tde_fit"
     elif sampletype == "bts":
-        plot_dir = os.path.join(io.LOCALSOURCE_bts_plots, "lightcurves", "tde_fit")
+        plot_dir = Path(io.LOCALSOURCE_bts_plots) / "lightcurves" / "tde_fit"
+    elif sampletype == "train":
+        plot_dir = Path(io.LOCALSOURCE_train_plots) / "lightcurves" / "tde_fit"
 
-    if not os.path.exists(plot_dir):
+    if not plot_dir.is_dir():
         os.makedirs(plot_dir)
 
     figwidth = 8 / (GOLDEN_RATIO + 0.52)
@@ -1480,8 +1491,13 @@ def plot_tde_fit(
     ylim_upper = 0
     ylim_lower = 1
 
-    for filterid in sorted(df["filterid"].unique()):
-        _df = df.query("filterid == @filterid")
+    if "fid" in list(df.keys()):
+        fid_key = "fid"
+    else:
+        fid_key = "filterid"
+
+    for filterid in sorted(df[fid_key].unique()):
+        _df = df.query(f"{fid_key} == @filterid")
 
         bandname = utils.ztf_filterid_to_band(filterid, short=True)
         bandname_sncosmo = utils.ztf_filterid_to_band(filterid, sncosmo=True)
