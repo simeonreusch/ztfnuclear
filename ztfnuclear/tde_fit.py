@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 
 class TDESource_exp_simple(sncosmo.Source):
-
     _param_names: list = [
         "risetime",
         "decaytime",
@@ -42,7 +41,6 @@ class TDESource_exp_simple(sncosmo.Source):
         name: str = "TDE_exp_simple",
         version: str = "1.0",
     ) -> None:
-
         self.name: str = name
         self.version: str = version
         self._phase: np.ndarray = phase
@@ -153,7 +151,6 @@ class TDESource_exp_simple(sncosmo.Source):
 
 
 class TDESource_exp_flextemp(sncosmo.Source):
-
     _param_names: list = [
         "risetime",
         "decaytime",
@@ -180,7 +177,6 @@ class TDESource_exp_flextemp(sncosmo.Source):
         priors: np.ndarray = None,
         debug: bool = None,
     ) -> None:
-
         self.name: str = name
         self.version: str = version
         self._phase: np.ndarray = phase
@@ -342,7 +338,6 @@ class TDESource_exp_flextemp(sncosmo.Source):
 
 
 class TDESource_pl_simple(sncosmo.Source):
-
     _param_names: list = [
         "risetime",
         "alpha",
@@ -365,7 +360,6 @@ class TDESource_pl_simple(sncosmo.Source):
         name: str = "TDE_pl_simple",
         version: str = "1.0",
     ) -> None:
-
         self.name: str = name
         self.version: str = version
         self._phase: np.ndarray = phase
@@ -476,7 +470,6 @@ class TDESource_pl_simple(sncosmo.Source):
 
 
 class TDESource_pl_flextemp(sncosmo.Source):
-
     _param_names: list = [
         "risetime",
         "alpha",
@@ -505,7 +498,6 @@ class TDESource_pl_flextemp(sncosmo.Source):
         priors: np.ndarray = None,
         debug: bool = None,
     ) -> None:
-
         self.name: str = name
         self.version: str = version
         self._phase: np.ndarray = phase
@@ -649,6 +641,7 @@ def fit(
     """
     Fit TDE model
     """
+
     if "t_peak" in baseline_info.keys():
         t_peak = baseline_info["t_peak"]
 

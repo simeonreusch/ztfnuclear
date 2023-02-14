@@ -4,6 +4,8 @@
 
 import os, logging, datetime, base64, time, pickle
 
+from pathlib import Path
+
 from functools import cached_property
 from typing import Optional, List, Tuple
 
@@ -248,13 +250,18 @@ class NuclearSample(object):
         """
         for ztfid in tqdm(self.ztfids):
             header = io.get_ztfid_header(ztfid=ztfid, sampletype=self.sampletype)
-            print(header)
+            header["RA"] = header.pop("ra")
+            header["Dec"] = header.pop("dec")
+            data = {ztfid: header}
+            self.populate_db_from_dict(data=data)
 
     def populate_db_from_dict(self, data: dict):
         """
         Use a dict of the form {ztfid: data} to update the Mongo DB
         """
-        self.logger.info("Populating the database from a dictionary")
+        self.logger.info(
+            f"Populating the {self.meta.coll.name} database from a dictionary"
+        )
 
         ztfids = data.keys()
         data_list = []
@@ -699,8 +706,8 @@ class Transient(object):
         if transient_info is None:
             raise ValueError(f"{ztfid} is not in {sampletype} sample")
 
-        self.ra = transient_info["RA"]
-        self.dec = transient_info["Dec"]
+        self.ra = float(transient_info["RA"])
+        self.dec = float(transient_info["Dec"])
 
         self.location = {"RA": self.ra, "Dec": self.dec}
 
@@ -747,12 +754,16 @@ class Transient(object):
         Obtain the baseline correction, create if not present
         """
         if self.sampletype == "nuclear":
-            bl_file = os.path.join(io.LOCALSOURCE_baseline, self.ztfid + "_bl.csv")
+            bl_file = Path(io.LOCALSOURCE_baseline) / f"{self.ztfid}_bl.csv"
         elif self.sampletype == "bts":
-            bl_file = os.path.join(io.LOCALSOURCE_bts_baseline, self.ztfid + "_bl.csv")
+            bl_file = Path(io.LOCALSOURCE_bts_baseline) / f"{self.ztfid}_bl.csv"
+        elif self.sampletype == "train":
+            bl_file = Path(io.LOCALSOURCE_train_dfs) / f"{self.ztfid}.csv"
 
-        if os.path.isfile(bl_file):
+        if bl_file.is_file():
             bl = pd.read_csv(bl_file, comment="#")
+            if "filter" not in list(bl.keys()):
+                bl["filter"] = bl["fid"].apply(lambda x: utils.ztf_filterid_to_band(x))
         else:
             # create empty df
             bl = pd.DataFrame()
@@ -764,12 +775,14 @@ class Transient(object):
         """
         Obtain the baseline correction metadata, create if not present
         """
-        self.baseline
 
-        if "bl_info" in self.meta.keys():
-            return self.meta["bl_info"]
+        if self.sampletype in ["nuclear", "bts"]:
+            return self.meta.get("bl_info")
+
         else:
-            return None
+            parent_ztfid = self.meta["parent_ztfid"]
+            t = Transient(ztfid=parent_ztfid, sampletype="bts")
+            return t.meta.get("bl_info")
 
     def recreate_baseline(self):
         """
@@ -914,6 +927,8 @@ class Transient(object):
             transient_metadata = meta.read_transient(ztfid=self.ztfid)
         elif self.sampletype == "bts":
             transient_metadata = meta_bts.read_transient(ztfid=self.ztfid)
+        elif self.sampletype == "train":
+            transient_metadata = meta_train.read_transient(ztfid=self.ztfid)
         if transient_metadata:
             return transient_metadata
         else:
@@ -1113,7 +1128,7 @@ class Transient(object):
         exclude_list = ["WISE", "TNS", "WISE_cat"]
 
         xmatch = self.meta["crossmatch"]
-        print(xmatch)
+
         message = ""
         for key in xmatch.keys():
             subdict = xmatch[key]
@@ -1379,6 +1394,10 @@ class Transient(object):
             m_db = meta
         elif self.sampletype == "bts":
             m_db = meta_bts
+        elif self.sampletype == "train":
+            m_db = meta_train
+
+        # self.sampletype == "trai"
 
         if len(self.baseline) > 0:
             fitresult = tde_fit.fit(
