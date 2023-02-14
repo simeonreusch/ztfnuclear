@@ -310,7 +310,6 @@ class MetadataDB(object):
         return entry
 
     def get_rating_overview(self, username: str = None) -> dict:
-
         res_dict = {}
         if username:
             res = self.coll.find(

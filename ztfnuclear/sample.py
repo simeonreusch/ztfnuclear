@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 meta = MetadataDB()
 meta_bts = MetadataDB(sampletype="bts")
+meta_train = MetadataDB(sampletype="train")
 info_db = SampleInfo()
 info_db_bts = SampleInfo(sampletype="bts")
 
@@ -39,9 +40,15 @@ class NuclearSample(object):
         self.meta = MetadataDB(sampletype=self.sampletype)
         self.info_db = SampleInfo(sampletype=self.sampletype)
 
-        if self.info_db.read().get("flaring") is None:
-            logger.info("Flaring info not found, ingesting")
-            self.get_flaring()
+        if self.sampletype in ["nuclear", "bts"]:
+            if self.info_db.read().get("flaring") is None:
+                logger.info("Flaring info not found, ingesting")
+                self.get_flaring()
+
+        if self.sampletype == "train":
+            db_check = self.meta.get_statistics()
+            if db_check.get("count", 0) == 0:
+                self.populate_db_from_headers()
 
         if self.sampletype == "nuclear":
             db_check = self.meta.get_statistics()
@@ -234,6 +241,14 @@ class NuclearSample(object):
             self.logger.info(f"Wrote {len(ztfids)} entries to db")
         else:
             raise ValueError(f"File {filepath} does not exist")
+
+    def populate_db_from_headers(self):
+        """
+        Read the lightcurve headers and populate the DB from these
+        """
+        for ztfid in tqdm(self.ztfids):
+            header = io.get_ztfid_header(ztfid=ztfid, sampletype=self.sampletype)
+            print(header)
 
     def populate_db_from_dict(self, data: dict):
         """
@@ -678,6 +693,8 @@ class Transient(object):
             transient_info = meta.read_transient(self.ztfid)
         elif self.sampletype == "bts":
             transient_info = meta_bts.read_transient(self.ztfid)
+        elif self.sampletype == "train":
+            transient_info = meta_train.read_transient(self.ztfid)
 
         if transient_info is None:
             raise ValueError(f"{ztfid} is not in {sampletype} sample")

@@ -108,8 +108,10 @@ def download_if_neccessary(sampletype="nuclear"):
         local = LOCALSOURCE_dfs
     elif sampletype == "bts":
         local = LOCALSOURCE_bts_dfs
+    elif sampletype == "train":
+        local = LOCALSOURCE_train_dfs
     else:
-        raise ValueError("sampletype needs to be 'nuclear' or 'bts'")
+        raise ValueError("sampletype needs to be 'nuclear', 'bts' or 'train'")
 
     if os.path.exists(local):
         csvs = []
@@ -121,7 +123,7 @@ def download_if_neccessary(sampletype="nuclear"):
 
     else:
         logger.info("Dataframe directory is not present, proceed to download files.")
-        download_sample()
+        download_sample(sampletype=sampletype)
 
     if sampletype == "nuclear":
         if not os.path.isfile(os.path.join(LOCALSOURCE_WISE, "WISE.parquet")):
@@ -137,6 +139,10 @@ def download_sample(sampletype="nuclear"):
         cmd = f"curl --create-dirs -J -O --output-dir {LOCALSOURCE} {DOWNLOAD_URL_SAMPLE}; unzip {LOCALSOURCE}/NUCLEAR.zip -d {LOCALSOURCE}; rm {LOCALSOURCE}/NUCLEAR.zip"
     elif sampletype == "bts":
         cmd = f"curl --create-dirs -J -O --output-dir {LOCALSOURCE} {DOWNLOAD_URL_SAMPLE}; unzip {LOCALSOURCE}/BTS.zip -d {LOCALSOURCE}; rm {LOCALSOURCE}/BTS.zip"
+    elif sampletype == "train":
+        raise ValueError(
+            f"No training data available online. They are expected to be in {LOCALSOURCE_train_dfs}"
+        )
 
     subprocess.run(cmd, shell=True)
     logger.info(f"{sampletype} sample download complete")
@@ -162,6 +168,8 @@ def get_all_ztfids(sampletype="nuclear") -> List[str]:
         local = LOCALSOURCE_dfs
     elif sampletype == "bts":
         local = LOCALSOURCE_bts_dfs
+    elif sampletype == "train":
+        local = LOCALSOURCE_train_dfs
 
     ztfids = []
     for name in os.listdir(local):
@@ -181,6 +189,17 @@ def is_valid_ztfid(ztfid: str) -> bool:
         return False
 
 
+def is_valid_train_ztfid(ztfid: str) -> bool:
+    """
+    Checks if a string adheres to the ztfparsnip naming scheme
+    """
+    is_match = re.match("^ZTF[1-2]\d[a-z]{7}_[0-9]\d*$", ztfid)
+    if is_match:
+        return True
+    else:
+        return False
+
+
 def is_valid_wiseid(wiseid: str) -> bool:
     """
     Checks if a string adheres to the (internal) WISE naming scheme
@@ -193,7 +212,7 @@ def is_valid_wiseid(wiseid: str) -> bool:
         return False
 
 
-def get_locations(sampletype="nuclear") -> pd.DataFrame:
+def get_locations(sampletype="nuclear") -> pd.DataFrame | None:
     """
     Gets the metadata dataframe for the full sample
     """
@@ -201,6 +220,8 @@ def get_locations(sampletype="nuclear") -> pd.DataFrame:
         local = LOCALSOURCE_location
     elif sampletype == "bts":
         local = LOCALSOURCE_bts_info
+    elif sampletype == "train":
+        return None
 
     df = pd.read_csv(local, index_col=0)
 
@@ -243,15 +264,17 @@ def get_ztfid_dataframe(
     """
     Get the Pandas Dataframe of a single transient
     """
-    if is_valid_ztfid(ztfid):
+    if is_valid_ztfid(ztfid) or is_valid_train_ztfid(ztfid):
         if sampletype == "nuclear":
-            filepath = os.path.join(LOCALSOURCE_dfs, f"{ztfid}.csv")
+            filepath = Path(LOCALSOURCE_dfs) / f"{ztfid}.csv"
         elif sampletype == "bts":
-            filepath = os.path.join(LOCALSOURCE_bts_dfs, f"{ztfid}.csv")
-        try:
+            filepath = Path(LOCALSOURCE_bts_dfs) / f"{ztfid}.csv"
+        elif sampletype == "train":
+            filepath = PathLOCALSOURCE_train_dfs / f"{ztfid}.csv"
+
+        if filepath.is_file():
             df = pd.read_csv(filepath, comment="#")
-            return df
-        except FileNotFoundError:
+        else:
             logger.warn(f"No file found for {ztfid}. Check the ID.")
             return None
     else:
@@ -264,17 +287,19 @@ def get_ztfid_header(
     """
     Returns the metadata contained in the csvs as dictionary
     """
-    if is_valid_ztfid(ztfid):
+    if is_valid_ztfid(ztfid) or is_valid_train_ztfid(ztfid):
         if sampletype == "nuclear":
             if not baseline:
-                filepath = os.path.join(LOCALSOURCE_dfs, f"{ztfid}.csv")
+                filepath = Path(LOCALSOURCE_dfs) / f"{ztfid}.csv"
             else:
-                filepath = os.path.join(LOCALSOURCE_baseline, f"{ztfid}_bl.csv")
+                filepath = Path(LOCALSOURCE_baseline) / f"{ztfid}_bl.csv"
         elif sampletype == "bts":
             if not baseline:
-                filepath = os.path.join(LOCALSOURCE_bts_dfs, f"{ztfid}.csv")
+                filepath = Path(LOCALSOURCE_bts_dfs) / f"{ztfid}.csv"
             else:
-                filepath = os.path.join(LOCALSOURCE_bts_baseline, f"{ztfid}_bl.csv")
+                filepath = Path(LOCALSOURCE_bts_baseline) / f"{ztfid}_bl.csv"
+        elif sampletype == "train":
+            filepath = Path(LOCALSOURCE_train_dfs) / f"{ztfid}.csv"
 
         try:
             with open(filepath, "r") as input_file:
@@ -285,6 +310,8 @@ def get_ztfid_header(
                     if len(line) >= 300:
                         break
                     if line == "\n":
+                        break
+                    if ",ampl_corr" in line:
                         break
                     key = line.split(",", 2)[0].split("=")[0].lstrip("#")
                     headerkeys.append(key)
