@@ -775,14 +775,20 @@ class Transient(object):
         """
         Obtain the baseline correction metadata, create if not present
         """
+        t_peak_bts = float(self.meta.get("bts_peak_jd")) - 2400000.5
 
         if self.sampletype in ["nuclear", "bts"]:
             return self.meta.get("bl_info")
 
         else:
             parent_ztfid = self.meta["parent_ztfid"]
-            t = Transient(ztfid=parent_ztfid, sampletype="bts")
-            return t.meta.get("bl_info")
+            try:
+                t = Transient(ztfid=parent_ztfid, sampletype="bts")
+                bl_info = t.meta.get("bl_info")
+            except:
+                bl_info = {"t_peak": t_peak_bts}
+
+        return bl_info
 
     def recreate_baseline(self):
         """
