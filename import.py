@@ -5,10 +5,13 @@
 import os, logging, re, json, argparse
 from ztfnuclear.database import MetadataDB
 
-databases = {"ztfnuclear": MetadataDB(), "bts": MetadataDB(sampletype="bts")}
+databases = {
+    "ztfnuclear": MetadataDB(),
+    "bts": MetadataDB(sampletype="bts"),
+    "train": MetadataDB(sampletype="train"),
+}
 
 if __name__ == "__main__":
-
     logger = logging.getLogger(name=__name__)
     parser = argparse.ArgumentParser(description="Import keys from json to MongoDB")
 
