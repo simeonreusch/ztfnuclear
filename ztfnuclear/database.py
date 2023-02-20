@@ -208,7 +208,15 @@ class MetadataDB(object):
             )
         elif for_training and self.sampletype == "train":
             params.extend(
-                ["tde_fit_exp", "median_distnr", "bts_peak_mag", "simpleclasses"]
+                [
+                    "tde_fit_exp",
+                    "median_distnr",
+                    "bts_peak_mag",
+                    "simpleclasses",
+                    "salt",
+                    "ZTF_bayesian",
+                    "crossmatch",
+                ]
             )
 
         for param in params:
@@ -289,7 +297,11 @@ class MetadataDB(object):
         if for_training:
             config = io.load_config()
             df.query("success == True", inplace=True)
-            df = df[config["train_params"]]
+
+            if self.sampletype in ["nuclear", "bts"]:
+                df = df[config["train_params"]]
+            else:
+                df = df[config["train_params_train"]]
 
         return df
 
