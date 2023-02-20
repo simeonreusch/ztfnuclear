@@ -117,6 +117,11 @@ def stockid_to_ztfid(stockid: int) -> str:
     return f"ZTF{year}{''.join(l)}"
 
 
+def stockid_ztfid_noisified(stockid: int) -> str:
+    ztfid = stockid_to_ztfid(stockid=stockid)
+    print(ztfid)
+
+
 def flux_density_to_abmag(
     flux_density: float, correct_apcor_bug: bool = False, band: Optional[str] = None
 ) -> float:

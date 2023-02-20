@@ -193,7 +193,7 @@ class MetadataDB(object):
         if "_id" not in params:
             params.append("_id")
 
-        if for_training:
+        if for_training and self.sampletype in ["bts", "nuclear"]:
             params.extend(
                 [
                     "crossmatch",
@@ -205,6 +205,10 @@ class MetadataDB(object):
                     "peak_mags",
                     "salt",
                 ]
+            )
+        elif for_training and self.sampletype == "train":
+            params.extend(
+                ["tde_fit_exp", "median_distnr", "bts_peak_mag", "simpleclasses"]
             )
 
         for param in params:
