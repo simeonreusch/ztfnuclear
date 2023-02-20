@@ -45,14 +45,16 @@ class Model(object):
         seed: int | None = None,
         validation_fraction: float = 0.1,
         train_test_fraction: float = 0.7,
+        noisified_validation: bool = True,
         n_iter: int = 10,
         grid_search_sample_size: int = 1000,
         model_dir: Path | str = Path(io.MODEL_dir),
-        plot_dir: Path | str = Path(io.LOCALSOURCE_plots),
+        plot_dir: Path | str = Path(io.LOCALSOURCE_plots) / "train",
     ):
         super(Model, self).__init__()
         self.logger = logging.getLogger(__name__)
         self.noisified = noisified
+        self.noisified_validation = noisified_validation
         self.validation_fraction = validation_fraction
         self.train_test_fraction = train_test_fraction
         self.seed = seed
@@ -119,7 +121,13 @@ class Model(object):
             size=int(self.validation_fraction * len(self.parent_ztfids)),
             replace=False,
         )
-        self.validation_ztfids = self.get_child_ztfids(self.validation_parent_ztfids)
+        if self.noisified_validation:
+            self.validation_ztfids = self.get_child_ztfids(
+                self.validation_parent_ztfids
+            )
+        else:
+            self.validation_ztfids = self.validation_parent_ztfids
+
         self.logger.info(
             f"Selected {len(self.validation_parent_ztfids)} validation ZTFIDs from {len(self.parent_ztfids)} parent ZTFIDs. These comprise {len(self.validation_ztfids)} lightcurves."
         )
@@ -262,9 +270,7 @@ class Model(object):
         on the full training sample
         """
         self.logger.info("--------------------------------------------")
-        self.logger.info(
-            "\n\nNow fitting with the best estimator from the grid search. This will take time\n"
-        )
+        self.logger.info("\nNow fitting with the best estimator from the grid search.")
         self.logger.info("--------------------------------------------")
 
         best_estimator = grid_result.best_estimator_.fit(self.X_train, self.y_train)
@@ -289,7 +295,7 @@ class Model(object):
 
         self.logger.info("------------------------------------")
         self.logger.info("           FITTING DONE             ")
-        self.logger.info(f"  This took {(t_end-t_start)/60} minutes")
+        self.logger.info(f"  This took {(t_end-t_start)/60:.2f} minutes")
         self.logger.info("------------------------------------")
 
     def evaluate(self):
@@ -319,7 +325,6 @@ class Model(object):
         self.plot_features()
 
         self.logger.info("Plotting evaluation")
-        self.logger.info(f"\nWe now plot the evaluation")
 
         features = self.X_validation
         target = self.y_validation
@@ -348,11 +353,15 @@ class Model(object):
             y_true=target,
             y_pred=pred,
             display_labels=["agn", "snia", "sn_other", "star", "tde"],
-            normalize="true",
+            # normalize="false",
         )
         disp.plot()
-        outfile = self.plot_dir / f"results_seed_{self.seed}.pdf"
+        outfile = (
+            self.plot_dir
+            / f"results_seed_{self.seed}_n_iter_{self.n_iter}_noisified_val_{self.noisified_validation}.pdf"
+        )
         plt.savefig(outfile)
+        self.logger.info(f"We saved the evaluation to {outfile}")
         # print(confusion)
         # aucpr = metrics.average_precision_score(target, pred, average="samples")
 
