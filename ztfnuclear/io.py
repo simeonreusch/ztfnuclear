@@ -21,6 +21,8 @@ if os.getenv("ZTFDATA"):
     SRC_bts = os.path.join(BASE, "BTS")
     SRC_train = os.path.join(BASE, "TRAIN")
 
+    MODEL_dir = Path(BASE) / "models"
+
     SRC_nuclear_pickle = os.path.join(SRC_nuclear, "overview.pkl")
     SRC_nuclear_pickle_flaring = os.path.join(
         SRC_nuclear,

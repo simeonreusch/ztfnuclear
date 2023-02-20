@@ -39,6 +39,8 @@ bs4 = "^0.0.1"
 xgboost = "^1.7.4"
 pandas-stubs = "^1.5.3.230214"
 sklearn-stub = "^0.0.3"
+joblib = "^1.2.0"
+types-pyyaml = "^6.0.12.7"
 
 [tool.poetry.dev-dependencies]
 coveralls = "^3.3.1"
