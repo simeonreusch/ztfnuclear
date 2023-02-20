@@ -330,18 +330,7 @@ class Model(object):
         target = self.y_validation
 
         pred = best_estimator.predict(features)
-        # print(target)
-        # print(pdred)
-        # quit()
-        # precision = metrics.precision_score(
-        #     target, pred, labels=[0, 1, 2, 3, 4], average="samples"
-        # )
-        # recall = metrics.recall_score(
-        #     target, pred, labels=[0, 1, 2, 3, 4], average="samples"
-        # )
-        # confusion = metrics.multilabel_confusion_matrix(
-        #     y_true=target, y_pred=pred, labels=[0, 1, 2, 3, 4]
-        # )
+
         # disp = metrics.ConfusionMatrixDisplay(confusion_matrix=confusion)
         # 0: agn
         # 1: sn_ia
@@ -353,7 +342,7 @@ class Model(object):
             y_true=target,
             y_pred=pred,
             display_labels=["agn", "snia", "sn_other", "star", "tde"],
-            # normalize="false",
+            normalize="true",
         )
         disp.plot()
         outfile = (
@@ -362,114 +351,6 @@ class Model(object):
         )
         plt.savefig(outfile)
         self.logger.info(f"We saved the evaluation to {outfile}")
-        # print(confusion)
-        # aucpr = metrics.average_precision_score(target, pred, average="samples")
-
-        # self.logger.info(
-        # f"Precision: {precision} / recall: {recall}"
-        # )  # / aucpr: {aucpr}")
-
-    #         target = y_test
-
-    #         pred = best_estimator.predict(features)
-
-    #         precision_list.append(metrics.precision_score(target, pred))
-    #         recall_list.append(metrics.recall_score(target, pred))
-    #         aucpr_list.append(metrics.average_precision_score(target, pred))
-
-    #         timebin_mean_list.append(np.mean([timebin[0], timebin[1]]))
-
-    #     df_test_subsample = self.get_random_stock_subsample(self.df_test)
-
-    #     logger.info(f"Best: {grid_result.best_score_} using {grid_result.best_params_}")
-
-    #     self.df_test_subsample = df_test_subsample
-
-    #     # We get even sized binning (at least as far as possible)
-    #     evaluation_bins, nbins = self.get_optimal_bins(nbins=14)
-
-    #     self.evaluation_bins = evaluation_bins
-
-    #     logger.info(f"\nWe now plot the evaluation using {nbins} time bins")
-
-    #     precision_list = []
-    #     recall_list = []
-    #     aucpr_list = []
-    #     timebin_mean_list = []
-
-    #     for timebin in evaluation_bins:
-    #         df_test_bin = df_test_subsample[
-    #             (df_test_subsample["ndet"] >= timebin[0])
-    #             & (df_test_subsample["ndet"] <= timebin[1])
-    #         ]
-    #         X_test = df_test_bin.drop(columns=["class_short", "stock"])
-
-    #         self.cols_to_use.append("stock")
-    #         y_test = df_test_bin.drop(columns=self.cols_to_use)
-    #         features = X_test
-    #         target = y_test
-
-    #         pred = best_estimator.predict(features)
-
-    #         precision_list.append(metrics.precision_score(target, pred))
-    #         recall_list.append(metrics.recall_score(target, pred))
-    #         aucpr_list.append(metrics.average_precision_score(target, pred))
-
-    #         timebin_mean_list.append(np.mean([timebin[0], timebin[1]]))
-
-    #     outfiles = [
-    #         os.path.join(
-    #             self.plot_dir,
-    #             f"{i}_niter_{self.n_iter}_nsample_{self.grid_search_sample_size}.png",
-    #         )
-    #         for i in ["precision", "recall", "aucpr"]
-    #     ]
-
-    #     fig, ax = plt.subplots(figsize=(5, 5))
-    #     ax.scatter(timebin_mean_list, precision_list)
-    #     ax.set_xlabel("ndet interval center")
-    #     ax.set_ylabel("precision")
-    #     ax.set_ylim([0.5, 1])
-    #     fig.savefig(outfiles[0], dpi=300)
-    #     plt.close()
-
-    #     fig, ax = plt.subplots(figsize=(5, 5))
-    #     ax.scatter(timebin_mean_list, recall_list)
-    #     ax.set_xlabel("ndet interval center")
-    #     ax.set_ylabel("recall")
-    #     ax.set_ylim([0.75, 1])
-    #     fig.savefig(outfiles[1], dpi=300)
-    #     plt.close()
-
-    #     fig, ax = plt.subplots(figsize=(5, 5))
-    #     ax.scatter(timebin_mean_list, aucpr_list)
-    #     ax.set_xlabel("ndet interval center")
-    #     ax.set_ylabel("aucpr")
-    #     ax.set_ylim([0.5, 1])
-    #     fig.savefig(outfiles[2], dpi=300)
-    #     plt.close()
-
-    # def get_optimal_bins(self, nbins=20):
-    #     """
-    #     Determine optimal time bins (requirement: same number
-    #     of alerts per bin). This cannot always be fulfilled, so duplicates=drop is passed.
-    #     """
-    #     out, bins = pd.qcut(
-    #         self.df_test_subsample.ndet.values, nbins, retbins=True, duplicates="drop"
-    #     )
-    #     final_bins = []
-    #     for i in range(len(bins) - 1):
-    #         final_bins.append([int(bins[i]), int(bins[i + 1])])
-    #     nbins = len(final_bins)
-    #     return final_bins, nbins
-
-    # def get_random_stock_subsample(self, df):
-    #     """
-    #     Returns a df consisting of one random datapoint for each unique stock ID
-    #     """
-    #     df_sample = df.groupby("stock").sample(n=1, random_state=self.random_state)
-
-    #     return df_sample
 
     def plot_features(self):
         """
@@ -479,8 +360,6 @@ class Model(object):
         fig, ax = plt.subplots(figsize=(10, 21))
 
         cols = list(self.X_train.keys())
-
-        # cols.remove("classif")
 
         ax.barh(cols, self.best_estimator.feature_importances_)
         plt.title("Feature importance", fontsize=25)
