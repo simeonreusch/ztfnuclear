@@ -36,6 +36,9 @@ seaborn = "^0.12.1"
 mypy = "^0.991"
 keyring = "^23.13.1"
 bs4 = "^0.0.1"
+xgboost = "^1.7.4"
+pandas-stubs = "^1.5.3.230214"
+sklearn-stub = "^0.0.3"
 
 [tool.poetry.dev-dependencies]
 coveralls = "^3.3.1"

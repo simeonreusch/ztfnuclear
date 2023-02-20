@@ -9,11 +9,25 @@ import numpy as np
 import pandas as pd
 from numpy.random import default_rng
 
+import xgboost as xgb
+from sklearn import metrics
+from sklearn.utils import shuffle
+from sklearn.model_selection import (
+    RandomizedSearchCV,
+    StratifiedKFold,
+    train_test_split,
+)
+
+
 from ztfnuclear.sample import NuclearSample
 from ztfnuclear.plot import get_tde_selection
 
+# ToDo
+# -add peakmag
+# -add wisecolors
 
-class Train(object):
+
+class Model(object):
     """
     Do fancy ML
     """
@@ -22,18 +36,22 @@ class Train(object):
         self,
         noisified: bool = True,
         seed: int | None = None,
-        validation_fraction=0.1,
-        train_test_fraction=0.9,
+        validation_fraction: float = 0.1,
+        train_test_fraction: float = 0.7,
+        n_iter: int = 10,
     ):
-        super(Train, self).__init__()
+        super(Model, self).__init__()
         self.logger = logging.getLogger(__name__)
         self.noisified = noisified
         self.validation_fraction = validation_fraction
         self.train_test_fraction = train_test_fraction
         self.seed = seed
+        self.n_iter = n_iter
+
         self.rng = default_rng(seed=self.seed)
         self.get_training_metadata()
         self.get_validation_sample()
+
         self.train_test_split()
 
     def get_training_metadata(self) -> pd.DataFrame:
@@ -52,6 +70,7 @@ class Train(object):
         else:
             train = NuclearSample(sampletype="train")
             self.meta = train.meta.get_dataframe(for_training=True)
+            self.meta.rename(columns={"simpleclasses": "classif"}, inplace=True)
 
         self.logger.info(f"Read metadata. {len(self.meta)} transients available.")
         self.meta.to_csv("test.csv")
@@ -69,14 +88,16 @@ class Train(object):
             size=int(self.validation_fraction * len(self.parent_ztfids)),
             replace=False,
         )
+        self.validation_ztfids = self.get_child_ztfids(self.validation_parent_ztfids)
         self.logger.info(
-            f"Selected {len(self.validation_parent_ztfids)} validation ZTFIDs from {len(self.parent_ztfids)} parent ZTFIDs"
+            f"Selected {len(self.validation_parent_ztfids)} validation ZTFIDs from {len(self.parent_ztfids)} parent ZTFIDs. These comprise {len(self.validation_ztfids)} lightcurves."
         )
         self.train_test_parent_ztfids = [
             ztfid
             for ztfid in self.parent_ztfids
             if ztfid not in self.validation_parent_ztfids
         ]
+        self.validation_sample = self.meta.query("index in @self.validation_ztfids")
 
     def train_test_split(self):
         """
@@ -92,22 +113,42 @@ class Train(object):
             for ztfid in self.train_test_parent_ztfids
             if ztfid not in self.train_parent_ztfids
         ]
+
+        self.train_ztfids = self.get_child_ztfids(ztfids=self.train_parent_ztfids)
+        self.test_ztfids = self.get_child_ztfids(ztfids=self.test_parent_ztfids)
+
         self.logger.info(
             f"From {len(self.train_test_parent_ztfids)} available parent ZTFIDs selected {len(self.train_parent_ztfids)} for training, {len(self.test_parent_ztfids)} for testing."
         )
-        self.train_ztfids = self.get_child_ztfids(ztfids=self.train_parent_ztfids)
         self.logger.info(
             f"Train sample: {len(self.train_ztfids)} lightcurves in total."
         )
+        self.logger.info(f"Test sample: {len(self.test_ztfids)} lightcurves in total.")
 
-    @staticmethod
-    def get_parent_ztfids(ztfids: List[str]):
+        df_train = self.meta.query("index in @self.train_ztfids")
+        df_test = self.meta.query("index in @self.test_ztfids")
+
+        X_train = df_train.drop(columns="classif").reset_index(drop=True)
+        X_test = df_test.drop(columns="classif").reset_index(drop=True)
+        y_train = df_train.filter(["classif"]).reset_index(drop=True)["class_short"]
+        y_test = df_test.filter(["classif"]).reset_index(drop=True)["class_short"]
+
+        print(y_test)
+
+        # df["class_short"] = y.values
+
+        # df = shuffle(df, random_state=random_state).reset_index(drop=True)
+
+    def get_parent_ztfids(self, ztfids: List[str]):
         parent_ztfids = [i for i in ztfids if len(i.split("_")) == 1]
         return parent_ztfids
 
-    @staticmethod
-    def get_child_ztfids(ztfids: List[str], include_parent: bool = True):
-        child_ztfids = [i for i in ztfids if len(i.split("_")) == 2]
+    def get_child_ztfids(self, ztfids: List[str], include_parent: bool = True):
+        child_ztfids = [
+            i
+            for i in self.all_ztfids
+            if (len(isplit := i.split("_")) == 2 and isplit[0] in ztfids)
+        ]
 
         if include_parent:
             child_ztfids.extend(ztfids)
