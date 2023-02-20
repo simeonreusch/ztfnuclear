@@ -118,8 +118,17 @@ def stockid_to_ztfid(stockid: int) -> str:
 
 
 def stockid_ztfid_noisified(stockid: int) -> str:
-    ztfid = stockid_to_ztfid(stockid=stockid)
-    print(ztfid)
+    stockid_with_subid = str(stockid).split("000000")
+
+    if len(stockid_with_subid) < 2:
+        ztfid = stockid_to_ztfid(stockid=int(stockid_with_subid[0]))
+        ztfid_noisified = ztfid
+
+    else:
+        ztfid = stockid_to_ztfid(stockid=int(stockid_with_subid[0]))
+        ztfid_noisified = ztfid + "_" + str(int(stockid_with_subid[1]))
+
+    return ztfid_noisified
 
 
 def flux_density_to_abmag(

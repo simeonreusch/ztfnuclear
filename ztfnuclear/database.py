@@ -338,7 +338,10 @@ class MetadataDB(object):
         elif self.sampletype == "train":
             items_in_coll = self.db.command("collstats", "metadata_train")["count"]
 
-        testobj = self.read_transient(ztfid="ZTF19aatubsj")
+        if self.sampletype in ["nuclear", "bts"]:
+            testobj = self.read_transient(ztfid="ZTF19aatubsj")
+        elif self.sampletype == "train":
+            testobj = self.read_transient(ztfid="ZTF18abamrjl")
 
         if testobj:
             has_ra = True if "RA" in testobj.keys() else False
@@ -356,6 +359,7 @@ class MetadataDB(object):
             has_wise_bayesian = True if "WISE_bayesian" in testobj.keys() else False
             has_wise_dust = True if "WISE_dust" in testobj.keys() else False
             has_tns = True if "TNS_name" in testobj.keys() else False
+            has_ztf_bayesian = True if "ZTF_bayesian" in testobj.keys() else False
 
         else:
             has_ra = False
@@ -371,6 +375,7 @@ class MetadataDB(object):
             has_wise_bayesian = False
             has_wise_dust = False
             has_tns = False
+            has_ztf_bayesian = False
 
         return {
             "count": items_in_coll,
@@ -387,6 +392,7 @@ class MetadataDB(object):
             "has_wise_bayesian": has_wise_bayesian,
             "has_wise_dust": has_wise_dust,
             "has_tns": has_tns,
+            "has_ztf_bayesian": has_ztf_bayesian,
         }
 
     def to_df(self) -> pd.DataFrame:

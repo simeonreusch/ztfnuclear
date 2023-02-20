@@ -147,6 +147,23 @@ class NuclearSample(object):
                 self.populate_db_from_csv(filepath=io.LOCALSOURCE_bts_info)
             db_check = self.meta.get_statistics()
 
+        elif self.sampletype == "train":
+            if not db_check["has_salt"]:
+                saltfit_res = io.parse_ampel_json(
+                    filepath=os.path.join(io.LOCALSOURCE_train_fitres, "saltfit.json"),
+                    parameter_name="salt",
+                    sampletype=self.sampletype,
+                )
+                self.populate_db_from_dict(data=saltfit_res)
+
+            if not db_check["has_ztf_bayesian"]:
+                bayesian_res = io.parse_ampel_json(
+                    filepath=os.path.join(io.SRC_train, "ztf_bayesian.json"),
+                    parameter_name="ztf_bayesian",
+                    sampletype=self.sampletype,
+                )
+                self.populate_db_from_dict(data=bayesian_res)
+
         if self.sampletype == "nuclear":
             assert db_check["count"] == 11687
         elif self.sampletype == "bts":

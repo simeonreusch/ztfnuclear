@@ -35,6 +35,7 @@ if os.getenv("ZTFDATA"):
     LOCALSOURCE_bts_irsa = os.path.join(SRC_bts, "irsa")
 
     LOCALSOURCE_fitres = os.path.join(SRC_nuclear, "fitres")
+    LOCALSOURCE_train_fitres = os.path.join(SRC_train, "fitres")
     LOCALSOURCE_ampelz = os.path.join(SRC_nuclear, "ampel_z.json")
     LOCALSOURCE_location = os.path.join(SRC_nuclear, "location.csv")
     LOCALSOURCE_bts_info = os.path.join(SRC_bts, "bts.csv")
@@ -395,7 +396,10 @@ def parse_ampel_json(
             stockid = entry["stock"]
 
             if parameter_name not in ["wise_bayesian", "wise_dust"]:
-                ztfid = utils.stockid_to_ztfid(stockid)
+                if sampletype in ["nuclear", "bts"]:
+                    ztfid = utils.stockid_to_ztfid(stockid)
+                elif sampletype == "train":
+                    ztfid = utils.stockid_ztfid_noisified(stockid)
             else:
                 ztfid = airflares_to_ztf[str(stockid)]
 
