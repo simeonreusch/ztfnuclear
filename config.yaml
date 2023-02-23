@@ -401,7 +401,7 @@ train_params_train:
   - tde_fit_exp_paramdict_plateaustart
   - tde_fit_exp_paramdict_mwebv
   - overlapping_regions
-  - median_distnr
+  - distnr
   - crossmatch_sgscore_sgscore
   - simpleclasses
   - sample

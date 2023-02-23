@@ -182,31 +182,30 @@ class NuclearSample(object):
 
         cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
 
+        self.logger.info("Updating train metadata DB with z-corrected distnr values")
+
         if self.sampletype != "train":
             raise ValueError("get scaled distnr only applies to sampletype 'train'")
-        for t in tqdm(self.get_transients(), total=len(self.ztfids)):
+        for t in self.get_transients():
+            distnr = float(t.meta["median_distnr"])
             if len(t.ztfid.split("_")) > 1:
-                distnr = float(t.meta["median_distnr"])
-
                 distnr_deg = distnr / 3600 * u.deg
                 z = float(t.meta["z"])
                 parent_z = float(t.meta["bts_z"])
                 parent_lumidist = cosmo.luminosity_distance(parent_z)
+                new_lumidist = cosmo.luminosity_distance(z)
                 theta = distnr_deg.to(u.radian).value
                 D_A = parent_lumidist / (1 + parent_z) ** 2
-                dist = (theta * D_A).to(u.kpc)
+                dist = theta * D_A
 
-                print("\n")
-                print(f"distnr: {distnr * u.arcsec}")
-                print(f"distnr_deg: {distnr_deg}")
-                print(f"parent_lumidist: {parent_lumidist}")
-                print(f"D_A: {D_A}")
-                print(f"parent z: {parent_z}")
-                print(f"z: {z}")
-                print(f"theta: {theta}")
-                print(f"R: {dist}")
-                print("-----")
-                quit()
+                theta_new = dist * (1 + z) ** 2 / new_lumidist
+                distnr_new = ((theta_new * u.rad).to(u.deg) * 3600).value
+            else:
+                distnr_new = distnr
+
+            data = {"distnr": distnr_new}
+
+            self.meta.update_transient(ztfid=t.ztfid, data=data)
 
     def get_flaring(self, after_optical_peak: bool = True):
         """
