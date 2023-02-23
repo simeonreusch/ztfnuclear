@@ -298,7 +298,7 @@ class Model(object):
         self.logger.info(f"  This took {(t_end-t_start)/60:.2f} minutes")
         self.logger.info("------------------------------------")
 
-    def evaluate(self):
+    def evaluate(self, normalize=True):
         """
         Evaluate the model
         """
@@ -331,23 +331,27 @@ class Model(object):
 
         pred = best_estimator.predict(features)
 
-        # disp = metrics.ConfusionMatrixDisplay(confusion_matrix=confusion)
         # 0: agn
         # 1: sn_ia
         # 2: sn_other
         # 3: star
         # 4: tde
 
+        if normalize:
+            norm_str = "true"
+        else:
+            norm_str = None
+
         disp = metrics.ConfusionMatrixDisplay.from_predictions(
             y_true=target,
             y_pred=pred,
             display_labels=["agn", "snia", "sn_other", "star", "tde"],
-            normalize="true",
+            normalize=norm_str,
         )
         disp.plot()
         outfile = (
             self.plot_dir
-            / f"results_seed_{self.seed}_n_iter_{self.n_iter}_noisified_val_{self.noisified_validation}.pdf"
+            / f"results_seed_{self.seed}_n_iter_{self.n_iter}_noisified_val_{self.noisified_validation}_normalized_{normalize}.pdf"
         )
         plt.savefig(outfile)
         self.logger.info(f"We saved the evaluation to {outfile}")

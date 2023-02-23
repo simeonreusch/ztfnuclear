@@ -263,9 +263,6 @@ class MetadataDB(object):
 
         df["ztfid"] = df.index
 
-        # if "crossmatch_TNS_type" not in df.keys():
-        # df["crossmatch_TNS_type"] = None
-
         df.rename(
             columns={
                 "tde_fit_exp_success": "success",
@@ -282,14 +279,14 @@ class MetadataDB(object):
             inplace=True,
         )
 
+        # if self.sampletype == "train":
+        # distnr magic
+
         if "wise_w1" in df.keys():
             df["wise_w1w2"] = df.wise_w1 - df.wise_w2
             df["wise_w1w2"] = df["wise_w1w2"].fillna(999)
             df["wise_w2w3"] = df.wise_w2 - df.wise_w3
             df["wise_w2w3"] = df["wise_w2w3"].fillna(999)
-        # else:
-        #     df["wise_w1w2"] = 999
-        #     df["wise_w2w3"] = 999
 
         if "salt_red_chisq" in df.keys():
             df["salt_red_chisq"] = df["salt_red_chisq"].fillna(99999)
@@ -372,6 +369,7 @@ class MetadataDB(object):
             has_wise_dust = True if "WISE_dust" in testobj.keys() else False
             has_tns = True if "TNS_name" in testobj.keys() else False
             has_ztf_bayesian = True if "ZTF_bayesian" in testobj.keys() else False
+            has_distnr_scaled = True if "distnr_scaled" in testobj.keys() else False
 
         else:
             has_ra = False
@@ -388,6 +386,7 @@ class MetadataDB(object):
             has_wise_dust = False
             has_tns = False
             has_ztf_bayesian = False
+            has_distnr_scaled = False
 
         return {
             "count": items_in_coll,
@@ -405,6 +404,7 @@ class MetadataDB(object):
             "has_wise_dust": has_wise_dust,
             "has_tns": has_tns,
             "has_ztf_bayesian": has_ztf_bayesian,
+            "has_distnr_scaled": has_distnr_scaled,
         }
 
     def to_df(self) -> pd.DataFrame:

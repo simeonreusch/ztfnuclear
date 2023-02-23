@@ -163,11 +163,50 @@ class NuclearSample(object):
                     sampletype=self.sampletype,
                 )
                 self.populate_db_from_dict(data=bayesian_res)
+            if not db_check["has_distnr_scaled"]:
+                self.get_scaled_distnr(sampletype=self.sampletype)
+                quit()
 
         if self.sampletype == "nuclear":
             assert db_check["count"] == 11687
         elif self.sampletype == "bts":
             assert db_check["count"] == 7131 or db_check["count"] == 7130
+
+    def get_scaled_distnr(self, sampletype):
+        """
+        Convert the core distance at a certain redshift
+        to core distance at another redshift
+        """
+        from astropy.cosmology import FlatLambdaCDM
+        from astropy import units as u
+
+        cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
+
+        if self.sampletype != "train":
+            raise ValueError("get scaled distnr only applies to sampletype 'train'")
+        for t in tqdm(self.get_transients(), total=len(self.ztfids)):
+            if len(t.ztfid.split("_")) > 1:
+                distnr = float(t.meta["median_distnr"])
+
+                distnr_deg = distnr / 3600 * u.deg
+                z = float(t.meta["z"])
+                parent_z = float(t.meta["bts_z"])
+                parent_lumidist = cosmo.luminosity_distance(parent_z)
+                theta = distnr_deg.to(u.radian).value
+                D_A = parent_lumidist / (1 + parent_z) ** 2
+                dist = (theta * D_A).to(u.kpc)
+
+                print("\n")
+                print(f"distnr: {distnr * u.arcsec}")
+                print(f"distnr_deg: {distnr_deg}")
+                print(f"parent_lumidist: {parent_lumidist}")
+                print(f"D_A: {D_A}")
+                print(f"parent z: {parent_z}")
+                print(f"z: {z}")
+                print(f"theta: {theta}")
+                print(f"R: {dist}")
+                print("-----")
+                quit()
 
     def get_flaring(self, after_optical_peak: bool = True):
         """
