@@ -104,7 +104,7 @@ class Model(object):
         self.meta.drop(
             columns=["RA", "Dec", "tde_fit_exp_covariance", "sample"], inplace=True
         )
-        self.meta = self.meta.astype({"median_distnr": "float64", "classif": "str"})
+        self.meta = self.meta.astype({"distnr": "float64", "classif": "str"})
 
         self.logger.info(f"Read metadata. {len(self.meta)} transients available.")
         self.all_ztfids = self.meta.index.values

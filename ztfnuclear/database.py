@@ -210,7 +210,7 @@ class MetadataDB(object):
             params.extend(
                 [
                     "tde_fit_exp",
-                    "median_distnr",
+                    "distnr",
                     "bts_peak_mag",
                     "simpleclasses",
                     "salt",
@@ -369,7 +369,7 @@ class MetadataDB(object):
             has_wise_dust = True if "WISE_dust" in testobj.keys() else False
             has_tns = True if "TNS_name" in testobj.keys() else False
             has_ztf_bayesian = True if "ZTF_bayesian" in testobj.keys() else False
-            has_distnr_scaled = True if "distnr_scaled" in testobj.keys() else False
+            has_distnr_scaled = True if "distnr" in testobj.keys() else False
 
         else:
             has_ra = False
