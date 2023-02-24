@@ -165,7 +165,9 @@ class NuclearSample(object):
                 self.populate_db_from_dict(data=bayesian_res)
             if not db_check["has_distnr_scaled"]:
                 self.get_scaled_distnr(sampletype=self.sampletype)
-                quit()
+
+            if not db_check["has_peakmag_scaled"]:
+                self.get_scaled_peakmag(sampletype=self.sampletype)
 
         if self.sampletype == "nuclear":
             assert db_check["count"] == 11687
@@ -184,8 +186,8 @@ class NuclearSample(object):
 
         self.logger.info("Updating train metadata DB with z-corrected distnr values")
 
-        if self.sampletype != "train":
-            raise ValueError("get scaled distnr only applies to sampletype 'train'")
+        assert self.sampletype == "train"
+
         for t in self.get_transients():
             distnr = float(t.meta["median_distnr"])
             if len(t.ztfid.split("_")) > 1:
@@ -205,6 +207,33 @@ class NuclearSample(object):
 
             data = {"distnr": distnr_new}
 
+            self.meta.update_transient(ztfid=t.ztfid, data=data)
+
+    def get_scaled_peakmag(self, sampletype):
+        """
+        Convert the peak apparent mag at a certain redshift to one at another redshift
+        """
+        from astropy.cosmology import FlatLambdaCDM
+        from astropy import units as u
+
+        cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
+        self.logger.info("Updating train metadata DB with z-corrected peakmag values")
+
+        assert self.sampletype == "train"
+
+        for t in self.get_transients():
+            peakmag_parent = float(t.meta["bts_peak_mag"])
+            if len(t.ztfid.split("_")) > 1:
+                z = float(t.meta["z"])
+                parent_z = float(t.meta["bts_z"])
+                lumidist_pc = cosmo.luminosity_distance(parent_z).to(u.pc).value
+                peak_absmag_parent = peakmag_parent - 5 * (np.log10(lumidist_pc) - 1)
+                lumidist_new_pc = cosmo.luminosity_distance(z).to(u.pc).value
+                peakmag_new = peak_absmag_parent + 5 * np.log10(lumidist_new_pc) - 5
+            else:
+                peakmag_new = peakmag_parent
+
+            data = {"peakmag": peakmag_new}
             self.meta.update_transient(ztfid=t.ztfid, data=data)
 
     def get_flaring(self, after_optical_peak: bool = True):

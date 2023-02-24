@@ -370,6 +370,7 @@ class MetadataDB(object):
             has_tns = True if "TNS_name" in testobj.keys() else False
             has_ztf_bayesian = True if "ZTF_bayesian" in testobj.keys() else False
             has_distnr_scaled = True if "distnr" in testobj.keys() else False
+            has_peakmag_scaled = True if "peakmag" in testobj.keys() else False
 
         else:
             has_ra = False
@@ -387,6 +388,7 @@ class MetadataDB(object):
             has_tns = False
             has_ztf_bayesian = False
             has_distnr_scaled = False
+            has_peakmag_scaled = False
 
         return {
             "count": items_in_coll,
@@ -405,6 +407,7 @@ class MetadataDB(object):
             "has_tns": has_tns,
             "has_ztf_bayesian": has_ztf_bayesian,
             "has_distnr_scaled": has_distnr_scaled,
+            "has_peakmag_scaled": has_peakmag_scaled,
         }
 
     def to_df(self) -> pd.DataFrame:
