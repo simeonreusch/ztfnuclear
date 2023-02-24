@@ -416,6 +416,7 @@ train_params_train:
   - salt_red_chisq
   - wise_w1w2
   - wise_w2w3
+  - peakmag
 
 
 

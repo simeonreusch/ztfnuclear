@@ -29,10 +29,6 @@ from ztfnuclear import io
 from ztfnuclear.sample import NuclearSample
 from ztfnuclear.plot import get_tde_selection
 
-# ToDo
-# -add peakmag
-# -add wisecolors
-
 
 class Model(object):
     """

@@ -211,7 +211,7 @@ class MetadataDB(object):
                 [
                     "tde_fit_exp",
                     "distnr",
-                    "bts_peak_mag",
+                    "peakmag",
                     "simpleclasses",
                     "salt",
                     "ZTF_bayesian",
