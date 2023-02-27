@@ -410,6 +410,7 @@ train_params_train:
   - salt_paramdict_c
   #- salt_paramdict_mwebv
   - salt_red_chisq
+  - sample
   - wise_w1w2
   - wise_w2w3
   - peakmag

@@ -20,6 +20,6 @@ m = Model(
     train_test_fraction=0.7,
     grid_search_sample_size=2000,
 )
-# m.train()
+m.train()
 m.evaluate(normalize=True)
 m.evaluate(normalize=False)

@@ -42,7 +42,7 @@ class Model(object):
         n_iter: int = 10,
         grid_search_sample_size: int = 1000,
         model_dir: Path | str = Path(io.MODEL_dir),
-        plot_dir: Path | str = Path(io.LOCALSOURCE_plots) / "train",
+        plot_dir: Path | str = Path(io.LOCALSOURCE_train_plots),
     ):
         super(Model, self).__init__()
         self.logger = logging.getLogger(__name__)
