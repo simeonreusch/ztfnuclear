@@ -15,11 +15,13 @@ import xgboost as xgb
 from matplotlib import pyplot as plt
 from numpy.random import default_rng
 from sklearn import metrics
-from sklearn.model_selection import (RandomizedSearchCV, StratifiedKFold,
-                                     train_test_split)
+from sklearn.model_selection import (
+    RandomizedSearchCV,
+    StratifiedKFold,
+    train_test_split,
+)
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import shuffle
-
 from ztfnuclear import io
 from ztfnuclear.plot import get_tde_selection
 from ztfnuclear.sample import NuclearSample
