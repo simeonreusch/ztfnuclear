@@ -17,7 +17,6 @@ from healpy import ang2pix  # type: ignore
 from pymongo import GEOSPHERE, MongoClient, UpdateOne
 from pymongo.database import Database
 from tqdm import tqdm  # type: ignore
-
 from ztfnuclear import io
 
 logging.getLogger("extcats.CatalogQuery").setLevel(logging.WARN)
@@ -300,10 +299,8 @@ class MetadataDB(object):
         if for_training:
             config = io.load_config()
             df.query("success == True", inplace=True)
-            print(df.wise_w1w2)
-            # print(np.random.normal(0, 0.05, len(df)))
-            # df["wise_w1w2"] = df.wise_w1w2 + np.random.normal(0, 0.02, len(df))
             df["wise_w1w2"] = self.add_noise_to_wise(df_col=df["wise_w1w2"])
+            df["wise_w2w3"] = self.add_noise_to_wise(df_col=df["wise_w2w3"])
 
             if self.sampletype in ["nuclear", "bts"]:
                 df = df[config["train_params"]]
