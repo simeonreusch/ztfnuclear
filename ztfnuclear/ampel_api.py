@@ -2,15 +2,14 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging
+import logging
+import os
 from json import JSONDecodeError
 
+import backoff
 import numpy as np
 import numpy.ma as ma
-
-import backoff
 import requests  # type: ignore
-
 
 API_BASEURL = "https://ampel.zeuthen.desy.de/api"
 API_CATALOGMATCH_URL = API_BASEURL + "/catalogmatch"
@@ -86,7 +85,9 @@ def ampel_api_ztfid(ztfid: str, limit: int = 100, hist: bool = True) -> dict | N
     """
     Query alerts via the Ampel API
     """
-    import keyring, getpass
+    import getpass
+
+    import keyring
 
     ampel_api_token = keyring.get_password("ampel_api_token", "password")
     if ampel_api_token is None:

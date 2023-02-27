@@ -3,13 +3,13 @@
 # License: BSD-3-Clause
 
 import logging
-
 from pathlib import Path
-import pandas as pd  # type: ignore
-import numpy as np
 
+import numpy as np
+import pandas as pd  # type: ignore
+
+from ztfnuclear import crossmatch, io, utils
 from ztfnuclear.sample import NuclearSample, Transient
-from ztfnuclear import io, utils, crossmatch
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)

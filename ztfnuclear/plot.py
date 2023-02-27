@@ -2,23 +2,24 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, warnings, typing, copy
-
+import copy
+import logging
+import os
+import typing
+import warnings
 from pathlib import Path
-
-from typing import Optional, Union, List, Any, Tuple
+from typing import Any, List, Optional, Tuple, Union
 
 import astropy  # type: ignore
-from astropy import units as u  # type: ignore
-from astropy.coordinates import Angle  # type: ignore
-from astropy import constants as const  # type: ignore
-
 import matplotlib
+import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
 import numpy.ma as ma
 import pandas as pd
-import matplotlib.pyplot as plt  # type: ignore
 import seaborn as sns
+from astropy import constants as const  # type: ignore
+from astropy import units as u  # type: ignore
+from astropy.coordinates import Angle  # type: ignore
 
 from ztfnuclear import io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
@@ -1444,9 +1445,11 @@ def plot_tde_fit(
     """
     Plot the TDE fit result if present
     """
-    from ztfnuclear.tde_fit import TDESource_exp_flextemp, TDESource_pl_flextemp
     import sncosmo
     from sfdmap import SFDMap  # type: ignore[import]
+
+    from ztfnuclear.tde_fit import (TDESource_exp_flextemp,
+                                    TDESource_pl_flextemp)
 
     logger.debug("Plotting TDE fit lightcurve (in flux space)")
 

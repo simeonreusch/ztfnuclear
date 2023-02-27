@@ -2,7 +2,12 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, re, json, argparse
+import argparse
+import json
+import logging
+import os
+import re
+
 from ztfnuclear.database import MetadataDB
 
 databases = {"ztfnuclear": MetadataDB(), "bts": MetadataDB(sampletype="bts")}

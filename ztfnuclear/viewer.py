@@ -1,38 +1,25 @@
-import os, json, random, io, base64
-
-import matplotlib
-
+import base64
+import io
+import json
+import os
+import random
 from datetime import datetime
 
+import matplotlib
+from flask import Flask, flash, redirect, render_template, request, url_for
+from flask_login import (LoginManager, UserMixin, current_user, login_required,
+                         login_user, logout_user)
+from flask_mongoengine import Document, MongoEngine
 from flask_wtf import FlaskForm
-from wtforms import (
-    StringField,
-    SubmitField,
-    PasswordField,
-    BooleanField,
-    ValidationError,
-)
+from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.urls import url_parse
+from wtforms import (BooleanField, PasswordField, StringField, SubmitField,
+                     ValidationError)
 from wtforms.validators import DataRequired, EqualTo, Length
 
-from flask import Flask, render_template, redirect, url_for, request, flash
-from flask_mongoengine import MongoEngine, Document
-from flask_login import (
-    current_user,
-    LoginManager,
-    logout_user,
-    login_required,
-    UserMixin,
-    login_user,
-)
-from werkzeug.security import generate_password_hash, check_password_hash
-
-from werkzeug.urls import url_parse
-
+from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.sample import NuclearSample, Transient
-
-from ztfnuclear.database import SampleInfo, MetadataDB
-from ztfnuclear.utils import is_ztf_name, is_tns_name
-
+from ztfnuclear.utils import is_tns_name, is_ztf_name
 
 matplotlib.pyplot.switch_backend("Agg")
 

@@ -1,15 +1,14 @@
-import logging, os, gc
-
+import gc
+import logging
+import os
 from pathlib import Path
+from typing import Any, Optional
 
-from matplotlib import pyplot as plt  # type: ignore
-
-from typing import Optional, Any
-
-from astropy.time import Time  # type: ignore
-from scipy.stats import median_abs_deviation  # type: ignore
 import numpy as np
 import pandas as pd  # type: ignore
+from astropy.time import Time  # type: ignore
+from matplotlib import pyplot as plt  # type: ignore
+from scipy.stats import median_abs_deviation  # type: ignore
 
 pd.options.mode.chained_assignment = None  # default='warn'
 

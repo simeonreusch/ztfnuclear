@@ -2,17 +2,21 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, re, subprocess, json, yaml
+import json
+import logging
+import os
+import re
+import subprocess
 from pathlib import Path
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional
 
-from ztfnuclear import utils
-
+import numpy as np
+import pandas as pd  # type: ignore
+import yaml
 from ztfquery.io import LOCALSOURCE  # type: ignore
 from ztfquery.lightcurve import LCQuery  # type: ignore
 
-import pandas as pd  # type: ignore
-import numpy as np
+from ztfnuclear import utils
 
 if os.getenv("ZTFDATA"):
     _SOURCEDIR = os.path.dirname(os.path.realpath(__file__))

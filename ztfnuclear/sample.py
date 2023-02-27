@@ -2,18 +2,21 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, datetime, base64, time, pickle
-
-from pathlib import Path
-
+import base64
+import datetime
+import logging
+import os
+import pickle
+import time
 from functools import cached_property
-from typing import Optional, List, Tuple
+from pathlib import Path
+from typing import List, Optional, Tuple
 
-from tqdm import tqdm  # type: ignore
 import numpy as np
 import pandas as pd  # type: ignore
+from tqdm import tqdm  # type: ignore
 
-from ztfnuclear import io, baseline, utils
+from ztfnuclear import baseline, io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.fritz import FritzAPI
 
@@ -179,8 +182,8 @@ class NuclearSample(object):
         Convert the core distance at a certain redshift
         to core distance at another redshift
         """
-        from astropy.cosmology import FlatLambdaCDM
         from astropy import units as u
+        from astropy.cosmology import FlatLambdaCDM
 
         cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
 
@@ -213,8 +216,8 @@ class NuclearSample(object):
         """
         Convert the peak apparent mag at a certain redshift to one at another redshift
         """
-        from astropy.cosmology import FlatLambdaCDM
         from astropy import units as u
+        from astropy.cosmology import FlatLambdaCDM
 
         cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
         self.logger.info("Updating train metadata DB with z-corrected peakmag values")
@@ -1272,20 +1275,13 @@ class Transient(object):
         """
         Do all kinds of crossmatches for the transient
         """
-        from ztfnuclear.crossmatch import (
-            query_crts,
-            query_milliquas,
-            query_sdss,
-            query_gaia,
-            query_wise,
-            query_tns,
-            query_wise_cat,
-            query_ampel_dist,
-            query_ampel_sgscore,
-            query_sarah_agn,
-            query_bts,
-            query_marshal,
-        )
+        from ztfnuclear.crossmatch import (query_ampel_dist,
+                                           query_ampel_sgscore, query_bts,
+                                           query_crts, query_gaia,
+                                           query_marshal, query_milliquas,
+                                           query_sarah_agn, query_sdss,
+                                           query_tns, query_wise,
+                                           query_wise_cat)
 
         results = self.meta.get("crossmatch", {})
         res_list = []

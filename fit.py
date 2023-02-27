@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
-import os, logging, re, json, multiprocessing, argparse
-import pandas as pd  # type: ignore
+import argparse
+import json
+import logging
+import multiprocessing
+import os
+import re
+
 import matplotlib  # type: ignore
+import pandas as pd  # type: ignore
 from tqdm import tqdm  # type: ignore
 
 from ztfnuclear.database import MetadataDB
 from ztfnuclear.sample import NuclearSample, Transient
-
 
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"

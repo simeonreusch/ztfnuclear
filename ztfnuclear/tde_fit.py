@@ -2,20 +2,23 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, warnings, time, logging
-import numpy as np
-import sncosmo  # type: ignore[import]
-import pandas as pd
-from sfdmap import SFDMap  # type: ignore[import]
-from typing import Union, Optional
-import errno, os, backoff, copy
+import copy
+import errno
+import logging
+import os
+import time
+import warnings
+from typing import Literal, Optional, Sequence, Union
 
 import astropy.cosmology as cosmo
-from astropy.table import Table
-from typing import Literal, Sequence
-
+import backoff
+import numpy as np
+import pandas as pd
+import sncosmo  # type: ignore[import]
 from astropy import constants as c
 from astropy import units as u
+from astropy.table import Table
+from sfdmap import SFDMap  # type: ignore[import]
 
 logger = logging.getLogger(__name__)
 

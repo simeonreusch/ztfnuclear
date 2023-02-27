@@ -2,15 +2,20 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, requests, keyring, getpass
+import getpass
+import logging
+import os
 
 import backoff
+import keyring
 import pandas as pd
-
-from ztfnuclear.ampel_api import ampel_api_catalog, ampel_api_distnr, ampel_api_sgscore
-from ztfnuclear import io
-from ztfnuclear.database import WISE, SarahAGN
+import requests
 import ztfquery
+
+from ztfnuclear import io
+from ztfnuclear.ampel_api import (ampel_api_catalog, ampel_api_distnr,
+                                  ampel_api_sgscore)
+from ztfnuclear.database import WISE, SarahAGN
 
 logger = logging.getLogger(__name__)
 

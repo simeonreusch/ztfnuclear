@@ -2,13 +2,14 @@
 # The coded used here was developed by Valéry Brinnel
 # License: BSD-3-Clause
 
-import os, logging, warnings, re
-
+import logging
+import os
+import re
+import warnings
 from typing import Optional
 
-from astropy import units as u
-
 import numpy as np
+from astropy import units as u
 
 alphabet = "abcdefghijklmnopqrstuvwxyz"
 rg = (6, 5, 4, 3, 2, 1, 0)

@@ -2,14 +2,12 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-from tqdm import tqdm  # type: ignore
-from ztfnuclear import io
 import numpy as np
 import pandas as pd  # type: ignore
-from ztfnuclear.sample import (
-    NuclearSample,
-)
+from tqdm import tqdm  # type: ignore
 
+from ztfnuclear import io
+from ztfnuclear.sample import NuclearSample
 
 resdict = {}
 s = NuclearSample(sampletype="nuclear")

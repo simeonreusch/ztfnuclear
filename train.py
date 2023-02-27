@@ -3,6 +3,7 @@
 # License: BSD-3-Clause
 
 import logging
+
 from ztfnuclear.train import Model
 
 logging.basicConfig()
@@ -12,13 +13,13 @@ logger.setLevel(logging.INFO)
 
 m = Model(
     noisified=True,
-    noisified_validation=False,
+    noisified_validation=True,
     seed=1000,
     n_iter=50,
     validation_fraction=0.3,
     train_test_fraction=0.7,
     grid_search_sample_size=2000,
 )
-m.train()
+# m.train()
 m.evaluate(normalize=True)
 m.evaluate(normalize=False)

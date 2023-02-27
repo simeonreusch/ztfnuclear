@@ -1,23 +1,19 @@
 #!/usr/bin/env python3
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
-import os, logging, argparse
-from typing import Tuple, List
+import argparse
+import logging
+import os
+from typing import List, Tuple
 
-import numpy as np
 import matplotlib  # type: ignore
+import matplotlib.pyplot as plt  # type: ignore
+import numpy as np
 from tqdm import tqdm  # type: ignore
 
-import matplotlib.pyplot as plt  # type: ignore
-from ztfnuclear.plot import (
-    plot_tde_scatter,
-    plot_tde_scatter_seaborn,
-    get_tde_selection,
-    plot_mag_hist,
-    plot_dist_hist,
-    plot_sgscore_hist,
-    plot_mag_hist_2x2,
-)
+from ztfnuclear.plot import (get_tde_selection, plot_dist_hist, plot_mag_hist,
+                             plot_mag_hist_2x2, plot_sgscore_hist,
+                             plot_tde_scatter, plot_tde_scatter_seaborn)
 from ztfnuclear.sample import NuclearSample, Transient
 
 logging.basicConfig(level=logging.INFO)

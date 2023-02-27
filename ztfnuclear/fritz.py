@@ -2,11 +2,13 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, json
+import json
+import logging
+import os
 
-import backoff, requests
-
+import backoff
 import numpy as np
+import requests
 from astropy.time import Time  # type: ignore
 
 

@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
-import warnings, logging
+import logging
+import warnings
 
 import numpy as np
+import numpy.ma as ma
 import pandas as pd  # type: ignore
 from tqdm import tqdm  # type: ignore
-import numpy.ma as ma
-from ztfnuclear.sample import (
-    NuclearSample,
-)
-from ztfnuclear import utils
-from ztfnuclear import io
+
+from ztfnuclear import io, utils
+from ztfnuclear.sample import NuclearSample
 
 SNT_THRESHOLD = 6
 

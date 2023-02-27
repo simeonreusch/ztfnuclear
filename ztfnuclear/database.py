@@ -2,15 +2,21 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, collections, socket, json
-from tqdm import tqdm  # type: ignore
-from typing import Union, Any, Sequence, Tuple, List, Optional
-from pymongo import MongoClient, UpdateOne, GEOSPHERE
-from pymongo.database import Database
-import pandas as pd
-from healpy import ang2pix  # type: ignore
-from extcats import CatalogPusher, CatalogQuery  # type: ignore
+import collections
+import json
+import logging
+import os
+import socket
+from typing import Any, List, Optional, Sequence, Tuple, Union
+
 import astropy
+import numpy as np
+import pandas as pd
+from extcats import CatalogPusher, CatalogQuery  # type: ignore
+from healpy import ang2pix  # type: ignore
+from pymongo import GEOSPHERE, MongoClient, UpdateOne
+from pymongo.database import Database
+from tqdm import tqdm  # type: ignore
 
 from ztfnuclear import io
 
@@ -294,6 +300,10 @@ class MetadataDB(object):
         if for_training:
             config = io.load_config()
             df.query("success == True", inplace=True)
+            print(df.wise_w1w2)
+            # print(np.random.normal(0, 0.05, len(df)))
+            # df["wise_w1w2"] = df.wise_w1w2 + np.random.normal(0, 0.02, len(df))
+            df["wise_w1w2"] = self.add_noise_to_wise(df_col=df["wise_w1w2"])
 
             if self.sampletype in ["nuclear", "bts"]:
                 df = df[config["train_params"]]
@@ -301,6 +311,24 @@ class MetadataDB(object):
                 df = df[config["train_params_train"]]
 
         return df
+
+    @staticmethod
+    def add_noise_to_wise(df_col: pd.core.series.Series, sigma=0.02) -> np.array:
+        """
+        Generate noisified Wise colors for child lightcurves
+        """
+
+        ztfids = df_col.index.values
+        wise_vals = df_col.values
+        noisified_wise = []
+        noise = np.random.normal(0, sigma, len(df_col))
+        for i, ztfid in enumerate(ztfids):
+            if len(ztfid.split("_")) > 1:
+                noisified_wise.append(wise_vals[i] + noise[i])
+            else:
+                noisified_wise.append(wise_vals[i])
+
+        return noisified_wise
 
     def read_transient(self, ztfid: str) -> dict:
         """

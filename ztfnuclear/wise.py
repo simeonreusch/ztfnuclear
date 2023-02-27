@@ -2,10 +2,13 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
-import os, logging, json, copy
+import copy
+import json
+import logging
+import os
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 from ztfnuclear import io
 

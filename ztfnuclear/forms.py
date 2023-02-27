@@ -1,12 +1,7 @@
 # WhatTheForm
 from flask_wtf import FlaskForm
-from wtforms import (
-    StringField,
-    SubmitField,
-    PasswordField,
-    BooleanField,
-    ValidationError,
-)
+from wtforms import (BooleanField, PasswordField, StringField, SubmitField,
+                     ValidationError)
 from wtforms.validators import DataRequired, EqualTo, Length
 
 
