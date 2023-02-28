@@ -2,6 +2,7 @@
 # Author: Simeon Reusch (simeon.reusch@desy.de)
 # License: BSD-3-Clause
 
+import itertools
 import logging
 import os
 import time
@@ -15,6 +16,7 @@ import xgboost as xgb
 from matplotlib import pyplot as plt
 from numpy.random import default_rng
 from sklearn import metrics
+from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import (
     RandomizedSearchCV,
     StratifiedKFold,
@@ -95,7 +97,8 @@ class Model(object):
             self.meta.rename(columns={"simpleclasses": "classif"}, inplace=True)
 
         self.meta.drop(
-            columns=["RA", "Dec", "tde_fit_exp_covariance", "sample"], inplace=True
+            columns=["RA", "Dec", "tde_fit_exp_covariance", "sample"],
+            inplace=True,
         )
         self.meta = self.meta.astype({"distnr": "float64", "classif": "str"})
 
@@ -135,9 +138,19 @@ class Model(object):
         )
         self.X_validation = df_validation.drop(columns="classif").reset_index(drop=True)
         self.y_validation = df_validation.filter(["classif"]).reset_index(drop=True)
+
         self.y_validation["classif"] = self.le.fit_transform(
             self.y_validation["classif"]
         )
+        label_list = self.le.inverse_transform(self.y_validation["classif"])
+
+        # create a dictionary to remember which value belongs to which label
+        label_mapping = {}
+        for i, classif in enumerate(label_list):
+            label_mapping.update({self.y_validation["classif"].values[i]: classif})
+
+        self.label_mapping = dict(sorted(label_mapping.items()))
+
         self.y_validation = self.y_validation["classif"]
 
     def train_test_split(self):
@@ -201,15 +214,7 @@ class Model(object):
     def train(self):
         t_start = time.time()
 
-        # print(type(len(self.y_train)))
-        # print(np.sum(self.y_train))
-
-        # scale_pos_weight = (len(self.y_train) - np.sum(self.y_train)) / np.sum(
-        # self.y_train
-        # )
-
         model = xgb.XGBClassifier(
-            # scale_pos_weight=scale_pos_weight,
             random_state=self.seed,
             objective="multi:softmax",
             num_class=max(self.y_train) + 1,
@@ -224,7 +229,6 @@ class Model(object):
             "learning_rate": np.arange(0.0005, 0.5, 0.0005),
             "subsample": np.arange(0.01, 1.0, 0.01),
             "colsample_bylevel": np.round(np.arange(0.1, 1.0, 0.01)),
-            # "colsample_bytree": np.arange(0.1, 1.0, 0.01),
         }
 
         kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=self.seed + 3)
@@ -308,9 +312,6 @@ class Model(object):
         self.grid_result = grid_result
         self.best_estimator = best_estimator
 
-        # print(self.le.get_params())
-        # quit()
-
         self.logger.info(f"Loading best estimator. Parameters:\n{self.best_estimator}")
 
         # Plot feature importance for full set
@@ -324,24 +325,69 @@ class Model(object):
 
         pred = best_estimator.predict(features)
 
-        # 0: agn
-        # 1: sn_ia
-        # 2: sn_other
-        # 3: star
-        # 4: tde
+        self.plot_confusion_matrix(
+            y_true=target.values, y_pred=pred, normalize=normalize
+        )
+
+    def plot_confusion_matrix(
+        self, y_true: np.ndarray, y_pred: np.ndarray, normalize: bool = True
+    ):
+        """
+        Plot the confusion matrix
+        """
+        # Use human readable labels (instead of integers)
+        y_true_pretty = self.le.inverse_transform(y_true)
+        y_pred_pretty = self.le.inverse_transform(y_pred)
+        labels = list(self.label_mapping.values())
+
+        plt.figure()
 
         if normalize:
-            norm_str = "true"
+            norm = "true"
         else:
-            norm_str = None
+            norm = None
 
-        disp = metrics.ConfusionMatrixDisplay.from_predictions(
-            y_true=target,
-            y_pred=pred,
-            display_labels=["agn", "snia", "sn_other", "star", "tde"],
-            normalize=norm_str,
+        cm = confusion_matrix(
+            y_true_pretty, y_pred_pretty, labels=labels, normalize=norm
         )
-        disp.plot()
+
+        if normalize:
+            vmax = cm.max()
+        else:
+            vmax = 1
+
+        im = plt.imshow(
+            cm, interpolation="nearest", cmap=plt.cm.Blues, vmin=0, vmax=vmax
+        )
+
+        tick_marks = np.arange(len(labels))
+        plt.xticks(tick_marks, labels, rotation=60, ha="right")
+        plt.yticks(tick_marks, labels)
+
+        fmt = ".2f"
+        thresh = cm.max() / 2.0
+        for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+            plt.text(
+                j,
+                i,
+                format(cm[i, j], fmt),
+                horizontalalignment="center",
+                color="white" if cm[i, j] > thresh else "black",
+            )
+
+        plt.ylabel("True Type")
+        plt.xlabel("Predicted Type")
+
+        # Make a colorbar that is lined up with the plot
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+        ax = plt.gca()
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="4%", pad=0.25)
+        plt.colorbar(im, cax=cax, label="Fraction of objects")
+
+        plt.tight_layout()
+
         outfile = (
             self.plot_dir
             / f"results_seed_{self.seed}_n_iter_{self.n_iter}_noisified_val_{self.noisified_validation}_normalized_{normalize}.pdf"
@@ -353,7 +399,6 @@ class Model(object):
         """
         Plot the features in their importance for the classification decision
         """
-
         fig, ax = plt.subplots(figsize=(10, 21))
 
         cols = list(self.X_train.keys())
