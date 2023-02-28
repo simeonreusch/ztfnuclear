@@ -344,17 +344,19 @@ class Model(object):
 
         if normalize:
             norm = "true"
+            cmlabel = "Fraction of objects"
         else:
             norm = None
+            cmlabel = "Objects"
 
         cm = confusion_matrix(
             y_true_pretty, y_pred_pretty, labels=labels, normalize=norm
         )
 
         if normalize:
-            vmax = cm.max()
-        else:
             vmax = 1
+        else:
+            vmax = cm.max()
 
         im = plt.imshow(
             cm, interpolation="nearest", cmap=plt.cm.Blues, vmin=0, vmax=vmax
@@ -384,7 +386,7 @@ class Model(object):
         ax = plt.gca()
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="4%", pad=0.25)
-        plt.colorbar(im, cax=cax, label="Fraction of objects")
+        plt.colorbar(im, cax=cax, label=cmlabel)
 
         plt.tight_layout()
 
