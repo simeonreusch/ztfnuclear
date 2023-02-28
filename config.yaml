@@ -405,7 +405,7 @@ train_params_train:
   - simpleclasses
   - salt_chisq
   - salt_ndof
-  - salt_paramdict_z
+  # - salt_paramdict_z
   - salt_paramdict_x0
   - salt_paramdict_x1
   - salt_paramdict_c
