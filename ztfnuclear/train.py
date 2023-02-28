@@ -369,7 +369,7 @@ class Model(object):
         )
 
         tick_marks = np.arange(len(labels))
-        plt.xticks(tick_marks, labels_pretty, rotation=60, ha="right")
+        plt.xticks(tick_marks, labels_pretty, ha="center")
         plt.yticks(tick_marks, labels_pretty)
 
         thresh = cm.max() / 2.0
@@ -378,7 +378,8 @@ class Model(object):
                 j,
                 i,
                 format(cm[i, j], fmt),
-                horizontalalignment="center",
+                ha="center",
+                va="center",
                 color="white" if cm[i, j] > thresh else "black",
             )
 

@@ -150,7 +150,7 @@ classlabels:
   tde: TDE
   agn: AGN
   star: Star
-  sn_other: SN (no Ia)
+  sn_other: SN ($\neq$Ia)
   unclass: Unclass.
   other: Other
 
