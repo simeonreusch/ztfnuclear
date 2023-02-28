@@ -28,6 +28,8 @@ from ztfnuclear import io
 from ztfnuclear.plot import get_tde_selection
 from ztfnuclear.sample import NuclearSample
 
+GOLDEN_RATIO = 1.62
+
 
 class Model(object):
     """
@@ -55,6 +57,7 @@ class Model(object):
         self.seed = seed
         self.n_iter = n_iter
         self.grid_search_sample_size = grid_search_sample_size
+        self.config = io.load_config()
 
         self.le = LabelEncoder()
 
@@ -339,15 +342,18 @@ class Model(object):
         y_true_pretty = self.le.inverse_transform(y_true)
         y_pred_pretty = self.le.inverse_transform(y_pred)
         labels = list(self.label_mapping.values())
+        labels_pretty = [self.config["classlabels"][i] for i in labels]
 
-        plt.figure()
+        plt.figure(figsize=(5, 4))
 
         if normalize:
             norm = "true"
             cmlabel = "Fraction of objects"
+            fmt = ".2f"
         else:
             norm = None
             cmlabel = "Objects"
+            fmt = ".0f"
 
         cm = confusion_matrix(
             y_true_pretty, y_pred_pretty, labels=labels, normalize=norm
@@ -363,10 +369,9 @@ class Model(object):
         )
 
         tick_marks = np.arange(len(labels))
-        plt.xticks(tick_marks, labels, rotation=60, ha="right")
-        plt.yticks(tick_marks, labels)
+        plt.xticks(tick_marks, labels_pretty, rotation=60, ha="right")
+        plt.yticks(tick_marks, labels_pretty)
 
-        fmt = ".2f"
         thresh = cm.max() / 2.0
         for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
             plt.text(
@@ -377,8 +382,8 @@ class Model(object):
                 color="white" if cm[i, j] > thresh else "black",
             )
 
-        plt.ylabel("True Type")
-        plt.xlabel("Predicted Type")
+        plt.ylabel("True Type", fontsize=12)
+        plt.xlabel("Predicted Type", fontsize=12)
 
         # Make a colorbar that is lined up with the plot
         from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -386,14 +391,14 @@ class Model(object):
         ax = plt.gca()
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="4%", pad=0.25)
-        plt.colorbar(im, cax=cax, label=cmlabel)
-
-        plt.tight_layout()
+        cbar = plt.colorbar(im, cax=cax)
+        cbar.set_label(label=cmlabel, fontsize=12)
 
         outfile = (
             self.plot_dir
             / f"results_seed_{self.seed}_n_iter_{self.n_iter}_noisified_val_{self.noisified_validation}_normalized_{normalize}.pdf"
         )
+        plt.tight_layout()
         plt.savefig(outfile)
         self.logger.info(f"We saved the evaluation to {outfile}")
 
