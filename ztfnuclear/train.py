@@ -3,6 +3,7 @@
 # License: BSD-3-Clause
 
 import itertools
+import json
 import logging
 import os
 import time
@@ -181,6 +182,14 @@ class Model(object):
             f"Train sample: {len(self.train_ztfids)} lightcurves in total."
         )
         self.logger.info(f"Test sample: {len(self.test_ztfids)} lightcurves in total.")
+
+        export_dict = {
+            "validation": self.validation_ztfids,
+            "traintest": self.train_ztfids + self.test_ztfids,
+        }
+
+        with open("split.json", "w") as f:
+            json.dump(export_dict, f)
 
         df_train = self.meta.query("index in @self.train_ztfids")
         df_test = self.meta.query("index in @self.test_ztfids")
