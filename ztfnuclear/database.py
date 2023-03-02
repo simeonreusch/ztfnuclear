@@ -378,6 +378,8 @@ class MetadataDB(object):
             testobj = self.read_transient(ztfid="ZTF18abamrjl")
 
         if testobj:
+            # print(testobj.keys())
+            # quit()
             has_ra = True if "RA" in testobj.keys() else False
             has_salt = True if "salt" in testobj.keys() else False
             has_salt_loose_bl = True if "salt_loose_bl" in testobj.keys() else False
@@ -476,7 +478,7 @@ class WISE(object):
         self.logger.info(
             "Reading WISE.parquet and creating Mongo database from it for querying by location. This will take a considerable amount of time, CPU and RAM!"
         )
-        if not os.path.isfile():
+        if not os.path.isfile(os.path.join(io.LOCALSOURCE_WISE, "WISE.csv")):
             df = pd.read_parquet(os.path.join(io.LOCALSOURCE_WISE, "WISE.parquet"))
             df.to_csv(os.path.join(io.LOCALSOURCE_WISE, "WISE.csv"))
 

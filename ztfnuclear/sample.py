@@ -15,7 +15,6 @@ from typing import List, Optional, Tuple
 import numpy as np
 import pandas as pd  # type: ignore
 from tqdm import tqdm  # type: ignore
-
 from ztfnuclear import baseline, io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.fritz import FritzAPI
@@ -400,12 +399,13 @@ class NuclearSample(object):
     def crossmatch(self, startindex: int = 0):
         """Crossmatch the full sample"""
         self.logger.info("Crossmatching the full sample")
+
         for i, ztfid in tqdm(
             enumerate(self.ztfids[startindex:]), total=len(self.ztfids[startindex:])
         ):
             self.logger.debug(f"{ztfid}: Crossmatching")
             self.logger.debug(f"Transient {i+startindex} of {len(self.ztfids)}")
-            t = Transient(ztfid)
+            t = self.transient(ztfid)
             t.crossmatch()
         info = SampleInfo()
         date_now = datetime.datetime.now().replace(microsecond=0)
@@ -1275,13 +1275,20 @@ class Transient(object):
         """
         Do all kinds of crossmatches for the transient
         """
-        from ztfnuclear.crossmatch import (query_ampel_dist,
-                                           query_ampel_sgscore, query_bts,
-                                           query_crts, query_gaia,
-                                           query_marshal, query_milliquas,
-                                           query_sarah_agn, query_sdss,
-                                           query_tns, query_wise,
-                                           query_wise_cat)
+        from ztfnuclear.crossmatch import (
+            query_ampel_dist,
+            query_ampel_sgscore,
+            query_bts,
+            query_crts,
+            query_gaia,
+            query_marshal,
+            query_milliquas,
+            query_sarah_agn,
+            query_sdss,
+            query_tns,
+            query_wise,
+            query_wise_cat,
+        )
 
         results = self.meta.get("crossmatch", {})
         res_list = []
