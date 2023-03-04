@@ -185,6 +185,7 @@ class Model(object):
 
         export_dict = {
             "validation": self.validation_ztfids,
+            "validation_parentonly": self.validation_parent_ztfids,
             "traintest": self.train_ztfids + self.test_ztfids,
         }
 
