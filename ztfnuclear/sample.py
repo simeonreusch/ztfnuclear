@@ -75,8 +75,6 @@ class NuclearSample(object):
                     filepath=os.path.join(io.LOCALSOURCE_fitres, "saltfit.json"),
                     parameter_name="salt",
                 )
-                print(saltfit_res)
-                quit()
                 self.populate_db_from_dict(data=saltfit_res)
 
             if not db_check["has_salt_loose_bl"]:
@@ -169,6 +167,9 @@ class NuclearSample(object):
                     json_path=tdefit_path, mongo_key="tde_fit_exp"
                 )
 
+            if not db_check["has_crossmatch"]:
+                self.get_parent_crossmatch(sampletype=self.sampletype)
+
             if not db_check["has_ztf_bayesian"]:
                 bayesian_res = io.parse_ampel_json(
                     filepath=os.path.join(io.SRC_train, "ztf_bayesian.json"),
@@ -247,6 +248,25 @@ class NuclearSample(object):
                 peakmag_new = peakmag_parent
 
             data = {"peakmag": peakmag_new}
+            self.meta.update_transient(ztfid=t.ztfid, data=data)
+
+    def get_parent_crossmatch(self, sampletype):
+        """
+        Add the parent lightcurve crossmatch info
+        """
+        assert self.sampletype == "train"
+
+        self.logger.info("Updating train metadata DB with parent crossmatch info")
+
+        for t in self.get_transients():
+            parent_ztfid = t.meta["parent_ztfid"]
+            try:
+                test = Transient(ztfid=parent_ztfid, sampletype="bts")
+            except:
+                test = Transient(ztfid=parent_ztfid, sampletype="nuclear")
+            crossmatch = test.meta["crossmatch"]
+            data = {"crossmatch": crossmatch}
+
             self.meta.update_transient(ztfid=t.ztfid, data=data)
 
     def get_flaring(self, after_optical_peak: bool = True):
