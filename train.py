@@ -17,8 +17,8 @@ m = Model(
     noisified_validation=True,
     seed=SEED,
     n_iter=50,
-    validation_fraction=0.2,
-    train_test_fraction=0.8,
+    validation_fraction=0.3,
+    train_test_fraction=0.7,
     grid_search_sample_size=2000,
 )
 m.train()
