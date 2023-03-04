@@ -378,8 +378,6 @@ class MetadataDB(object):
             testobj = self.read_transient(ztfid="ZTF18abamrjl")
 
         if testobj:
-            # print(testobj.keys())
-            # quit()
             has_ra = True if "RA" in testobj.keys() else False
             has_salt = True if "salt" in testobj.keys() else False
             has_salt_loose_bl = True if "salt_loose_bl" in testobj.keys() else False
@@ -387,6 +385,7 @@ class MetadataDB(object):
             has_tdefit_loose_bl = (
                 True if "tde_fit_loose_bl" in testobj.keys() else False
             )
+            has_tdefit_exp = True if "tde_fit_exp" in testobj.keys() else False
             has_peak_dates = True if "peak_dates" in testobj.keys() else False
             has_peak_mags = True if "peak_mags" in testobj.keys() else False
             has_distnr = True if "distnr" in testobj.keys() else False
@@ -405,6 +404,7 @@ class MetadataDB(object):
             has_salt_loose_bl = False
             has_tdefit = False
             has_tdefit_loose_bl = False
+            has_tdefit_exp = False
             has_peak_dates = False
             has_peak_mags = False
             has_distnr = False
@@ -424,6 +424,7 @@ class MetadataDB(object):
             "has_salt_loose_bl": has_salt_loose_bl,
             "has_tdefit": has_tdefit,
             "has_tdefit_loose_bl": has_tdefit_loose_bl,
+            "has_tdefit_exp": has_tdefit_exp,
             "has_peak_dates": has_peak_dates,
             "has_peak_mags": has_peak_mags,
             "has_distnr": has_distnr,

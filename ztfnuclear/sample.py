@@ -75,6 +75,8 @@ class NuclearSample(object):
                     filepath=os.path.join(io.LOCALSOURCE_fitres, "saltfit.json"),
                     parameter_name="salt",
                 )
+                print(saltfit_res)
+                quit()
                 self.populate_db_from_dict(data=saltfit_res)
 
             if not db_check["has_salt_loose_bl"]:
@@ -157,6 +159,15 @@ class NuclearSample(object):
                     sampletype=self.sampletype,
                 )
                 self.populate_db_from_dict(data=saltfit_res)
+
+            if not db_check["has_tdefit_exp"]:
+                tdefit_path = os.path.join(
+                    io.LOCALSOURCE_train_fitres, "tde_fit_exp.json"
+                )
+                self.logger.info(f"Importing TDE fit results from {tdefit_path}")
+                self.meta.key_update_from_json(
+                    json_path=tdefit_path, mongo_key="tde_fit_exp"
+                )
 
             if not db_check["has_ztf_bayesian"]:
                 bayesian_res = io.parse_ampel_json(
@@ -1301,7 +1312,7 @@ class Transient(object):
             res_list.append(query_gaia(ra_deg=self.ra, dec_deg=self.dec))
             res_list.append(query_wise(ra_deg=self.ra, dec_deg=self.dec))
             res_list.append(query_tns(ra_deg=self.ra, dec_deg=self.dec))
-            res_list.apend(query_sarah_agn(ra_deg=self.ra, dec_deg=self.dec))
+            res_list.append(query_sarah_agn(ra_deg=self.ra, dec_deg=self.dec))
 
         else:
             if "crts" in crossmatch_types:

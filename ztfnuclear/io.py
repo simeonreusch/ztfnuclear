@@ -13,10 +13,9 @@ from typing import Dict, List, Optional
 import numpy as np
 import pandas as pd  # type: ignore
 import yaml
+from ztfnuclear import utils
 from ztfquery.io import LOCALSOURCE  # type: ignore
 from ztfquery.lightcurve import LCQuery  # type: ignore
-
-from ztfnuclear import utils
 
 if os.getenv("ZTFDATA"):
     _SOURCEDIR = os.path.dirname(os.path.realpath(__file__))
