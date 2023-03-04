@@ -10,14 +10,15 @@ logging.basicConfig()
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+SEED = 10
 
 m = Model(
     noisified=True,
     noisified_validation=True,
-    seed=1000,
+    seed=SEED,
     n_iter=50,
-    validation_fraction=0.3,
-    train_test_fraction=0.7,
+    validation_fraction=0.2,
+    train_test_fraction=0.8,
     grid_search_sample_size=2000,
 )
 m.train()
@@ -27,7 +28,7 @@ m.evaluate(normalize=False)
 m = Model(
     noisified=True,
     noisified_validation=False,
-    seed=1000,
+    seed=SEED,
     n_iter=50,
     validation_fraction=0.3,
     train_test_fraction=0.7,
