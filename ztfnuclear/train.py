@@ -120,11 +120,38 @@ class Model(object):
         """
         Get a validation sample
         """
-        self.validation_parent_ztfids = self.rng.choice(
-            self.parent_ztfids,
-            size=int(self.validation_fraction * len(self.parent_ztfids)),
-            replace=False,
+        # TODO: Make sure all non-TDE objects in BTS that are also in the nuclear sample end up in the validation sample
+
+        nuc = NuclearSample(sampletype="nuclear")
+
+        nuc_ztfids = set(nuc.ztfids)
+        bts_ztfids = set(self.parent_ztfids)
+
+        in_both = list(nuc_ztfids.intersection(bts_ztfids))
+
+        in_both_notde = []
+        for ztfid in in_both:
+            if self.meta.loc[ztfid]["classif"] != "tde":
+                in_both_notde.append(ztfid)
+
+        self.logger.info(f"{len(in_both)} BTS objects are also in the nuclear sample")
+        self.logger.info(f"{len(in_both_notde)} of these are not a TDE")
+
+        desired_validation_size = int(
+            self.validation_fraction * len(self.parent_ztfids)
         )
+        remaining_validation_size = desired_validation_size - len(in_both_notde)
+
+        self.validation_parent_ztfids = in_both_notde
+
+        self.validation_parent_ztfids.extend(
+            self.rng.choice(
+                self.parent_ztfids,
+                size=remaining_validation_size,
+                replace=False,
+            )
+        )
+
         if self.noisified_validation:
             self.validation_ztfids = self.get_child_ztfids(
                 self.validation_parent_ztfids
