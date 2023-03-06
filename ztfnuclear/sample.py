@@ -922,6 +922,12 @@ class Transient(object):
         elif self.sampletype == "bts":
             meta_bts.update_transient(self.ztfid, data={"bl_info": bl_info})
 
+    def update(self, data: dict):
+        """
+        Update the database with new metadata
+        """
+        meta.update_transient(self.ztfid, data=data)
+
     @cached_property
     def raw_lc(self) -> pd.DataFrame:
         """

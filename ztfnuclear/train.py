@@ -461,5 +461,6 @@ class Model(object):
         nuc_df["xgclass"] = pred_pretty
         counts = nuc_df["xgclass"].value_counts()
 
-        for row in nuc_df.iterrows():
-            print(row.index)
+        for ztfid, row in nuc_df.iterrows():
+            t = s.transient(ztfid)
+            t.update({"xgclass": row["xgclass"]})
