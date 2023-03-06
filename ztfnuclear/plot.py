@@ -20,7 +20,6 @@ import seaborn as sns
 from astropy import constants as const  # type: ignore
 from astropy import units as u  # type: ignore
 from astropy.coordinates import Angle  # type: ignore
-
 from ztfnuclear import io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.wise import is_in_wise_agn_box
@@ -634,9 +633,6 @@ def plot_mag_hist_2x2(
     fig.suptitle(title, fontsize=15)
 
     plt.tight_layout()
-
-    # cuts.remove("milliquas_noagn")
-    # cuts.remove("milliquas_keepagn")
 
     outfile = os.path.join(
         io.LOCALSOURCE_plots, "maghist", f"maghist_{cuts}_comb.{plot_ext}"
@@ -1448,8 +1444,7 @@ def plot_tde_fit(
     import sncosmo
     from sfdmap import SFDMap  # type: ignore[import]
 
-    from ztfnuclear.tde_fit import (TDESource_exp_flextemp,
-                                    TDESource_pl_flextemp)
+    from ztfnuclear.tde_fit import TDESource_exp_flextemp, TDESource_pl_flextemp
 
     logger.debug("Plotting TDE fit lightcurve (in flux space)")
 

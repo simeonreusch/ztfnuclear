@@ -189,6 +189,7 @@ class MetadataDB(object):
         params: List[str] = ["_id", "RA", "Dec"],
         ztfids: List[str] | None = None,
         for_training: bool = False,
+        include_z_in_training: bool = False,
         for_classification: bool = False,
     ) -> pd.DataFrame:
         """
@@ -236,6 +237,8 @@ class MetadataDB(object):
                     "crossmatch",
                 ]
             )
+            if include_z_in_training:
+                params.extend(["z"])
 
         for param in params:
             search_dict.update({param: 1})

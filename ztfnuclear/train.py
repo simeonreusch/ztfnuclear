@@ -97,8 +97,12 @@ class Model(object):
 
         else:
             train = NuclearSample(sampletype="train")
-            self.meta = train.meta.get_dataframe(for_training=True)
+            self.meta = train.meta.get_dataframe(
+                for_training=True, include_z_in_training=False
+            )
             self.meta.rename(columns={"simpleclasses": "classif"}, inplace=True)
+
+        # self.meta.query("classif != 'agn'", inplace=True)
 
         self.meta.drop(
             columns=["RA", "Dec", "tde_fit_exp_covariance", "sample"],
@@ -450,8 +454,12 @@ class Model(object):
         # Load the nuclear sample
         s = NuclearSample(sampletype="nuclear")
         nuc_df = s.meta.get_dataframe(for_classification=True)
+        nuc_df.query("crossmatch_Milliquas_type.isnull()", inplace=True)
+
         nuc_df_noclass = nuc_df.copy(deep=True)
-        nuc_df_noclass.drop(columns=["classif"], inplace=True)
+        nuc_df_noclass.drop(
+            columns=["classif", "crossmatch_Milliquas_type"], inplace=True
+        )
 
         nuc_df_noclass.to_csv("test_nuc.csv")
 
@@ -460,6 +468,8 @@ class Model(object):
         pred_pretty = [self.label_mapping[i] for i in pred]
         nuc_df["xgclass"] = pred_pretty
         counts = nuc_df["xgclass"].value_counts()
+
+        print(counts)
 
         for ztfid, row in nuc_df.iterrows():
             t = s.transient(ztfid)
