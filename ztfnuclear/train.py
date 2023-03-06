@@ -434,3 +434,32 @@ class Model(object):
             outfile,
             dpi=300,
         )
+
+    def classify(self):
+        """
+        Use the trained model to classify the nuclear sample
+        """
+        # Load the model
+        infile_grid = (
+            self.model_dir
+            / f"grid_result_niter_{self.n_iter}_nsample_{self.grid_search_sample_size}"
+        )
+        self.grid_result = joblib.load(infile_grid)
+        self.best_estimator = self.grid_result.best_estimator_
+
+        # Load the nuclear sample
+        s = NuclearSample(sampletype="nuclear")
+        nuc_df = s.meta.get_dataframe(for_classification=True)
+        nuc_df_noclass = nuc_df.copy(deep=True)
+        nuc_df_noclass.drop(columns=["classif"], inplace=True)
+
+        nuc_df_noclass.to_csv("test_nuc.csv")
+
+        pred = self.best_estimator.predict(nuc_df_noclass)
+
+        pred_pretty = [self.label_mapping[i] for i in pred]
+        nuc_df["xgclass"] = pred_pretty
+        counts = nuc_df["xgclass"].value_counts()
+
+        for row in nuc_df.iterrows():
+            print(row.index)

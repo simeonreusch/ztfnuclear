@@ -366,8 +366,6 @@ train_params:
   - peak_mags_r
   - peak_mags_i
   - sample
-  - wise_w1w2
-  - wise_w2w3
   - salt_chisq
   - salt_ndof
   - salt_paramdict_z
@@ -405,7 +403,6 @@ train_params_train:
   - simpleclasses
   - salt_chisq
   - salt_ndof
-  # - salt_paramdict_z
   - salt_paramdict_x0
   - salt_paramdict_x1
   - salt_paramdict_c
@@ -415,5 +412,37 @@ train_params_train:
   - wise_w2w3
   - peakmag
 
-
+classify_params:
+  - tde_fit_exp_chisq
+  - tde_fit_exp_ndof
+  - tde_fit_exp_covariance
+  - tde_fit_exp_errors_t0
+  - tde_fit_exp_errors_risetime
+  - tde_fit_exp_errors_decaytime
+  - tde_fit_exp_errors_temperature
+  - tde_fit_exp_errors_amplitude
+  - tde_fit_exp_errors_d_temp
+  - tde_fit_exp_errors_plateaustart
+  - rise
+  - decay
+  - temp
+  - tde_fit_exp_paramdict_amplitude
+  - d_temp
+  - tde_fit_exp_paramdict_plateaustart
+  - tde_fit_exp_paramdict_mwebv
+  - overlapping_regions
+  - distnr_distnr
+  - crossmatch_sgscore_sgscore
+  - classif
+  - peak_mags_g
+  - peak_mags_r
+  - peak_mags_i
+  - salt_chisq
+  - salt_ndof
+  - salt_paramdict_x0
+  - salt_paramdict_x1
+  - salt_paramdict_c
+  - salt_red_chisq
+  - wise_w1w2
+  - wise_w2w3
 

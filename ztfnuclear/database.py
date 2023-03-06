@@ -189,6 +189,7 @@ class MetadataDB(object):
         params: List[str] = ["_id", "RA", "Dec"],
         ztfids: List[str] | None = None,
         for_training: bool = False,
+        for_classification: bool = False,
     ) -> pd.DataFrame:
         """
         Get a dataframe containing all the parameters specified
@@ -207,6 +208,18 @@ class MetadataDB(object):
                     "ZTF_bayesian",
                     "classif",
                     "ampel_z",
+                    "peak_mags",
+                    "salt",
+                ]
+            )
+        elif for_classification and self.sampletype == "nuclear":
+            params.extend(
+                [
+                    "crossmatch",
+                    "tde_fit_exp",
+                    "distnr",
+                    "ZTF_bayesian",
+                    "classif",
                     "peak_mags",
                     "salt",
                 ]
@@ -306,6 +319,31 @@ class MetadataDB(object):
                 df = df[config["train_params"]]
             else:
                 df = df[config["train_params_train"]]
+
+        if for_classification:
+            config = io.load_config()
+            df.query("success == True", inplace=True)
+            df = df[config["classify_params"]]
+            df.rename(columns={"distnr_distnr": "distnr"}, inplace=True)
+
+            peak_mags = []
+            for i, peakmag_g in enumerate(df.peak_mags_g.values):
+                _peak_mags = [peakmag_g]
+                _peak_mags.append(df.peak_mags_r.values[i])
+                _peak_mags.append(df.peak_mags_i.values[i])
+                peak_mag = np.nanmin(_peak_mags)
+                peak_mags.append(peak_mag)
+            df["peakmag"] = peak_mags
+            df.drop(
+                columns=[
+                    "peak_mags_g",
+                    "peak_mags_r",
+                    "peak_mags_i",
+                    "tde_fit_exp_errors_t0",
+                    "tde_fit_exp_covariance",
+                ],
+                inplace=True,
+            )
 
         return df
 
