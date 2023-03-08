@@ -101,7 +101,9 @@ class Model(object):
         # self.meta.query("classif != 'agn'", inplace=True)
 
         self.meta.drop(
-            columns=["RA", "Dec", "tde_fit_exp_covariance", "sample"],
+            columns=[
+                "sample",
+            ],
             inplace=True,
         )
         self.meta = self.meta.astype({"distnr": "float64", "classif": "str"})

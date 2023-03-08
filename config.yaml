@@ -379,24 +379,15 @@ train_params:
   - wise_w2w3
 
 train_params_train:
-  - RA
-  - Dec
   - tde_fit_exp_chisq
   - tde_fit_exp_ndof
-  - tde_fit_exp_covariance
-  - tde_fit_exp_errors_risetime
-  - tde_fit_exp_errors_decaytime
-  - tde_fit_exp_errors_temperature
-  - tde_fit_exp_errors_amplitude
-  - tde_fit_exp_errors_d_temp
-  - tde_fit_exp_errors_plateaustart
+  - tde_fit_exp_paramdict_plateaustart
+  - tde_fit_exp_paramdict_mwebv
+  - tde_fit_exp_paramdict_amplitude
   - rise
   - decay
   - temp
-  - tde_fit_exp_paramdict_amplitude
   - d_temp
-  - tde_fit_exp_paramdict_plateaustart
-  - tde_fit_exp_paramdict_mwebv
   - overlapping_regions
   - distnr
   - crossmatch_sgscore_sgscore
@@ -415,14 +406,6 @@ train_params_train:
 classify_params:
   - tde_fit_exp_chisq
   - tde_fit_exp_ndof
-  - tde_fit_exp_covariance
-  - tde_fit_exp_errors_t0
-  - tde_fit_exp_errors_risetime
-  - tde_fit_exp_errors_decaytime
-  - tde_fit_exp_errors_temperature
-  - tde_fit_exp_errors_amplitude
-  - tde_fit_exp_errors_d_temp
-  - tde_fit_exp_errors_plateaustart
   - crossmatch_Milliquas_type
   - rise
   - decay
