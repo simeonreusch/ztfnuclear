@@ -490,7 +490,9 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plot_ext="pdf", rerun=
         if logplot:
             ax.set_ylim((0.9, 1500))
 
-        ax.legend(fontsize=11, loc=legendpos[sample_title])
+        handles, labels = ax.get_legend_handles_labels()
+
+        ax.legend(handles[::-1], labels[::-1], fontsize=11, loc=legendpos[sample_title])
 
     len_nuc = len(combined.query("sample == 'nuclear'"))
     len_bts = len(combined.query("sample == 'bts'"))
