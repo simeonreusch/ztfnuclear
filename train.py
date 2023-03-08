@@ -11,29 +11,30 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 SEED = 10
+# SEED = None
 
 m = Model(
     noisified=True,
-    noisified_validation=True,
+    noisified_test=True,
     seed=SEED,
     n_iter=50,
-    validation_fraction=0.3,
-    train_test_fraction=0.7,
+    test_fraction=0.2,
+    train_validation_fraction=0.8,
     grid_search_sample_size=2000,
 )
-# m.train()
-# m.evaluate(normalize=True)
-# m.evaluate(normalize=False)
+m.train()
+m.evaluate(normalize=True)
+m.evaluate(normalize=False)
 
-# m = Model(
-#     noisified=True,
-#     noisified_validation=False,
-#     seed=SEED,
-#     n_iter=50,
-#     validation_fraction=0.3,
-#     train_test_fraction=0.7,
-#     grid_search_sample_size=2000,
-# )
-# m.evaluate(normalize=True)
-# m.evaluate(normalize=False)
-m.classify()
+m = Model(
+    noisified=True,
+    noisified_test=False,
+    seed=SEED,
+    n_iter=50,
+    test_fraction=0.2,
+    train_validation_fraction=0.8,
+    grid_search_sample_size=2000,
+)
+m.evaluate(normalize=True)
+m.evaluate(normalize=False)
+# m.classify()

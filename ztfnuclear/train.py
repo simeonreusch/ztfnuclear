@@ -320,7 +320,17 @@ class Model(object):
             "colsample_bylevel": np.round(np.arange(0.1, 1.0, 0.01)),
         }
 
-        kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=self.seed + 3)
+        if self.seed is None:
+            random_state = None
+        else:
+            random_state = self.seed + 3
+
+        kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_state)
+
+        if self.seed is None:
+            random_state = None
+        else:
+            random_state = self.seed + 4
 
         grid_search = RandomizedSearchCV(
             estimator=model,
@@ -328,7 +338,7 @@ class Model(object):
             scoring=None,
             n_iter=self.n_iter,
             cv=kfold,
-            random_state=self.seed + 4,
+            random_state=random_state,
             verbose=2,
             error_score="raise",
         )
@@ -342,11 +352,17 @@ class Model(object):
         self.logger.info(
             f"Downsampling for grid search to {self.grid_search_sample_size} entries\n"
         )
+
+        if self.seed is None:
+            random_state = None
+        else:
+            random_state = self.seed + 5
+
         X_train_subset = self.X_train.sample(
-            n=self.grid_search_sample_size, random_state=self.seed + 5
+            n=self.grid_search_sample_size, random_state=random_state
         )
         y_train_subset = self.y_train.sample(
-            n=self.grid_search_sample_size, random_state=self.seed + 5
+            n=self.grid_search_sample_size, random_state=random_state
         )
 
         grid_result = grid_search.fit(X_train_subset, y_train_subset)
