@@ -18,11 +18,7 @@ from matplotlib import pyplot as plt
 from numpy.random import default_rng
 from sklearn import metrics
 from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import (
-    RandomizedSearchCV,
-    StratifiedKFold,
-    train_test_split,
-)
+from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import shuffle
 from ztfnuclear import io
@@ -41,9 +37,9 @@ class Model(object):
         self,
         noisified: bool = True,
         seed: int | None = None,
-        validation_fraction: float = 0.1,
-        train_test_fraction: float = 0.7,
-        noisified_validation: bool = True,
+        test_fraction: float = 0.1,
+        train_validation_fraction: float = 0.7,
+        noisified_test: bool = True,
         n_iter: int = 10,
         grid_search_sample_size: int = 1000,
         model_dir: Path | str = Path(io.MODEL_dir),
@@ -52,9 +48,9 @@ class Model(object):
         super(Model, self).__init__()
         self.logger = logging.getLogger(__name__)
         self.noisified = noisified
-        self.noisified_validation = noisified_validation
-        self.validation_fraction = validation_fraction
-        self.train_test_fraction = train_test_fraction
+        self.noisified_test = noisified_test
+        self.test_fraction = test_fraction
+        self.train_validation_fraction = train_validation_fraction
         self.seed = seed
         self.n_iter = n_iter
         self.grid_search_sample_size = grid_search_sample_size
@@ -78,8 +74,8 @@ class Model(object):
 
         self.rng = default_rng(seed=self.seed)
         self.get_training_metadata()
-        self.get_validation_sample()
-        self.train_test_split()
+        self.get_test_sample()
+        self.train_validation_split()
 
     def get_training_metadata(self) -> pd.DataFrame:
         """
@@ -118,59 +114,53 @@ class Model(object):
         self.parent_ztfids = self.get_parent_ztfids(self.all_ztfids)
         self.logger.info(f"{len(self.parent_ztfids)} parent ZTFIDs available.")
 
-    def get_validation_sample(self) -> List[str]:
+    def get_test_sample(self) -> List[str]:
         """
-        Get a validation sample
+        Get a test sample
         """
-        self.validation_parent_ztfids = self.get_validation_per_class(
+        self.test_parent_ztfids = self.get_test_per_class(
             select_classes=["tde", "agn", "star", "snia", "sn_other"],
-            validation_fraction=self.validation_fraction,
+            test_fraction=self.test_fraction,
         )
 
-        if self.noisified_validation:
-            self.validation_ztfids = self.get_child_ztfids(
-                self.validation_parent_ztfids
-            )
+        if self.noisified_test:
+            self.test_ztfids = self.get_child_ztfids(self.test_parent_ztfids)
         else:
-            self.validation_ztfids = self.validation_parent_ztfids
+            self.test_ztfids = self.test_parent_ztfids
 
         self.logger.info(
-            f"Selected {len(self.validation_parent_ztfids)} validation ZTFIDs from {len(self.parent_ztfids)} parent ZTFIDs. These comprise {len(self.validation_ztfids)} lightcurves."
+            f"Selected {len(self.test_parent_ztfids)} test ZTFIDs from {len(self.parent_ztfids)} parent ZTFIDs. These comprise {len(self.test_ztfids)} lightcurves."
         )
-        self.train_test_parent_ztfids = [
+        self.train_validation_parent_ztfids = [
             ztfid
             for ztfid in self.parent_ztfids
-            if ztfid not in self.validation_parent_ztfids
+            if ztfid not in self.test_parent_ztfids
         ]
-        df_validation = self.meta.query("index in @self.validation_ztfids")
-        df_validation = shuffle(df_validation, random_state=self.seed).reset_index(
-            drop=True
-        )
-        self.X_validation = df_validation.drop(columns="classif").reset_index(drop=True)
-        self.y_validation = df_validation.filter(["classif"]).reset_index(drop=True)
+        df_test = self.meta.query("index in @self.test_ztfids")
+        df_test = shuffle(df_test, random_state=self.seed).reset_index(drop=True)
+        self.X_test = df_test.drop(columns="classif").reset_index(drop=True)
+        self.y_test = df_test.filter(["classif"]).reset_index(drop=True)
 
-        self.y_validation["classif"] = self.le.fit_transform(
-            self.y_validation["classif"]
-        )
-        label_list = self.le.inverse_transform(self.y_validation["classif"])
+        self.y_test["classif"] = self.le.fit_transform(self.y_test["classif"])
+        label_list = self.le.inverse_transform(self.y_test["classif"])
 
         # create a dictionary to remember which value belongs to which label
         label_mapping = {}
         for i, classif in enumerate(label_list):
-            label_mapping.update({self.y_validation["classif"].values[i]: classif})
+            label_mapping.update({self.y_test["classif"].values[i]: classif})
 
         self.label_mapping = dict(sorted(label_mapping.items()))
 
-        self.y_validation = self.y_validation["classif"]
+        self.y_test = self.y_test["classif"]
 
-    def get_validation_per_class(
+    def get_test_per_class(
         self,
         select_classes: list = ["tde", "agn", "star", "snia", "sn_other"],
-        validation_fraction: float = 0.3,
+        test_fraction: float = 0.3,
     ):
         """
-        For each class, select val_fraction of all transients belonging to that class for validation. Make sure that
-            a) all transients that are both in the nuclear and the BTS sample are kept for validation
+        For each class, select val_fraction of all transients belonging to that class for test. Make sure that
+            a) all transients that are both in the nuclear and the BTS sample are kept for test
             b) this rule is not applied to TDEs
         """
         nuc = NuclearSample(sampletype="nuclear")
@@ -184,12 +174,12 @@ class Model(object):
         in_bts_only = self.meta_parent.copy(deep=True)
         in_bts_only.query("index not in @in_both_list", inplace=True)
 
-        validation_parent_ztfids = []
+        test_parent_ztfids = []
 
         for cl in select_classes:
             if cl == "tde":
-                size = int(validation_fraction * len(in_both.query("classif == @cl")))
-                validation_parent_ztfids.extend(
+                size = int(test_fraction * len(in_both.query("classif == @cl")))
+                test_parent_ztfids.extend(
                     self.rng.choice(
                         in_both.query("classif == @cl").index.values,
                         size=size,
@@ -198,7 +188,7 @@ class Model(object):
                 )
             else:
                 desired = int(
-                    validation_fraction * len(self.meta_parent.query("classif == @cl"))
+                    test_fraction * len(self.meta_parent.query("classif == @cl"))
                 )
                 nuc = in_both.query("classif == @cl")
                 available_nuc = len(nuc)
@@ -211,9 +201,9 @@ class Model(object):
 
                 # now we take all the nuclear transients (if we need them all)
                 if available_nuc < desired:
-                    validation_parent_ztfids.extend(nuc.index.values)
+                    test_parent_ztfids.extend(nuc.index.values)
                 else:
-                    validation_parent_ztfids.extend(
+                    test_parent_ztfids.extend(
                         self.rng.choice(
                             nuc.index.values,
                             size=desired,
@@ -223,7 +213,7 @@ class Model(object):
 
                 # and fill with bts only transients (if we must)
                 if needed > 0:
-                    validation_parent_ztfids.extend(
+                    test_parent_ztfids.extend(
                         self.rng.choice(
                             in_bts_only.query("classif == @cl").index.values,
                             size=needed,
@@ -231,59 +221,70 @@ class Model(object):
                         )
                     )
 
-        return validation_parent_ztfids
+        return test_parent_ztfids
 
-    def train_test_split(self):
+    def train_validation_split(self):
         """
-        Split the remaining sample (all minus validation) into a test and a training sample
+        Split the remaining sample (all minus test) into a validation and a training sample
         """
         self.train_parent_ztfids = self.rng.choice(
-            self.train_test_parent_ztfids,
-            size=int(self.train_test_fraction * len(self.train_test_parent_ztfids)),
+            self.train_validation_parent_ztfids,
+            size=int(
+                self.train_validation_fraction
+                * len(self.train_validation_parent_ztfids)
+            ),
             replace=False,
         )
-        self.test_parent_ztfids = [
+        self.validation_parent_ztfids = [
             ztfid
-            for ztfid in self.train_test_parent_ztfids
+            for ztfid in self.train_validation_parent_ztfids
             if ztfid not in self.train_parent_ztfids
         ]
 
         self.train_ztfids = self.get_child_ztfids(ztfids=self.train_parent_ztfids)
-        self.test_ztfids = self.get_child_ztfids(ztfids=self.test_parent_ztfids)
+        self.validation_ztfids = self.get_child_ztfids(
+            ztfids=self.validation_parent_ztfids
+        )
 
         self.logger.info(
-            f"From {len(self.train_test_parent_ztfids)} available parent ZTFIDs selected {len(self.train_parent_ztfids)} for training, {len(self.test_parent_ztfids)} for testing."
+            f"From {len(self.train_validation_parent_ztfids)} available parent ZTFIDs selected {len(self.train_parent_ztfids)} for training, {len(self.validation_parent_ztfids)} for validationing."
         )
         self.logger.info(
             f"Train sample: {len(self.train_ztfids)} lightcurves in total."
         )
-        self.logger.info(f"Test sample: {len(self.test_ztfids)} lightcurves in total.")
+        self.logger.info(
+            f"Test sample: {len(self.validation_ztfids)} lightcurves in total."
+        )
 
         export_dict = {
-            "validation": list(self.validation_ztfids),
-            "validation_parentonly": list(self.validation_parent_ztfids),
-            "traintest": self.train_ztfids + self.test_ztfids,
+            "test": list(self.test_ztfids),
+            "test_parentonly": list(self.test_parent_ztfids),
+            "trainvalidation": self.train_ztfids + self.validation_ztfids,
         }
 
         with open("split.json", "w") as f:
             json.dump(export_dict, f)
 
         df_train = self.meta.query("index in @self.train_ztfids")
-        df_test = self.meta.query("index in @self.test_ztfids")
+        df_validation = self.meta.query("index in @self.validation_ztfids")
 
         df_train = shuffle(df_train, random_state=self.seed).reset_index(drop=True)
-        df_test = shuffle(df_test, random_state=self.seed).reset_index(drop=True)
+        df_validation = shuffle(df_validation, random_state=self.seed).reset_index(
+            drop=True
+        )
 
         self.X_train = df_train.drop(columns="classif").reset_index(drop=True)
-        self.X_test = df_test.drop(columns="classif").reset_index(drop=True)
+        self.X_validation = df_validation.drop(columns="classif").reset_index(drop=True)
         self.y_train = df_train.filter(["classif"]).reset_index(drop=True)
 
         self.y_train["classif"] = self.le.fit_transform(self.y_train["classif"])
         self.y_train = self.y_train["classif"]
 
-        self.y_test = df_test.filter(["classif"]).reset_index(drop=True)
-        self.y_test["classif"] = self.le.fit_transform(self.y_test["classif"])
-        self.y_test = self.y_test["classif"]
+        self.y_validation = df_validation.filter(["classif"]).reset_index(drop=True)
+        self.y_validation["classif"] = self.le.fit_transform(
+            self.y_validation["classif"]
+        )
+        self.y_validation = self.y_validation["classif"]
 
     def get_parent_ztfids(self, ztfids: List[str]):
         parent_ztfids = [i for i in ztfids if len(i.split("_")) == 1]
@@ -425,8 +426,8 @@ class Model(object):
 
         self.logger.info("Plotting evaluation")
 
-        features = self.X_validation
-        target = self.y_validation
+        features = self.X_test
+        target = self.y_test
 
         pred = best_estimator.predict(features)
 
@@ -499,7 +500,7 @@ class Model(object):
 
         outfile = (
             self.plot_dir
-            / f"results_seed_{self.seed}_n_iter_{self.n_iter}_noisified_val_{self.noisified_validation}_normalized_{normalize}.pdf"
+            / f"results_seed_{self.seed}_n_iter_{self.n_iter}_noisified_val_{self.noisified_test}_normalized_{normalize}.pdf"
         )
         plt.tight_layout()
         plt.savefig(outfile)
