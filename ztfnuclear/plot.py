@@ -665,7 +665,10 @@ def plot_mag_hist_2x2(
         ax.set_xlabel("Peak mag (AB)", fontsize=11)
         ax.set_ylim((0.9, 1500))
 
-        ax.legend(fontsize=11, loc=legendpos[sample_title])
+        handles, labels = ax.get_legend_handles_labels()
+
+        ax.legend(handles[::-1], labels[::-1], fontsize=11, loc=legendpos[sample_title])
+
         ax.set_title(
             f"{titles[sample_title]} ({len(combined.query('sample == @sample_title'))})",
             fontsize=13,
