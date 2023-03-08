@@ -18,8 +18,8 @@ m = Model(
     noisified_test=True,
     seed=SEED,
     n_iter=50,
-    test_fraction=0.2,
-    train_validation_fraction=0.8,
+    test_fraction=0.3,
+    train_validation_fraction=0.7,
     grid_search_sample_size=2000,
 )
 m.train()
@@ -31,8 +31,8 @@ m = Model(
     noisified_test=False,
     seed=SEED,
     n_iter=50,
-    test_fraction=0.2,
-    train_validation_fraction=0.8,
+    test_fraction=0.3,
+    train_validation_fraction=0.7,
     grid_search_sample_size=2000,
 )
 m.evaluate(normalize=True)

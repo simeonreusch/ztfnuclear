@@ -312,13 +312,24 @@ class Model(object):
             colsample_bytree=1.0,
         )
 
+        # param_grid = {
+        #     "max_depth": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        #     "min_child_weight": np.arange(0.0001, 0.5, 0.001),
+        #     "gamma": np.arange(0.0, 40.0, 0.005),
+        #     "learning_rate": np.arange(0.0005, 0.5, 0.0005),
+        #     "subsample": np.arange(0.01, 1.0, 0.01),
+        #     "colsample_bylevel": np.round(np.arange(0.1, 1.0, 0.01)),
+        # }
         param_grid = {
-            "max_depth": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-            "min_child_weight": np.arange(0.0001, 0.5, 0.001),
-            "gamma": np.arange(0.0, 40.0, 0.005),
-            "learning_rate": np.arange(0.0005, 0.5, 0.0005),
-            "subsample": np.arange(0.01, 1.0, 0.01),
-            "colsample_bylevel": np.round(np.arange(0.1, 1.0, 0.01)),
+            "learning_rate": [0.1, 0.01, 0.001],
+            "gamma": [0.01, 0.1, 0.3, 0.5, 1, 1.5, 2],
+            "max_depth": [2, 4, 7, 10],
+            "colsample_bytree": [0.3, 0.6, 0.8, 1.0],
+            "subsample": [0.2, 0.4, 0.5, 0.6, 0.7],
+            "reg_alpha": [0, 0.5, 1],
+            "reg_lambda": [1, 1.5, 2, 3, 4.5],
+            "min_child_weight": [1, 3, 5, 7],
+            "n_estimators": [100, 250, 500, 1000],
         }
 
         if self.seed is None:
@@ -359,6 +370,8 @@ class Model(object):
         else:
             random_state = self.seed + 5
 
+        from sklearn.utils import class_weight
+
         X_train_subset = self.X_train.sample(
             n=self.grid_search_sample_size, random_state=random_state
         )
@@ -366,7 +379,13 @@ class Model(object):
             n=self.grid_search_sample_size, random_state=random_state
         )
 
-        grid_result = grid_search.fit(X_train_subset, y_train_subset)
+        classes_weights = class_weight.compute_sample_weight(
+            class_weight="balanced", y=y_train_subset
+        )
+
+        grid_result = grid_search.fit(
+            X_train_subset, y_train_subset, sample_weight=classes_weights
+        )
 
         """
         Run the actual training with the best estimator
