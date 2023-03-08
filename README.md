@@ -1,2 +1,2 @@
 # ztfnuclear
-Analyzing the Zwicky Transient Facility forced photometry nuclear transient sample
+Analyzing the Zwicky Transient Facility nuclear transient sample.
