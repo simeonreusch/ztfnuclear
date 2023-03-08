@@ -79,7 +79,6 @@ class Model(object):
         self.rng = default_rng(seed=self.seed)
         self.get_training_metadata()
         self.get_validation_sample()
-
         self.train_test_split()
 
     def get_training_metadata(self) -> pd.DataFrame:
@@ -101,6 +100,7 @@ class Model(object):
                 for_training=True, include_z_in_training=False
             )
             self.meta.rename(columns={"simpleclasses": "classif"}, inplace=True)
+            self.meta.replace({"classif": {"sn_ia": "snia"}}, inplace=True)
 
         # self.meta.query("classif != 'agn'", inplace=True)
 
@@ -109,6 +109,8 @@ class Model(object):
             inplace=True,
         )
         self.meta = self.meta.astype({"distnr": "float64", "classif": "str"})
+        self.meta_parent = self.meta.copy(deep=True)
+        self.meta_parent = self.meta_parent[~self.meta_parent.index.str.contains("_")]
 
         self.logger.info(f"Read metadata. {len(self.meta)} transients available.")
         self.all_ztfids = self.meta.index.values
@@ -120,36 +122,9 @@ class Model(object):
         """
         Get a validation sample
         """
-        # TODO: Make sure all non-TDE objects in BTS that are also in the nuclear sample end up in the validation sample
-
-        nuc = NuclearSample(sampletype="nuclear")
-
-        nuc_ztfids = set(nuc.ztfids)
-        bts_ztfids = set(self.parent_ztfids)
-
-        in_both = list(nuc_ztfids.intersection(bts_ztfids))
-
-        in_both_notde = []
-        for ztfid in in_both:
-            if self.meta.loc[ztfid]["classif"] != "tde":
-                in_both_notde.append(ztfid)
-
-        self.logger.info(f"{len(in_both)} BTS objects are also in the nuclear sample")
-        self.logger.info(f"{len(in_both_notde)} of these are not a TDE")
-
-        desired_validation_size = int(
-            self.validation_fraction * len(self.parent_ztfids)
-        )
-        remaining_validation_size = desired_validation_size - len(in_both_notde)
-
-        self.validation_parent_ztfids = in_both_notde
-
-        self.validation_parent_ztfids.extend(
-            self.rng.choice(
-                self.parent_ztfids,
-                size=remaining_validation_size,
-                replace=False,
-            )
+        self.validation_parent_ztfids = self.get_validation_per_class(
+            select_classes=["tde", "agn", "star", "snia", "sn_other"],
+            validation_fraction=self.validation_fraction,
         )
 
         if self.noisified_validation:
@@ -187,6 +162,76 @@ class Model(object):
         self.label_mapping = dict(sorted(label_mapping.items()))
 
         self.y_validation = self.y_validation["classif"]
+
+    def get_validation_per_class(
+        self,
+        select_classes: list = ["tde", "agn", "star", "snia", "sn_other"],
+        validation_fraction: float = 0.3,
+    ):
+        """
+        For each class, select val_fraction of all transients belonging to that class for validation. Make sure that
+            a) all transients that are both in the nuclear and the BTS sample are kept for validation
+            b) this rule is not applied to TDEs
+        """
+        nuc = NuclearSample(sampletype="nuclear")
+
+        nuc_ztfids = set(nuc.ztfids)
+        bts_ztfids = set(self.parent_ztfids)
+
+        in_both_list = list(nuc_ztfids.intersection(bts_ztfids))
+        in_both = self.meta_parent.copy(deep=True)
+        in_both.query("index in @in_both_list", inplace=True)
+        in_bts_only = self.meta_parent.copy(deep=True)
+        in_bts_only.query("index not in @in_both_list", inplace=True)
+
+        validation_parent_ztfids = []
+
+        for cl in select_classes:
+            if cl == "tde":
+                size = int(validation_fraction * len(in_both.query("classif == @cl")))
+                validation_parent_ztfids.extend(
+                    self.rng.choice(
+                        in_both.query("classif == @cl").index.values,
+                        size=size,
+                        replace=False,
+                    )
+                )
+            else:
+                desired = int(
+                    validation_fraction * len(self.meta_parent.query("classif == @cl"))
+                )
+                nuc = in_both.query("classif == @cl")
+                available_nuc = len(nuc)
+                needed = desired - available_nuc
+
+                self.logger.info(f"Class: {cl}")
+                self.logger.info(f"desired val. size: {desired}")
+                self.logger.info(f"available in nuclear sample: {available_nuc}")
+                self.logger.info(f"needed: {needed}")
+
+                # now we take all the nuclear transients (if we need them all)
+                if available_nuc < desired:
+                    validation_parent_ztfids.extend(nuc.index.values)
+                else:
+                    validation_parent_ztfids.extend(
+                        self.rng.choice(
+                            nuc.index.values,
+                            size=desired,
+                            replace=False,
+                        )
+                    )
+
+                # and fill with bts only transients (if we must)
+                if needed > 0:
+                    validation_parent_ztfids.extend(
+                        self.rng.choice(
+                            in_bts_only.query("classif == @cl").index.values,
+                            size=needed,
+                            replace=False,
+                        )
+                    )
+
+        return validation_parent_ztfids
 
     def train_test_split(self):
         """
@@ -488,15 +533,14 @@ class Model(object):
             columns=["classif", "crossmatch_Milliquas_type"], inplace=True
         )
 
-        nuc_df_noclass.to_csv("test_nuc.csv")
-
         pred = self.best_estimator.predict(nuc_df_noclass)
 
         pred_pretty = [self.label_mapping[i] for i in pred]
         nuc_df["xgclass"] = pred_pretty
         counts = nuc_df["xgclass"].value_counts()
 
-        print(counts)
+        self.logger.info("Statistics:\n")
+        self.logger.info(f"\n{counts}")
 
         for ztfid, row in nuc_df.iterrows():
             t = s.transient(ztfid)

@@ -48,6 +48,7 @@ def get_tde_selection(
     sampletype: str = "nuclear",
     purity_sel: str | None = "tde",
     rerun: bool = False,
+    xgclass: bool = False,
     require_fitsuccess: bool = True,
     reject_bogus: bool = True,
 ) -> Tuple[pd.DataFrame, dict]:
@@ -98,19 +99,20 @@ def get_tde_selection(
 
     if len(cuts_to_do) > 0:
         s = NuclearSample(sampletype=sampletype)
-        sample = s.meta.get_dataframe(
-            params=[
-                "tde_fit_exp",
-                "_id",
-                "distnr",
-                class_key,
-                "crossmatch",
-                "WISE_bayesian",
-                salt_key,
-                "ZTF_bayesian",
-                "peak_mags",
-            ]
-        )
+        params = params = [
+            "tde_fit_exp",
+            "_id",
+            "distnr",
+            class_key,
+            "crossmatch",
+            "WISE_bayesian",
+            salt_key,
+            "ZTF_bayesian",
+            "peak_mags",
+        ]
+        if xgclass:
+            params.append("xgclass")
+        sample = s.meta.get_dataframe(params=params)
 
         # cut everything flagged as bogus
         if reject_bogus:
@@ -224,16 +226,20 @@ def get_tde_selection(
 
     surviving = list(set(ztfid_list[0]).intersection(*[set(i) for i in ztfid_list[1:]]))
 
+    params = [
+        "distnr",
+        class_key,
+        "peak_mags",
+        "ampel_z",
+        "classif",
+        "tde_fit_exp",
+        "crossmatch",
+    ]
+
+    if xgclass:
+        params.append("xgclass")
     sample = NuclearSample(sampletype=sampletype).meta.get_dataframe(
-        params=[
-            "distnr",
-            class_key,
-            "peak_mags",
-            "ampel_z",
-            "classif",
-            "tde_fit_exp",
-            "crossmatch",
-        ],
+        params=params,
         ztfids=surviving,
     )
 
@@ -508,7 +514,11 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plot_ext="pdf", rerun=
 
 
 def plot_mag_hist_2x2(
-    cuts: list | None = None, logplot=True, plot_ext="pdf", rerun=False
+    cuts: list | None = None,
+    logplot=True,
+    plot_ext="pdf",
+    compare: str = "nuc_bts",
+    rerun=False,
 ):
     """
     Plot the mag histogram
@@ -529,12 +539,16 @@ def plot_mag_hist_2x2(
         "nuclear_keepagn": "upper left",
         "bts_noagn": "upper right",
         "bts_keepagn": "upper right",
+        "nuclear_noagn_xg": "upper left",
+        "nuclear_keepagn_xg": "upper left",
     }
     titles = {
         "nuclear_noagn": "Nuclear - veto AGN",
         "nuclear_keepagn": "Nuclear - only AGN",
         "bts_noagn": "BTS - veto AGN",
         "bts_keepagn": "BTS - only AGN",
+        "nuclear_noagn_xg": "Nuclear XGBoost - veto AGN",
+        "nuclear_keepagn_xg": "Nuclear XGBoost - only AGN",
     }
 
     cuts_noagn = copy.deepcopy(cuts)
@@ -544,25 +558,43 @@ def plot_mag_hist_2x2(
     cuts_keepagn.append("milliquas_keepagn")
 
     sample_nuc_noagn = get_tde_selection(
-        cuts=cuts_noagn, sampletype="nuclear", rerun=rerun
+        cuts=cuts_noagn, sampletype="nuclear", rerun=rerun, xgclass=False
     )
     sample_nuc_keepagn = get_tde_selection(
-        cuts=cuts_keepagn, sampletype="nuclear", rerun=rerun
+        cuts=cuts_keepagn, sampletype="nuclear", rerun=rerun, xgclass=False
     )
     sample_bts_noagn = get_tde_selection(cuts=cuts_noagn, sampletype="bts", rerun=rerun)
 
     sample_bts_keepagn = get_tde_selection(
         cuts=cuts_keepagn, sampletype="bts", rerun=rerun
     )
+    sample_nuc_noagn_xg = get_tde_selection(
+        cuts=cuts_noagn, sampletype="nuclear", rerun=rerun, xgclass=True
+    )
+    sample_nuc_keepagn_xg = get_tde_selection(
+        cuts=cuts_keepagn, sampletype="nuclear", rerun=rerun, xgclass=True
+    )
 
     sample_nuc_noagn["sample"] = "nuclear_noagn"
     sample_nuc_keepagn["sample"] = "nuclear_keepagn"
     sample_bts_noagn["sample"] = "bts_noagn"
     sample_bts_keepagn["sample"] = "bts_keepagn"
+    sample_nuc_noagn_xg["sample"] = "nuclear_noagn_xg"
+    sample_nuc_keepagn_xg["sample"] = "nuclear_keepagn_xg"
 
-    combined = pd.concat(
-        [sample_nuc_noagn, sample_bts_noagn, sample_nuc_keepagn, sample_bts_keepagn]
-    )
+    if compare == "nuc_bts":
+        combined = pd.concat(
+            [sample_nuc_noagn, sample_bts_noagn, sample_nuc_keepagn, sample_bts_keepagn]
+        )
+    elif compare == "nuc_xg":
+        combined = pd.concat(
+            [
+                sample_nuc_noagn,
+                sample_nuc_noagn_xg,
+                sample_nuc_keepagn,
+                sample_nuc_keepagn_xg,
+            ]
+        )
 
     combined["peak_mag"] = [
         k if not np.isnan(k) else combined.peak_mags_r.values[i]
@@ -574,12 +606,20 @@ def plot_mag_hist_2x2(
 
     fig, axes = plt.subplots(2, 2, figsize=figsize, sharey=True)
 
-    sample_ax = {
-        axes[0, 0]: "nuclear_noagn",
-        axes[0, 1]: "bts_noagn",
-        axes[1, 0]: "nuclear_keepagn",
-        axes[1, 1]: "bts_keepagn",
-    }
+    if compare == "nuc_bts":
+        sample_ax = {
+            axes[0, 0]: "nuclear_noagn",
+            axes[0, 1]: "bts_noagn",
+            axes[1, 0]: "nuclear_keepagn",
+            axes[1, 1]: "bts_keepagn",
+        }
+    elif compare == "nuc_xg":
+        sample_ax = {
+            axes[0, 0]: "nuclear_noagn",
+            axes[0, 1]: "nuclear_noagn_xg",
+            axes[1, 0]: "nuclear_keepagn",
+            axes[1, 1]: "nuclear_keepagn_xg",
+        }
 
     for ax in axes.flat:
         ax.spines["right"].set_visible(False)
@@ -591,8 +631,13 @@ def plot_mag_hist_2x2(
         classifs_used = []
         sample_title = sample_ax[ax]
 
+        if "xg" in sample_title:
+            classif_key = "xgclass"
+        else:
+            classif_key = "classif"
+
         for c in classifs:
-            df = combined.query(f"classif == @c and sample == @sample_title")
+            df = combined.query(f"{classif_key} == @c and sample == @sample_title")
             if len(df) > 0:
                 peak_mags.append(df["peak_mag"].values)
                 colors_used.append(config["colordict"][c])
@@ -626,8 +671,8 @@ def plot_mag_hist_2x2(
             fontsize=13,
         )
 
-    len_nuc = len(combined.query("sample == 'nuclear'"))
-    len_bts = len(combined.query("sample == 'bts'"))
+    # len_nuc = len(combined.query("sample == 'nuclear'"))
+    # len_bts = len(combined.query("sample == 'bts'"))
 
     title = f"cut stage: {config['cutlabels'][cuts[-1]]} "
     fig.suptitle(title, fontsize=15)
