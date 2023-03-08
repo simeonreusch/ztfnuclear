@@ -381,7 +381,6 @@ train_params:
 train_params_train:
   - tde_fit_exp_chisq
   - tde_fit_exp_ndof
-  - tde_fit_exp_paramdict_plateaustart
   - tde_fit_exp_paramdict_mwebv
   - tde_fit_exp_paramdict_amplitude
   - rise
@@ -406,13 +405,11 @@ train_params_train:
 classify_params:
   - tde_fit_exp_chisq
   - tde_fit_exp_ndof
-  - crossmatch_Milliquas_type
   - rise
   - decay
   - temp
   - tde_fit_exp_paramdict_amplitude
   - d_temp
-  - tde_fit_exp_paramdict_plateaustart
   - tde_fit_exp_paramdict_mwebv
   - overlapping_regions
   - distnr_distnr

@@ -21,6 +21,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import shuffle
+from tqdm import tqdm
 from ztfnuclear import io
 from ztfnuclear.plot import get_tde_selection
 from ztfnuclear.sample import NuclearSample
@@ -558,18 +559,17 @@ class Model(object):
             self.model_dir
             / f"grid_result_niter_{self.n_iter}_nsample_{self.grid_search_sample_size}"
         )
+
         self.grid_result = joblib.load(infile_grid)
         self.best_estimator = self.grid_result.best_estimator_
 
         # Load the nuclear sample
         s = NuclearSample(sampletype="nuclear")
         nuc_df = s.meta.get_dataframe(for_classification=True)
-        nuc_df.query("crossmatch_Milliquas_type.isnull()", inplace=True)
+        # nuc_df.query("crossmatch_Milliquas_type.isnull()", inplace=True)
 
         nuc_df_noclass = nuc_df.copy(deep=True)
-        nuc_df_noclass.drop(
-            columns=["classif", "crossmatch_Milliquas_type"], inplace=True
-        )
+        nuc_df_noclass.drop(columns=["classif"], inplace=True)
 
         pred = self.best_estimator.predict(nuc_df_noclass)
 
@@ -580,6 +580,8 @@ class Model(object):
         self.logger.info("Statistics:\n")
         self.logger.info(f"\n{counts}")
 
-        for ztfid, row in nuc_df.iterrows():
+        self.logger.info("Ingesting XGBoost classifications into database")
+
+        for ztfid, row in tqdm(nuc_df.iterrows(), total=len(nuc_df)):
             t = s.transient(ztfid)
             t.update({"xgclass": row["xgclass"]})

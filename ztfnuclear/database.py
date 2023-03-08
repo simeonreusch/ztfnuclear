@@ -342,8 +342,6 @@ class MetadataDB(object):
                     "peak_mags_g",
                     "peak_mags_r",
                     "peak_mags_i",
-                    "tde_fit_exp_errors_t0",
-                    "tde_fit_exp_covariance",
                 ],
                 inplace=True,
             )
