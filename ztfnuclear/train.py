@@ -10,10 +10,8 @@ import time
 from pathlib import Path
 from typing import List
 
-import joblib
 import numpy as np
 import pandas as pd
-import xgboost as xgb
 from matplotlib import pyplot as plt
 from numpy.random import default_rng
 from sklearn import metrics
@@ -22,6 +20,9 @@ from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import shuffle
 from tqdm import tqdm
+
+import joblib
+import xgboost as xgb
 from ztfnuclear import io
 from ztfnuclear.plot import get_tde_selection
 from ztfnuclear.sample import NuclearSample
@@ -41,6 +42,7 @@ class Model(object):
         test_fraction: float = 0.1,
         train_validation_fraction: float = 0.7,
         noisified_test: bool = True,
+        nuclear_test: bool = True,
         n_iter: int = 10,
         grid_search_sample_size: int = 1000,
         model_dir: Path | str = Path(io.MODEL_dir),
@@ -50,6 +52,7 @@ class Model(object):
         self.logger = logging.getLogger(__name__)
         self.noisified = noisified
         self.noisified_test = noisified_test
+        self.nuclear_test = nuclear_test
         self.test_fraction = test_fraction
         self.train_validation_fraction = train_validation_fraction
         self.seed = seed
@@ -107,7 +110,9 @@ class Model(object):
             ],
             inplace=True,
         )
-        self.meta = self.meta.astype({"distnr": "float64", "classif": "str"})
+        self.meta = self.meta.astype({"classif": "str"})
+        if "distnr" in self.meta.keys():
+            self.meta = self.meta.astype({"distnr": "float64"})
         self.meta_parent = self.meta.copy(deep=True)
         self.meta_parent = self.meta_parent[~self.meta_parent.index.str.contains("_")]
 
@@ -121,10 +126,17 @@ class Model(object):
         """
         Get a test sample
         """
-        self.test_parent_ztfids = self.get_test_per_class(
-            select_classes=["tde", "agn", "star", "snia", "sn_other"],
-            test_fraction=self.test_fraction,
-        )
+        if self.nuclear_test:
+            self.test_parent_ztfids = self.get_test_per_class(
+                select_classes=["tde", "agn", "star", "snia", "sn_other"],
+                test_fraction=self.test_fraction,
+            )
+        else:
+            self.test_parent_ztfids = self.rng.choice(
+                self.parent_ztfids,
+                size=int(self.test_fraction * len(self.parent_ztfids)),
+                replace=False,
+            )
 
         if self.noisified_test:
             self.test_ztfids = self.get_child_ztfids(self.test_parent_ztfids)

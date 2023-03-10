@@ -11,12 +11,12 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 SEED = 10
-# SEED = None
 
 m = Model(
     noisified=True,
     noisified_test=True,
     seed=SEED,
+    nuclear_test=False,
     n_iter=50,
     test_fraction=0.3,
     train_validation_fraction=0.7,
@@ -30,6 +30,7 @@ m = Model(
 #     noisified=True,
 #     noisified_test=False,
 #     seed=SEED,
+#     nuclear_test=False,
 #     n_iter=50,
 #     test_fraction=0.3,
 #     train_validation_fraction=0.7,
