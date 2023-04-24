@@ -59,7 +59,6 @@ bogus:
   - bogus
   - duplicate
   - bogus?
-  - CV
   - varstar
   - rock
 
@@ -109,6 +108,7 @@ agn:
   - blazar
 
 star:
+  - CV
   - nova
   - CV?
   - varstar
