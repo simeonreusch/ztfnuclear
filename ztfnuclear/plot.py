@@ -102,7 +102,7 @@ def get_tde_selection(
 
     if len(cuts_to_do) > 0:
         s = NuclearSample(sampletype=sampletype)
-        params = params = [
+        params = [
             "tde_fit_exp",
             "_id",
             "distnr",
@@ -679,9 +679,6 @@ def plot_mag_hist_2x2(
             fontsize=13,
         )
 
-    # len_nuc = len(combined.query("sample == 'nuclear'"))
-    # len_bts = len(combined.query("sample == 'bts'"))
-
     title = f"cut stage: {config['cutlabels'][cuts[-1]]} "
     fig.suptitle(title, fontsize=15)
 
@@ -705,87 +702,106 @@ def plot_confusion(
     rerun: bool = False,
     normalize: bool = False,
 ):
-    sample_nuc = get_tde_selection(
-        cuts=cuts, sampletype="nuclear", rerun=rerun, xgclass=True
-    )
+    for magbin in [
+        [16, 16.5],
+        [16.5, 17],
+        [17, 17.5],
+        [18, 18.5],
+        [18.5, 19],
+        [19, 19.5],
+        [19.5, 20],
+        [20, 20.5],
+        [20.5, 21],
+    ]:
+        sample_nuc = get_tde_selection(
+            cuts=cuts, sampletype="nuclear", rerun=rerun, xgclass=True
+        )
+        sample_nuc["peak_mag"] = [
+            k if not np.isnan(k) else sample_nuc.peak_mags_r.values[i]
+            for i, k in enumerate(sample_nuc.peak_mags_g.values)
+        ]
+        sample_nuc.query("not peak_mag.isnull()", inplace=True)
 
-    # We can only compare those objects for which we
-    # have a Fritz etc. classification
-    sample_nuc.query("classif != 'unclass'", inplace=True)
-    y_true = sample_nuc.classif.values
-    y_pred = sample_nuc.xgclass.values
-
-    le = LabelEncoder()
-
-    y_true = le.fit_transform(y_true)
-    y_pred = le.fit_transform(y_pred)
-
-    label_list = le.inverse_transform(y_true)
-
-    label_mapping = {}
-    for i, classif in enumerate(label_list):
-        label_mapping.update({y_true[i]: classif})
-
-    label_mapping = dict(sorted(label_mapping.items()))
-
-    y_true_pretty = le.inverse_transform(y_true)
-    y_pred_pretty = le.inverse_transform(y_pred)
-
-    labels = list(sample_nuc.classif.unique())
-    labels_pretty = [config["classlabels"][i] for i in labels]
-
-    if normalize:
-        norm = "true"
-        cmlabel = "Fraction of objects"
-        fmt = ".2f"
-    else:
-        norm = None
-        cmlabel = "Objects"
-        fmt = ".0f"
-
-    cm = confusion_matrix(y_true_pretty, y_pred_pretty, normalize=norm, labels=labels)
-
-    if normalize:
-        vmax = 1
-    else:
-        vmax = cm.max()
-
-    im = plt.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues, vmin=0, vmax=vmax)
-
-    tick_marks = np.arange(len(labels))
-    plt.xticks(tick_marks, labels_pretty, ha="center")
-    plt.yticks(tick_marks, labels_pretty)
-
-    thresh = cm.max() / 2.0
-
-    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        plt.text(
-            j,
-            i,
-            format(cm[i, j], fmt),
-            ha="center",
-            va="center",
-            color="white" if cm[i, j] > thresh else "black",
+        # we apply the peak magnitude cut
+        sample_nuc.query(
+            f"peak_mag > {magbin[0]} and peak_mag < {magbin[1]}", inplace=True
         )
 
-    plt.ylabel("True Type", fontsize=12)
-    plt.xlabel("Predicted Type", fontsize=12)
+        # We can only compare those objects for which we
+        # have a Fritz etc. classification
+        sample_nuc.query("classif != 'unclass'", inplace=True)
+        y_true = sample_nuc.classif.values
+        y_pred = sample_nuc.xgclass.values
 
-    # Make a colorbar that is lined up with the plot
-    from mpl_toolkits.axes_grid1 import make_axes_locatable
+        y_true_num = [config["xg_label_to_num"][i] for i in y_true]
+        y_pred_num = [config["xg_label_to_num"][i] for i in y_pred]
 
-    ax = plt.gca()
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="4%", pad=0.25)
-    cbar = plt.colorbar(im, cax=cax)
-    cbar.set_label(label=cmlabel, fontsize=12)
+        if normalize:
+            norm = "true"
+            cmlabel = "Fraction of objects"
+            fmt = ".2f"
+        else:
+            norm = None
+            cmlabel = "Objects"
+            fmt = ".0f"
 
-    outfile = "test.pdf"
-    # quit()
-    plt.tight_layout()
-    plt.savefig(outfile)
-    logger.info(f"We saved the evaluation to {outfile}")
-    quit()
+        cm = confusion_matrix(y_true, y_pred, normalize=norm)
+
+        if normalize:
+            vmax = 1
+        else:
+            vmax = cm.max()
+
+        im = plt.imshow(
+            cm, interpolation="nearest", cmap=plt.cm.Blues, vmin=0, vmax=vmax
+        )
+
+        tick_marks = np.asarray(list(config["xg_num_to_label"].keys()))
+        labels_pretty = [
+            config["classlabels"][i] for i in list(config["xg_label_to_num"].keys())
+        ]
+
+        plt.xticks(tick_marks, labels_pretty, ha="center")
+        plt.yticks(tick_marks, labels_pretty)
+
+        thresh = cm.max() / 2.0
+
+        for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+            plt.text(
+                j,
+                i,
+                format(cm[i, j], fmt),
+                ha="center",
+                va="center",
+                color="white" if cm[i, j] > thresh else "black",
+            )
+
+        plt.ylabel("True Type", fontsize=12)
+        plt.xlabel("Predicted Type", fontsize=12)
+
+        # Make a colorbar that is lined up with the plot
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+        ax = plt.gca()
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="4%", pad=0.25)
+        cbar = plt.colorbar(im, cax=cax)
+        cbar.set_label(label=cmlabel, fontsize=12)
+
+        outdir = Path(io.LOCALSOURCE_plots) / "confusion"
+
+        outdir.mkdir(parents=True, exist_ok=True)
+
+        if normalize:
+            outpath = outdir / f"magbin_{magbin[0]}-{magbin[1]}_norm.pdf"
+        else:
+            outpath = outdir / f"magbin_{magbin[0]}-{magbin[1]}_abs.pdf"
+
+        plt.tight_layout()
+        plt.savefig(outpath)
+        logger.info(f"We saved the evaluation to {outpath}")
+
+        plt.close()
 
 
 def plot_dist_hist(

@@ -286,6 +286,20 @@ colordict_highlight:
   sn_other: darkviolet
   agn: peru
 
+xg_num_to_label:
+  0: agn
+  1: snia
+  2: sn_other
+  3: star
+  4: tde
+
+xg_label_to_num:
+  agn: 0
+  snia: 1
+  sn_other: 2
+  star: 3
+  tde: 4
+
 pl_props:
     unclass: 
       m: +

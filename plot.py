@@ -90,7 +90,7 @@ def aggregate_cuts(
             )
         if plottype == "confusion":
             plot_confusion(
-                cuts=cuts_now, plot_ext=plot_ext, rerun=rerun, normalize=True
+                cuts=cuts_now, plot_ext=plot_ext, rerun=rerun, normalize=False
             )
 
 
@@ -169,7 +169,7 @@ if __name__ == "__main__":
     parser.add_argument("-rerun", "-r", action="store_true", help="Rerun cut ingestion")
     cl = parser.parse_args()
 
-    if cl.type in ["mag", "mag2x2", "mag2x2xg", "scatter", "confusion"]:
+    if cl.type in ["mag", "mag2x2", "mag2x2xg", "scatter"]:
         aggregate_cuts(
             rerun=cl.rerun,
             plottype=cl.type,
@@ -183,6 +183,15 @@ if __name__ == "__main__":
                 "risedecay",
                 "chisq",
                 "bayes",
+            ],
+        )
+    if cl.type in ["confusion"]:
+        aggregate_cuts(
+            rerun=cl.rerun,
+            plottype=cl.type,
+            plot_ext=cl.ext,
+            cuts=[
+                "nocut",
             ],
         )
     if cl.type in ["dist", "sgscore"]:
