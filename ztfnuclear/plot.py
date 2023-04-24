@@ -733,6 +733,10 @@ def plot_confusion(
         y_true = sample_nuc.classif.values
         y_pred = sample_nuc.xgclass.values
 
+        for entry in y_pred:
+            if entry == "tde":
+                print("tde")
+
         y_true_num = [config["xg_label_to_num"][i] for i in y_true]
         y_pred_num = [config["xg_label_to_num"][i] for i in y_pred]
 
@@ -745,7 +749,12 @@ def plot_confusion(
             cmlabel = "Objects"
             fmt = ".0f"
 
-        cm = confusion_matrix(y_true, y_pred, normalize=norm)
+        cm = confusion_matrix(
+            y_true,
+            y_pred,
+            normalize=norm,
+            labels=list(config["xg_label_to_num"].keys()),
+        )
 
         if normalize:
             vmax = 1
@@ -788,7 +797,17 @@ def plot_confusion(
         cbar = plt.colorbar(im, cax=cax)
         cbar.set_label(label=cmlabel, fontsize=12)
 
-        outdir = Path(io.LOCALSOURCE_plots) / "confusion"
+        if "nocut" in cuts:
+            basedir = Path(io.LOCALSOURCE_plots) / "confusion" / "all"
+        elif "milliquas_noagn" in cuts:
+            basedir = Path(io.LOCALSOURCE_plots) / "confusion" / "noagn"
+        elif "milliquas_keepagn" in cuts:
+            basedir = Path(io.LOCALSOURCE_plots) / "confusion" / "agn"
+
+        if normalize:
+            outdir = basedir / "norm"
+        else:
+            outdir = basedir / "abs"
 
         outdir.mkdir(parents=True, exist_ok=True)
 

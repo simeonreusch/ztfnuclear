@@ -88,10 +88,6 @@ def aggregate_cuts(
                 rerun=rerun,
                 compare="nuc_xg",
             )
-        if plottype == "confusion":
-            plot_confusion(
-                cuts=cuts_now, plot_ext=plot_ext, rerun=rerun, normalize=False
-            )
 
 
 def iterate_classes(
@@ -186,13 +182,10 @@ if __name__ == "__main__":
             ],
         )
     if cl.type in ["confusion"]:
-        aggregate_cuts(
-            rerun=cl.rerun,
-            plottype=cl.type,
-            plot_ext=cl.ext,
-            cuts=[
-                "nocut",
-            ],
-        )
+        plot_confusion(cuts=["nocut"], plot_ext=cl.ext, rerun=cl.rerun, normalize=False)
+        # plot_confusion(
+        # cuts=["milliquas_keepagn"], plot_ext=cl.ext, rerun=cl.rerun, normalize=True
+        # )
+
     if cl.type in ["dist", "sgscore"]:
         iterate_classes(plottype=cl.type, plot_ext=cl.ext)
