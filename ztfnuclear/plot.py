@@ -733,10 +733,6 @@ def plot_confusion(
         y_true = sample_nuc.classif.values
         y_pred = sample_nuc.xgclass.values
 
-        for entry in y_pred:
-            if entry == "tde":
-                print("tde")
-
         y_true_num = [config["xg_label_to_num"][i] for i in y_true]
         y_pred_num = [config["xg_label_to_num"][i] for i in y_pred]
 
