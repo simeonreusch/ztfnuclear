@@ -700,7 +700,8 @@ def plot_confusion(
     cuts: list | None = None,
     plot_ext: str = "pdf",
     rerun: bool = False,
-    normalize: bool = False,
+    norm: str | None = None,
+    plot_misclass: bool = False,
 ):
     for magbin in [
         [16, 16.5],
@@ -713,6 +714,20 @@ def plot_confusion(
         [20, 20.5],
         [20.5, 21],
     ]:
+        if "nocut" in cuts:
+            basedir = Path(io.LOCALSOURCE_plots) / "confusion" / "all"
+        elif "milliquas_noagn" in cuts:
+            basedir = Path(io.LOCALSOURCE_plots) / "confusion" / "noagn"
+        elif "milliquas_keepagn" in cuts:
+            basedir = Path(io.LOCALSOURCE_plots) / "confusion" / "agn"
+
+        if norm is not None:
+            outdir = basedir / f"norm_{norm}"
+        else:
+            outdir = basedir / "abs"
+
+        outdir.mkdir(parents=True, exist_ok=True)
+
         sample_nuc = get_tde_selection(
             cuts=cuts, sampletype="nuclear", rerun=rerun, xgclass=True
         )
@@ -730,18 +745,45 @@ def plot_confusion(
         # We can only compare those objects for which we
         # have a Fritz etc. classification
         sample_nuc.query("classif != 'unclass'", inplace=True)
+
         y_true = sample_nuc.classif.values
+        ztfids = sample_nuc.index.values
         y_pred = sample_nuc.xgclass.values
+
+        if plot_misclass:
+            from ztfnuclear.sample import Transient
+
+            # Find the misclassified ones
+            misclassified = {}
+            for entry in list(config["xg_label_to_num"].keys()):
+                misclassified.update({entry: []})
+
+            for i, true in enumerate(y_true):
+                pred = y_pred[i]
+                if pred != true:
+                    misclassified[true].append((ztfids[i], pred))
+                    t = Transient(ztfids[i])
+
+                    outdir_lc = outdir / f"misclass_magbin_{magbin[0]}-{magbin[1]}"
+
+                    outdir_lc.mkdir(parents=True, exist_ok=True)
+
+                    t.plot(
+                        magplot=True,
+                        plot_raw=False,
+                        snt_threshold=3,
+                        no_magrange=False,
+                        include_wise=False,
+                        outdir=outdir_lc,
+                    )
 
         y_true_num = [config["xg_label_to_num"][i] for i in y_true]
         y_pred_num = [config["xg_label_to_num"][i] for i in y_pred]
 
-        if normalize:
-            norm = "true"
+        if norm is not None:
             cmlabel = "Fraction of objects"
             fmt = ".2f"
         else:
-            norm = None
             cmlabel = "Objects"
             fmt = ".0f"
 
@@ -752,7 +794,7 @@ def plot_confusion(
             labels=list(config["xg_label_to_num"].keys()),
         )
 
-        if normalize:
+        if norm is not None:
             vmax = 1
         else:
             vmax = cm.max()
@@ -793,22 +835,8 @@ def plot_confusion(
         cbar = plt.colorbar(im, cax=cax)
         cbar.set_label(label=cmlabel, fontsize=12)
 
-        if "nocut" in cuts:
-            basedir = Path(io.LOCALSOURCE_plots) / "confusion" / "all"
-        elif "milliquas_noagn" in cuts:
-            basedir = Path(io.LOCALSOURCE_plots) / "confusion" / "noagn"
-        elif "milliquas_keepagn" in cuts:
-            basedir = Path(io.LOCALSOURCE_plots) / "confusion" / "agn"
-
-        if normalize:
-            outdir = basedir / "norm"
-        else:
-            outdir = basedir / "abs"
-
-        outdir.mkdir(parents=True, exist_ok=True)
-
-        if normalize:
-            outpath = outdir / f"magbin_{magbin[0]}-{magbin[1]}_norm.pdf"
+        if norm is not None:
+            outpath = outdir / f"magbin_{magbin[0]}-{magbin[1]}_{norm}.pdf"
         else:
             outpath = outdir / f"magbin_{magbin[0]}-{magbin[1]}_abs.pdf"
 
@@ -1209,7 +1237,7 @@ def plot_lightcurve(
     tns_name: str = None,
     magplot: bool = True,
     primary_grid: bool = False,
-    wise_df: pd.DataFrame = None,
+    wise_df: pd.DataFrame | None = None,
     wise_bayesian: dict = None,
     snt_threshold=3,
     plot_png: bool = False,
@@ -1219,6 +1247,7 @@ def plot_lightcurve(
     no_magrange: bool = False,
     classif: str | None = None,
     xlim: list[float] | None = None,
+    outdir: str | Path | None = None,
 ) -> list:
     """Plot a lightcurve"""
     if magplot:
@@ -1236,16 +1265,19 @@ def plot_lightcurve(
     elif sampletype == "train":
         local = io.LOCALSOURCE_train_plots
 
-    if magplot:
-        plot_dir = os.path.join(local, "lightcurves", "mag")
-    else:
-        if thumbnail:
-            plot_dir = os.path.join(local, "lightcurves", "thumbnails")
+    if outdir is None:
+        if magplot:
+            plot_dir = os.path.join(local, "lightcurves", "mag")
         else:
-            plot_dir = os.path.join(local, "lightcurves", "flux")
+            if thumbnail:
+                plot_dir = os.path.join(local, "lightcurves", "thumbnails")
+            else:
+                plot_dir = os.path.join(local, "lightcurves", "flux")
 
-    if not os.path.exists(plot_dir):
-        os.makedirs(plot_dir)
+        if not os.path.exists(plot_dir):
+            os.makedirs(plot_dir)
+    else:
+        plot_dir = outdir
 
     if wide:
         figwidth = 8 / (GOLDEN_RATIO + 0.52)
@@ -1465,7 +1497,7 @@ def plot_lightcurve(
 
     if not thumbnail:
         ax.set_xlabel("Date (MJD)", fontsize=12)
-        ax.grid(which="both", b=True, axis="both", alpha=0.3)
+        ax.grid(which="both", visible=True, axis="both", alpha=0.3)
         plt.legend()
     else:
         ax.xaxis.set_ticklabels([])

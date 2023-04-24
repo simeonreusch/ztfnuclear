@@ -182,10 +182,27 @@ if __name__ == "__main__":
             ],
         )
     if cl.type in ["confusion"]:
-        plot_confusion(cuts=["nocut"], plot_ext=cl.ext, rerun=cl.rerun, normalize=False)
-        # plot_confusion(
-        # cuts=["milliquas_keepagn"], plot_ext=cl.ext, rerun=cl.rerun, normalize=True
-        # )
+        plot_confusion(
+            cuts=["nocut"],
+            plot_ext=cl.ext,
+            rerun=cl.rerun,
+            norm=None,
+            plot_misclass=True,
+        )
+        plot_confusion(
+            cuts=["nocut"],
+            plot_ext=cl.ext,
+            rerun=cl.rerun,
+            norm="true",
+            plot_misclass=False,
+        )
+        plot_confusion(
+            cuts=["nocut"],
+            plot_ext=cl.ext,
+            rerun=cl.rerun,
+            norm="pred",
+            plot_misclass=False,
+        )
 
     if cl.type in ["dist", "sgscore"]:
         iterate_classes(plottype=cl.type, plot_ext=cl.ext)

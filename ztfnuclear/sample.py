@@ -1411,11 +1411,14 @@ class Transient(object):
         thumbnail: bool = False,
         no_magrange: bool = False,
         xlim: list[float] | None = None,
+        outdir: Path | str | None = None,
     ):
         """
         Plot the transient lightcurve
         """
-        if include_wise:
+        if include_wise is False:
+            wise_df_to_plot = None
+        else:
             wise_df = self.wise_lc
             wise_df_to_plot = None
 
@@ -1488,6 +1491,8 @@ class Transient(object):
         from ztfnuclear.plot import plot_lightcurve
 
         cl = self.meta.get("classif")
+        if cl is not None:
+            cl += f" / xgclass: {self.meta.get('xgclass')}"
 
         axlims = plot_lightcurve(
             df=df_to_plot,
@@ -1504,6 +1509,7 @@ class Transient(object):
             no_magrange=no_magrange,
             classif=cl,
             xlim=xlim,
+            outdir=outdir,
         )
 
         return axlims
