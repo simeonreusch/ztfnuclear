@@ -3,6 +3,7 @@
 # License: BSD-3-Clause
 
 import copy
+import itertools
 import logging
 import os
 import typing
@@ -20,6 +21,8 @@ import seaborn as sns
 from astropy import constants as const  # type: ignore
 from astropy import units as u  # type: ignore
 from astropy.coordinates import Angle  # type: ignore
+from sklearn.metrics import confusion_matrix
+from sklearn.preprocessing import LabelEncoder
 from ztfnuclear import io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.wise import is_in_wise_agn_box
@@ -517,10 +520,10 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plot_ext="pdf", rerun=
 
 def plot_mag_hist_2x2(
     cuts: list | None = None,
-    logplot=True,
-    plot_ext="pdf",
+    logplot: bool = True,
+    plot_ext: str = "pdf",
     compare: str = "nuc_bts",
-    rerun=False,
+    rerun: bool = False,
 ):
     """
     Plot the mag histogram
@@ -694,6 +697,95 @@ def plot_mag_hist_2x2(
         dpi = None
     plt.savefig(outfile, dpi=dpi)
     plt.close()
+
+
+def plot_confusion(
+    cuts: list | None = None,
+    plot_ext: str = "pdf",
+    rerun: bool = False,
+    normalize: bool = False,
+):
+    sample_nuc = get_tde_selection(
+        cuts=cuts, sampletype="nuclear", rerun=rerun, xgclass=True
+    )
+
+    # We can only compare those objects for which we
+    # have a Fritz etc. classification
+    sample_nuc.query("classif != 'unclass'", inplace=True)
+    y_true = sample_nuc.classif.values
+    y_pred = sample_nuc.xgclass.values
+
+    le = LabelEncoder()
+
+    y_true = le.fit_transform(y_true)
+    y_pred = le.fit_transform(y_pred)
+
+    label_list = le.inverse_transform(y_true)
+
+    label_mapping = {}
+    for i, classif in enumerate(label_list):
+        label_mapping.update({y_true[i]: classif})
+
+    label_mapping = dict(sorted(label_mapping.items()))
+
+    y_true_pretty = le.inverse_transform(y_true)
+    y_pred_pretty = le.inverse_transform(y_pred)
+
+    labels = list(sample_nuc.classif.unique())
+    labels_pretty = [config["classlabels"][i] for i in labels]
+
+    if normalize:
+        norm = "true"
+        cmlabel = "Fraction of objects"
+        fmt = ".2f"
+    else:
+        norm = None
+        cmlabel = "Objects"
+        fmt = ".0f"
+
+    cm = confusion_matrix(y_true_pretty, y_pred_pretty, normalize=norm, labels=labels)
+
+    if normalize:
+        vmax = 1
+    else:
+        vmax = cm.max()
+
+    im = plt.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues, vmin=0, vmax=vmax)
+
+    tick_marks = np.arange(len(labels))
+    plt.xticks(tick_marks, labels_pretty, ha="center")
+    plt.yticks(tick_marks, labels_pretty)
+
+    thresh = cm.max() / 2.0
+
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(
+            j,
+            i,
+            format(cm[i, j], fmt),
+            ha="center",
+            va="center",
+            color="white" if cm[i, j] > thresh else "black",
+        )
+
+    plt.ylabel("True Type", fontsize=12)
+    plt.xlabel("Predicted Type", fontsize=12)
+
+    # Make a colorbar that is lined up with the plot
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+    ax = plt.gca()
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="4%", pad=0.25)
+    cbar = plt.colorbar(im, cax=cax)
+    cbar.set_label(label=cmlabel, fontsize=12)
+
+    outfile = "test.pdf"
+    # quit()
+    plt.tight_layout()
+    plt.savefig(outfile)
+    logger.info(f"We saved the evaluation to {outfile}")
+    quit()
 
 
 def plot_dist_hist(

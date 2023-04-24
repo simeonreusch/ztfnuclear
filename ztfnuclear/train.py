@@ -10,8 +10,10 @@ import time
 from pathlib import Path
 from typing import List
 
+import joblib
 import numpy as np
 import pandas as pd
+import xgboost as xgb
 from matplotlib import pyplot as plt
 from numpy.random import default_rng
 from sklearn import metrics
@@ -20,9 +22,6 @@ from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import shuffle
 from tqdm import tqdm
-
-import joblib
-import xgboost as xgb
 from ztfnuclear import io
 from ztfnuclear.plot import get_tde_selection
 from ztfnuclear.sample import NuclearSample
@@ -510,6 +509,7 @@ class Model(object):
         plt.yticks(tick_marks, labels_pretty)
 
         thresh = cm.max() / 2.0
+
         for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
             plt.text(
                 j,

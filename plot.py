@@ -12,6 +12,7 @@ import numpy as np
 from tqdm import tqdm  # type: ignore
 from ztfnuclear.plot import (
     get_tde_selection,
+    plot_confusion,
     plot_dist_hist,
     plot_mag_hist,
     plot_mag_hist_2x2,
@@ -86,6 +87,10 @@ def aggregate_cuts(
                 plot_ext=plot_ext,
                 rerun=rerun,
                 compare="nuc_xg",
+            )
+        if plottype == "confusion":
+            plot_confusion(
+                cuts=cuts_now, plot_ext=plot_ext, rerun=rerun, normalize=True
             )
 
 
@@ -164,7 +169,7 @@ if __name__ == "__main__":
     parser.add_argument("-rerun", "-r", action="store_true", help="Rerun cut ingestion")
     cl = parser.parse_args()
 
-    if cl.type in ["mag", "mag2x2", "mag2x2xg", "scatter"]:
+    if cl.type in ["mag", "mag2x2", "mag2x2xg", "scatter", "confusion"]:
         aggregate_cuts(
             rerun=cl.rerun,
             plottype=cl.type,
