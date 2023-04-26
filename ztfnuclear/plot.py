@@ -705,15 +705,15 @@ def plot_confusion(
     plot_misclass: bool = False,
 ):
     for magbin in [
-        [16, 16.5],
-        [16.5, 17],
-        [17, 17.5],
-        [18, 18.5],
-        [18.5, 19],
-        [19, 19.5],
-        [19.5, 20],
-        [20, 20.5],
-        [20.5, 21],
+        [16.0, 16.5],
+        [16.5, 17.0],
+        [17.0, 17.5],
+        [18.0, 18.5],
+        [18.5, 19.0],
+        [19.0, 19.5],
+        [19.5, 20.0],
+        [20.0, 20.5],
+        [20.5, 21.0],
     ]:
         if "nocut" in cuts:
             basedir = Path(io.LOCALSOURCE_plots) / "confusion" / "all"
@@ -828,6 +828,9 @@ def plot_confusion(
 
         plt.ylabel("True Type", fontsize=12)
         plt.xlabel("Predicted Type", fontsize=12)
+        plt.title(
+            f"Marshal/Fritz/TNS vs. XGBoost\nMagnitudes: {magbin[0]} - {magbin[1]}"
+        )
 
         # Make a colorbar that is lined up with the plot
         from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -844,7 +847,7 @@ def plot_confusion(
             outpath = outdir / f"magbin_{magbin[0]}-{magbin[1]}_abs.{plot_ext}"
 
         plt.tight_layout()
-        plt.savefig(outpath)
+        plt.savefig(outpath, dpi=300)
         logger.info(f"We saved the evaluation to {outpath}")
 
         plt.close()
