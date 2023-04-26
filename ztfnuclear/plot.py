@@ -23,6 +23,7 @@ from astropy import units as u  # type: ignore
 from astropy.coordinates import Angle  # type: ignore
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import LabelEncoder
+
 from ztfnuclear import io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.wise import is_in_wise_agn_box
@@ -30,7 +31,7 @@ from ztfnuclear.wise import is_in_wise_agn_box
 nice_fonts = {
     "text.usetex": True,
     "font.family": "serif",
-    "font.serif": "Helvetica",
+    "font.serif": "Palatino",
 }
 matplotlib.rcParams.update(nice_fonts)
 matplotlib.rcParams["text.usetex"] = True
@@ -764,7 +765,9 @@ def plot_confusion(
                     misclassified[true].append((ztfids[i], pred))
                     t = Transient(ztfids[i])
 
-                    outdir_lc = outdir / f"misclass_magbin_{magbin[0]}-{magbin[1]}"
+                    outdir_lc = (
+                        outdir / f"misclass_magbin_{magbin[0]}-{magbin[1]}" / true
+                    )
 
                     outdir_lc.mkdir(parents=True, exist_ok=True)
 
@@ -836,9 +839,9 @@ def plot_confusion(
         cbar.set_label(label=cmlabel, fontsize=12)
 
         if norm is not None:
-            outpath = outdir / f"magbin_{magbin[0]}-{magbin[1]}_{norm}.pdf"
+            outpath = outdir / f"magbin_{magbin[0]}-{magbin[1]}_{norm}.{plot_ext}"
         else:
-            outpath = outdir / f"magbin_{magbin[0]}-{magbin[1]}_abs.pdf"
+            outpath = outdir / f"magbin_{magbin[0]}-{magbin[1]}_abs.{plot_ext}"
 
         plt.tight_layout()
         plt.savefig(outpath)

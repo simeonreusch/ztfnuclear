@@ -10,6 +10,7 @@ import matplotlib  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
 from tqdm import tqdm  # type: ignore
+
 from ztfnuclear.plot import (
     get_tde_selection,
     plot_confusion,
