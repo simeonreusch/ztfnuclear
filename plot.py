@@ -10,7 +10,6 @@ import matplotlib  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
 from tqdm import tqdm  # type: ignore
-
 from ztfnuclear.plot import (
     get_tde_selection,
     plot_confusion,
@@ -184,7 +183,7 @@ if __name__ == "__main__":
         )
     if cl.type in ["confusion"]:
         plot_confusion(
-            cuts=["nocut"],
+            cuts=["milliquas_noagn", "wise_noagn"],
             plot_ext=cl.ext,
             rerun=cl.rerun,
             norm=None,

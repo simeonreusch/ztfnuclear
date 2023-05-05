@@ -23,7 +23,6 @@ from astropy import units as u  # type: ignore
 from astropy.coordinates import Angle  # type: ignore
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import LabelEncoder
-
 from ztfnuclear import io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.wise import is_in_wise_agn_box
@@ -561,7 +560,9 @@ def plot_mag_hist_2x2(
     cuts_keepagn = copy.deepcopy(cuts)
 
     cuts_noagn.append("milliquas_noagn")
+    cuts_noagn.append("wise_noagn")
     cuts_keepagn.append("milliquas_keepagn")
+    cuts_keepagn.append("wise_keepagn")
 
     sample_nuc_noagn = get_tde_selection(
         cuts=cuts_noagn, sampletype="nuclear", rerun=rerun, xgclass=False
@@ -708,6 +709,7 @@ def plot_confusion(
         [16.0, 16.5],
         [16.5, 17.0],
         [17.0, 17.5],
+        [17.5, 18.0],
         [18.0, 18.5],
         [18.5, 19.0],
         [19.0, 19.5],
@@ -842,9 +844,11 @@ def plot_confusion(
         cbar.set_label(label=cmlabel, fontsize=12)
 
         if norm is not None:
-            outpath = outdir / f"magbin_{magbin[0]}-{magbin[1]}_{norm}.{plot_ext}"
+            outpath = (
+                outdir / f"magbin_{magbin[0]:.1f}-{magbin[1]:.1f}_{norm}.{plot_ext}"
+            )
         else:
-            outpath = outdir / f"magbin_{magbin[0]}-{magbin[1]}_abs.{plot_ext}"
+            outpath = outdir / f"magbin_{magbin[0]:.1f}-{magbin[1]:.1f}_abs.{plot_ext}"
 
         plt.tight_layout()
         plt.savefig(outpath, dpi=300)
@@ -1626,7 +1630,7 @@ def plot_lightcurve_irsa(
         if "ylim" in axlims.keys():
             ax.set_ylim(axlims["ylim"])
 
-    ax.grid(which="both", b=True, axis="both", alpha=0.3)
+    ax.grid(which="both", visible=True, axis="both", alpha=0.3)
 
     plt.tight_layout()
     plt.legend()
@@ -1808,7 +1812,7 @@ def plot_tde_fit(
 
     ax.set_xlabel("Date (MJD)", fontsize=12)
     ax.set_ylabel(r"$\nu$ F$_\nu$ (erg s$^{-1}$ cm$^{-2}$)", fontsize=12)
-    ax.grid(which="both", b=True, axis="both", alpha=0.3)
+    ax.grid(which="both", visible=True, axis="both", alpha=0.3)
     plt.legend()
 
     ylim_upper = ylim_upper + ylim_upper * 0.2
