@@ -15,6 +15,7 @@ from typing import List, Optional, Tuple
 import numpy as np
 import pandas as pd  # type: ignore
 from tqdm import tqdm  # type: ignore
+
 from ztfnuclear import baseline, io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.fritz import FritzAPI
@@ -1325,6 +1326,7 @@ class Transient(object):
             query_tns,
             query_wise,
             query_wise_cat,
+            query_desi,
         )
 
         results = self.meta.get("crossmatch", {})
@@ -1339,6 +1341,7 @@ class Transient(object):
             res_list.append(query_wise(ra_deg=self.ra, dec_deg=self.dec))
             res_list.append(query_tns(ra_deg=self.ra, dec_deg=self.dec))
             res_list.append(query_sarah_agn(ra_deg=self.ra, dec_deg=self.dec))
+            res_list.append(query_desi(ra_deg=self.ra, dec_deg=self.dec))
 
         else:
             if "crts" in crossmatch_types:
@@ -1368,6 +1371,9 @@ class Transient(object):
                 res_list.append({"bts": query_bts(ztfid=self.ztfid)})
             if "marshal" in crossmatch_types:
                 res_list.append(query_marshal(ztfid=self.ztfid))
+
+            if "desi" in crossmatch_types:
+                res_list.append(query_desi(ra_deg=self.ra, dec_deg=self.dec))
 
             for res in res_list:
                 results.update(res)

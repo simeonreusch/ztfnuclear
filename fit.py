@@ -8,10 +8,10 @@ import multiprocessing
 import os
 import re
 
-import matplotlib  # type: ignore
 import pandas as pd  # type: ignore
 from tqdm import tqdm  # type: ignore
 
+import matplotlib  # type: ignore
 from ztfnuclear.database import MetadataDB
 from ztfnuclear.sample import NuclearSample, Transient
 
@@ -20,8 +20,8 @@ os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
 FIT_TYPE = "tde_fit_exp"
 RECREATE_BASELINE = False
-DEBUG = False
-SINGLECORE = False
+DEBUG = True
+SINGLECORE = True
 CORES = 16
 SAMPLE = "train"
 
@@ -56,7 +56,10 @@ if __name__ == "__main__":
         help="Fit certified TDEs only.",
     )
 
-    logger.info(f"Running fits for {FIT_TYPE} in {nprocess} threads.")
+    if SINGLECORE:
+        logger.info(f"Running fits for {FIT_TYPE} in 1 thread.")
+    else:
+        logger.info(f"Running fits for {FIT_TYPE} in {nprocess} threads.")
 
     commandline_args = parser.parse_args()
     tde_only = commandline_args.tde
@@ -79,10 +82,13 @@ if __name__ == "__main__":
     else:
         ztfids = s.ztfids
 
+    ztfids = ["ZTF20acyxxfo"]
+
     if SINGLECORE:
         for ztfid in tqdm(ztfids):
             t = Transient(ztfid, sampletype=SAMPLE)
             print(ztfid)
+            quit()
             if RECREATE_BASELINE:
                 t.recreate_baseline()
             if FIT_TYPE == "tde_fit_exp":

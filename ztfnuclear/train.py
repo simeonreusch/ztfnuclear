@@ -326,14 +326,6 @@ class Model(object):
             colsample_bytree=1.0,
         )
 
-        # param_grid = {
-        #     "max_depth": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-        #     "min_child_weight": np.arange(0.0001, 0.5, 0.001),
-        #     "gamma": np.arange(0.0, 40.0, 0.005),
-        #     "learning_rate": np.arange(0.0005, 0.5, 0.0005),
-        #     "subsample": np.arange(0.01, 1.0, 0.01),
-        #     "colsample_bylevel": np.round(np.arange(0.1, 1.0, 0.01)),
-        # }
         param_grid = {
             "learning_rate": [0.1, 0.01, 0.001],
             "gamma": [0.01, 0.1, 0.3, 0.5, 1, 1.5, 2],

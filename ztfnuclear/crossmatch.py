@@ -6,18 +6,30 @@ import getpass
 import logging
 import os
 
-import backoff
 import keyring
 import pandas as pd
 import requests
-import ztfquery
 
+import backoff
+import ztfquery
 from ztfnuclear import io
-from ztfnuclear.ampel_api import (ampel_api_catalog, ampel_api_distnr,
-                                  ampel_api_sgscore)
+from ztfnuclear.ampel_api import ampel_api_catalog, ampel_api_distnr, ampel_api_sgscore
 from ztfnuclear.database import WISE, SarahAGN
 
 logger = logging.getLogger(__name__)
+
+
+@backoff.on_exception(
+    backoff.expo,
+    requests.exceptions.RequestException,
+    max_time=600,
+)
+def query_desi(ra_deg: float, dec_deg: float):
+    """
+    Query DESI EDR
+    """
+    logger.debug("Querying DESI. No implemented yet")
+    quit()
 
 
 @backoff.on_exception(
