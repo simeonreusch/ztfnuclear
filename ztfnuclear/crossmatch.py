@@ -12,6 +12,8 @@ import requests
 
 import backoff
 import ztfquery
+from astropy import units as u
+from astroquery.ipac.irsa import Irsa
 from ztfnuclear import io
 from ztfnuclear.ampel_api import ampel_api_catalog, ampel_api_distnr, ampel_api_sgscore
 from ztfnuclear.database import WISE, SarahAGN
@@ -24,12 +26,34 @@ logger = logging.getLogger(__name__)
     requests.exceptions.RequestException,
     max_time=600,
 )
-def query_desi(ra_deg: float, dec_deg: float):
+def query_catwise(ra_deg: float, dec_deg: float, searchradius_arcsec=5):
     """
-    Query DESI EDR
+    Query the CatWISE 2020 catalog
     """
-    logger.debug("Querying DESI. No implemented yet")
-    quit()
+
+    logger.debug("Querying CatWISE2020")
+
+    table = Irsa.query_region(
+        catalog="catwise_2020",
+        coordinates=f"{ra_deg},{dec_deg}",
+        spatial="Cone",
+        radius=searchradius_arcsec * u.arcsec,
+        # selcols="ra,dec,dist",
+    )
+    df = table.to_pandas()
+    if len(df) == 0:
+        return {"catWISE2020": {}}
+
+    first_row = df.iloc[0]
+    ra = first_row["ra"]
+    dec = first_row["dec"]
+    w1 = first_row["w1mpro"]
+    w2 = first_row["w2mpro"]
+    dist = first_row["dist"]
+
+    resdict = {"RA": ra, "Dec": dec, "Mag_W1": w1, "Mag_W2": w2, "dist_arcsec": dist}
+
+    return {"catWISE2020": resdict}
 
 
 @backoff.on_exception(
@@ -298,6 +322,7 @@ def query_wise_cat(
         search_radius_arcsec=searchradius_arcsec,
         search_type="nearest",
     )
+
     if res:
         final_res = (
             {"WISE_cat": res["body"]} if "body" in res.keys() else {"WISE_cat": {}}

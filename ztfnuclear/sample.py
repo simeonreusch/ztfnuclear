@@ -1326,7 +1326,7 @@ class Transient(object):
             query_tns,
             query_wise,
             query_wise_cat,
-            query_desi,
+            query_catwise,
         )
 
         results = self.meta.get("crossmatch", {})
@@ -1341,7 +1341,7 @@ class Transient(object):
             res_list.append(query_wise(ra_deg=self.ra, dec_deg=self.dec))
             res_list.append(query_tns(ra_deg=self.ra, dec_deg=self.dec))
             res_list.append(query_sarah_agn(ra_deg=self.ra, dec_deg=self.dec))
-            res_list.append(query_desi(ra_deg=self.ra, dec_deg=self.dec))
+            res_list.append(query_catwise(ra_deg=self.ra, dec_deg=self.dec))
 
         else:
             if "crts" in crossmatch_types:
@@ -1372,8 +1372,8 @@ class Transient(object):
             if "marshal" in crossmatch_types:
                 res_list.append(query_marshal(ztfid=self.ztfid))
 
-            if "desi" in crossmatch_types:
-                res_list.append(query_desi(ra_deg=self.ra, dec_deg=self.dec))
+            if "catwise2020" in crossmatch_types:
+                res_list.append(query_catwise(ra_deg=self.ra, dec_deg=self.dec))
 
             for res in res_list:
                 results.update(res)
