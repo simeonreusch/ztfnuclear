@@ -11,12 +11,13 @@ import warnings
 from pathlib import Path
 from typing import Any, List, Optional, Tuple, Union
 
-import astropy  # type: ignore
-import matplotlib
-import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
 import numpy.ma as ma
 import pandas as pd
+
+import astropy  # type: ignore
+import matplotlib
+import matplotlib.pyplot as plt  # type: ignore
 import seaborn as sns
 from astropy import constants as const  # type: ignore
 from astropy import units as u  # type: ignore
@@ -556,31 +557,39 @@ def plot_mag_hist_2x2(
         "nuclear_keepagn_xg": "Nuclear XGBoost - only AGN",
     }
 
-    cuts_noagn = copy.deepcopy(cuts)
-    cuts_keepagn = copy.deepcopy(cuts)
+    sample_nuc_full = get_tde_selection(
+        cuts=cuts, sampletype="nuclear", rerun=rerun, xgclass=False
+    )
+    sample_bts_full = get_tde_selection(
+        cuts=cuts, sampletype="bts", rerun=rerun, xgclass=False
+    )
+    sample_nuc_xg_full = get_tde_selection(
+        cuts=cuts, sampletype="nuclear", rerun=rerun, xgclass=True
+    )
 
-    cuts_noagn.append("milliquas_noagn")
-    cuts_noagn.append("wise_noagn")
-    cuts_keepagn.append("milliquas_keepagn")
-    cuts_keepagn.append("wise_keepagn")
+    nuc_wise_agn_ids = get_tde_selection(
+        cuts=["wise_keepagn"], sampletype="nuclear", rerun=rerun, xgclass=False
+    ).ztfid.values
+    nuc_milliquas_agn_ids = get_tde_selection(
+        cuts=["milliquas_keepagn"], sampletype="nuclear", rerun=rerun, xgclass=False
+    ).ztfid.values
+    bts_wise_agn_ids = get_tde_selection(
+        cuts=["wise_keepagn"], sampletype="bts", rerun=rerun, xgclass=False
+    ).ztfid.values
+    bts_milliquas_agn_ids = get_tde_selection(
+        cuts=["milliquas_keepagn"], sampletype="bts", rerun=rerun, xgclass=False
+    ).ztfid.values
 
-    sample_nuc_noagn = get_tde_selection(
-        cuts=cuts_noagn, sampletype="nuclear", rerun=rerun, xgclass=False
-    )
-    sample_nuc_keepagn = get_tde_selection(
-        cuts=cuts_keepagn, sampletype="nuclear", rerun=rerun, xgclass=False
-    )
-    sample_bts_noagn = get_tde_selection(cuts=cuts_noagn, sampletype="bts", rerun=rerun)
+    nuc_agn_ids = list(set(nuc_milliquas_agn_ids).union(set(nuc_wise_agn_ids)))
+    bts_agn_ids = list(set(bts_milliquas_agn_ids).union(set(bts_wise_agn_ids)))
 
-    sample_bts_keepagn = get_tde_selection(
-        cuts=cuts_keepagn, sampletype="bts", rerun=rerun
-    )
-    sample_nuc_noagn_xg = get_tde_selection(
-        cuts=cuts_noagn, sampletype="nuclear", rerun=rerun, xgclass=True
-    )
-    sample_nuc_keepagn_xg = get_tde_selection(
-        cuts=cuts_keepagn, sampletype="nuclear", rerun=rerun, xgclass=True
-    )
+    sample_nuc_keepagn = sample_nuc_full.query("ztfid in @nuc_agn_ids")
+    sample_nuc_noagn = sample_nuc_full.query("ztfid not in @nuc_agn_ids")
+
+    sample_nuc_keepagn_xg = sample_nuc_xg_full.query("ztfid in @nuc_agn_ids")
+    sample_nuc_noagn_xg = sample_nuc_xg_full.query("ztfid not in @nuc_agn_ids")
+    sample_bts_keepagn = sample_bts_full.query("ztfid in @bts_agn_ids")
+    sample_bts_noagn = sample_bts_full.query("ztfid not in @bts_agn_ids")
 
     sample_nuc_noagn["sample"] = "nuclear_noagn"
     sample_nuc_keepagn["sample"] = "nuclear_keepagn"
