@@ -151,33 +151,33 @@ class NuclearSample(object):
             db_check = self.meta.get_statistics()
 
         elif self.sampletype == "train":
-            if not db_check["has_salt"]:
-                saltfit_res = io.parse_ampel_json(
-                    filepath=os.path.join(io.LOCALSOURCE_train_fitres, "saltfit.json"),
-                    parameter_name="salt",
-                    sampletype=self.sampletype,
-                )
-                self.populate_db_from_dict(data=saltfit_res)
+            # if not db_check["has_salt"]:
+            #     saltfit_res = io.parse_ampel_json(
+            #         filepath=os.path.join(io.LOCALSOURCE_train_fitres, "saltfit.json"),
+            #         parameter_name="salt",
+            #         sampletype=self.sampletype,
+            #     )
+            #     self.populate_db_from_dict(data=saltfit_res)
 
-            if not db_check["has_tdefit_exp"]:
-                tdefit_path = os.path.join(
-                    io.LOCALSOURCE_train_fitres, "tde_fit_exp.json"
-                )
-                self.logger.info(f"Importing TDE fit results from {tdefit_path}")
-                self.meta.key_update_from_json(
-                    json_path=tdefit_path, mongo_key="tde_fit_exp"
-                )
+            # if not db_check["has_tdefit_exp"]:
+            #     tdefit_path = os.path.join(
+            #         io.LOCALSOURCE_train_fitres, "tde_fit_exp.json"
+            #     )
+            #     self.logger.info(f"Importing TDE fit results from {tdefit_path}")
+            #     self.meta.key_update_from_json(
+            #         json_path=tdefit_path, mongo_key="tde_fit_exp"
+            #     )
 
             if not db_check["has_crossmatch"]:
                 self.get_parent_crossmatch(sampletype=self.sampletype)
 
-            if not db_check["has_ztf_bayesian"]:
-                bayesian_res = io.parse_ampel_json(
-                    filepath=os.path.join(io.SRC_train, "ztf_bayesian.json"),
-                    parameter_name="ztf_bayesian",
-                    sampletype=self.sampletype,
-                )
-                self.populate_db_from_dict(data=bayesian_res)
+            # if not db_check["has_ztf_bayesian"]:
+            #     bayesian_res = io.parse_ampel_json(
+            #         filepath=os.path.join(io.SRC_train, "ztf_bayesian.json"),
+            #         parameter_name="ztf_bayesian",
+            #         sampletype=self.sampletype,
+            #     )
+            #     self.populate_db_from_dict(data=bayesian_res)
             if not db_check["has_distnr_scaled"]:
                 self.get_scaled_distnr(sampletype=self.sampletype)
 

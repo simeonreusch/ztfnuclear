@@ -278,7 +278,7 @@ def get_ztfid_dataframe(
         elif sampletype == "bts":
             filepath = Path(LOCALSOURCE_bts_dfs) / f"{ztfid}.csv"
         elif sampletype == "train":
-            filepath = PathLOCALSOURCE_train_dfs / f"{ztfid}.csv"
+            filepath = Path(LOCALSOURCE_train_dfs) / f"{ztfid}.csv"
         if filepath.is_file():
             df = pd.read_csv(filepath, comment="#")
             return df

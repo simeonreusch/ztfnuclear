@@ -10,10 +10,11 @@ import time
 import warnings
 from typing import Literal, Optional, Sequence, Union
 
-import astropy.cosmology as cosmo
-import backoff
 import numpy as np
 import pandas as pd
+
+import astropy.cosmology as cosmo
+import backoff
 import sncosmo  # type: ignore[import]
 from astropy import constants as c
 from astropy import units as u

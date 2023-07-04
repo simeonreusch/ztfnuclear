@@ -15,12 +15,18 @@ import matplotlib  # type: ignore
 from ztfnuclear.database import MetadataDB
 from ztfnuclear.sample import NuclearSample, Transient
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+logging.getLogger("ztfnuclear.baseline").setLevel(logging.WARN)
+logging.getLogger("ztfnuclear.crossmatch").setLevel(logging.DEBUG)
+logging.getLogger("ztfnuclear.sample").setLevel(logging.DEBUG)
+
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
-RECREATE_BASELINE = False
-DEBUG = True
-SINGLECORE = True
+RECREATE_BASELINE = True
+DEBUG = False
+SINGLECORE = False
 CORES = 16
 SAMPLE = "train"
 
@@ -83,12 +89,9 @@ if __name__ == "__main__":
             t = Transient(ztfid, sampletype=SAMPLE)
             if RECREATE_BASELINE:
                 t.recreate_baseline()
-            if FIT_TYPE == "tde_fit_exp":
-                t.fit_tde(debug=DEBUG)
-                if DEBUG:
-                    t.plot_tde(debug=DEBUG)
-            elif FIT_TYPE == "tde_fit_pl":
-                t.fit_tde(powerlaw=True, debug=DEBUG)
+            t.fit_tde(debug=DEBUG)
+            if DEBUG:
+                t.plot_tde(debug=DEBUG)
 
     else:
         with multiprocessing.Pool(nprocess) as p:

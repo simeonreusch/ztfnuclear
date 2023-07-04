@@ -10,7 +10,7 @@ import pandas as pd  # type: ignore
 from astropy.time import Time  # type: ignore
 from matplotlib import pyplot as plt  # type: ignore
 from scipy.stats import median_abs_deviation  # type: ignore
-from ztfnuclear import io
+from ztfnuclear import io, utils
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -114,8 +114,21 @@ def baseline(
     df = transient.df
     header = transient.header
 
-    if excl_poor_conditions:
+    if excl_poor_conditions and "pass" in df.keys():
         df = df[(df["pass"] == 1)]
+
+    if "ampl_corr" in df.keys():
+        df.rename(
+            columns={"ampl_corr": "ampl", "ampl_err_corr": "ampl.err"}, inplace=True
+        )
+
+    if "fieldid" not in df.keys():
+        df["fieldid"] = df["fid"]
+        df["ccdid"] = df["fid"]
+        df["qid"] = df["fid"]
+        df["filterid"] = df["fid"]
+        reference_days_before_peak = False
+        df["filter"] = df["fid"].apply(lambda x: utils.ztf_filterid_to_band(x))
 
     df["ampl_zp_scale"] = 10 ** ((pivot_zeropoint - df["magzp"]) / 2.5)
     df["ampl"] *= df["ampl_zp_scale"]
@@ -435,7 +448,8 @@ def baseline(
     elif transient.sampletype == "bts":
         outpath = Path(io.LOCALSOURCE_bts_baseline) / f"{transient.ztfid}_bl.csv"
 
-    io.to_csv(df=df, header=header, outpath=outpath)
+    if transient.sampletype in ["nuclear", "bts"]:
+        io.to_csv(df=df, header=header, outpath=outpath)
 
     return df, fcqfid_dict
 
