@@ -82,13 +82,9 @@ if __name__ == "__main__":
     else:
         ztfids = s.ztfids
 
-    ztfids = ["ZTF20acyxxfo"]
-
     if SINGLECORE:
         for ztfid in tqdm(ztfids):
             t = Transient(ztfid, sampletype=SAMPLE)
-            print(ztfid)
-            quit()
             if RECREATE_BASELINE:
                 t.recreate_baseline()
             if FIT_TYPE == "tde_fit_exp":
