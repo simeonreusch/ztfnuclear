@@ -18,7 +18,6 @@ from ztfnuclear.sample import NuclearSample, Transient
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
-FIT_TYPE = "tde_fit_exp"
 RECREATE_BASELINE = False
 DEBUG = True
 SINGLECORE = True
@@ -38,12 +37,9 @@ def _tde_fitter(ztfid):
     t = Transient(ztfid, sampletype=SAMPLE)
     if RECREATE_BASELINE:
         t.recreate_baseline()
-    if FIT_TYPE == "tde_fit_exp":
-        t.fit_tde(debug=DEBUG)
-        if DEBUG:
-            t.plot_tde(debug=DEBUG)
-    elif FIT_TYPE == "tde_fit_pl":
-        t.fit_tde(powerlaw=True, debug=DEBUG)
+    t.fit_tde(debug=DEBUG)
+    if DEBUG:
+        t.plot_tde(debug=DEBUG)
 
 
 if __name__ == "__main__":
@@ -57,9 +53,9 @@ if __name__ == "__main__":
     )
 
     if SINGLECORE:
-        logger.info(f"Running fits for {FIT_TYPE} in 1 thread.")
+        logger.info(f"Running TDE fits for in 1 thread.")
     else:
-        logger.info(f"Running fits for {FIT_TYPE} in {nprocess} threads.")
+        logger.info(f"Running TDE fits for in {nprocess} threads.")
 
     commandline_args = parser.parse_args()
     tde_only = commandline_args.tde

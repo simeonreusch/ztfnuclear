@@ -6,13 +6,14 @@ from typing import Any, Optional
 
 import numpy as np
 import pandas as pd  # type: ignore
+
 from astropy.time import Time  # type: ignore
 from matplotlib import pyplot as plt  # type: ignore
 from scipy.stats import median_abs_deviation  # type: ignore
+from ztfnuclear import io
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
-from ztfnuclear import io
 
 logger = logging.getLogger(__name__)
 
@@ -193,6 +194,9 @@ def baseline(
             t_peak_list.append(t_max)
         else:
             fcqfid_dict[str(ufid)]["det_sn"] = False
+            fcqfid_dict[str(ufid)]["t_max"] = t_max
+            fcqfid_dict[str(ufid)]["flux_max"] = flux_max
+            t_peak_list.append(t_max)
 
     """
     For all field/ccd/fid combination where we have determined a peak, we can now check if the reference image end date is comfortably prior to the peak and remove this combo if not

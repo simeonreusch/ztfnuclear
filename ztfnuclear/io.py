@@ -13,6 +13,7 @@ from typing import Dict, List, Optional
 import numpy as np
 import pandas as pd  # type: ignore
 import yaml
+
 from ztfnuclear import utils
 from ztfquery.io import LOCALSOURCE  # type: ignore
 from ztfquery.lightcurve import LCQuery  # type: ignore
@@ -278,9 +279,9 @@ def get_ztfid_dataframe(
             filepath = Path(LOCALSOURCE_bts_dfs) / f"{ztfid}.csv"
         elif sampletype == "train":
             filepath = PathLOCALSOURCE_train_dfs / f"{ztfid}.csv"
-
         if filepath.is_file():
             df = pd.read_csv(filepath, comment="#")
+            return df
         else:
             logger.warn(f"No file found for {ztfid}. Check the ID.")
             return None
