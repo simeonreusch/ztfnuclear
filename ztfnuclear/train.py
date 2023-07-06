@@ -10,19 +10,19 @@ import time
 from pathlib import Path
 from typing import List
 
+import joblib
 import numpy as np
 import pandas as pd
-from numpy.random import default_rng
-from tqdm import tqdm
-
-import joblib
 import xgboost as xgb
 from matplotlib import pyplot as plt
+from numpy.random import default_rng
 from sklearn import metrics
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import shuffle
+from tqdm import tqdm
+
 from ztfnuclear import io
 from ztfnuclear.plot import get_tde_selection
 from ztfnuclear.sample import NuclearSample
@@ -462,7 +462,7 @@ class Model(object):
         )
 
     def plot_confusion_matrix(
-        self, y_true: np.ndarray, y_pred: np.ndarray, normalize: bool = True
+        self, y_true: np.ndarray, y_pred: np.ndarray, normalize: str | None = "all"
     ):
         """
         Plot the confusion matrix
@@ -475,23 +475,22 @@ class Model(object):
 
         plt.figure(figsize=(5, 4))
 
-        if normalize:
-            norm = "true"
-            cmlabel = "Fraction of objects"
-            fmt = ".2f"
-        else:
-            norm = None
-            cmlabel = "Objects"
-            fmt = ".0f"
-
         cm = confusion_matrix(
-            y_true_pretty, y_pred_pretty, labels=labels, normalize=norm
+            y_true_pretty, y_pred_pretty, labels=labels, normalize=normalize
         )
 
-        if normalize:
+        if normalize == "all":
+            cmlabel = "Fraction of objects"
+            fmt = ".2f"
+            vmax = cm.max()
+        elif normalize in ["pred", "true"]:
+            cmlabel = "Fraction of objects"
+            fmt = ".2f"
             vmax = 1
         else:
             vmax = cm.max()
+            cmlabel = "Nr. of objects"
+            fmt = ".0f"
 
         im = plt.imshow(
             cm, interpolation="nearest", cmap=plt.cm.Blues, vmin=0, vmax=vmax
@@ -517,7 +516,7 @@ class Model(object):
         plt.xlabel("Predicted Type", fontsize=12)
 
         # Make a colorbar that is lined up with the plot
-        from mpl_toolkits.axes_grid1 import make_axes_locatable
+        from mpl_toolkits.axes_grid1 import make_axes_locatable  # type: ignore
 
         ax = plt.gca()
         divider = make_axes_locatable(ax)
@@ -527,7 +526,7 @@ class Model(object):
 
         outfile = (
             self.plot_dir
-            / f"results_seed_{self.seed}_n_iter_{self.n_iter}_noisified_val_{self.noisified_test}_normalized_{normalize}.pdf"
+            / f"results_seed_{self.seed}_n_iter_{self.n_iter}_noisified_val_{self.noisified_test}_normaliz_{normalize}.pdf"
         )
         plt.tight_layout()
         plt.savefig(outfile)

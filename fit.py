@@ -8,10 +8,10 @@ import multiprocessing
 import os
 import re
 
+import matplotlib  # type: ignore
 import pandas as pd  # type: ignore
 from tqdm import tqdm  # type: ignore
 
-import matplotlib  # type: ignore
 from ztfnuclear.database import MetadataDB
 from ztfnuclear.sample import NuclearSample, Transient
 
@@ -27,7 +27,7 @@ os.environ["OPENBLAS_NUM_THREADS"] = "1"
 RECREATE_BASELINE = True
 DEBUG = False
 SINGLECORE = False
-CORES = 16
+CORES = 32
 SAMPLE = "train"
 
 if not CORES:
@@ -101,10 +101,10 @@ if __name__ == "__main__":
             ):
                 a = 1
 
-        fitres = meta.read_parameters(["_id", FIT_TYPE])
-        outfile = f"{FIT_TYPE}.json"
+        fitres = meta.read_parameters(["_id", "tde_fit_exp"])
+        outfile = "tde_fit_exp.json"
 
-        logger.info(f"Fitting for {FIT_TYPE} done, exporting result to {outfile}")
+        logger.info(f"Fitting for TDE fit done, exporting result to {outfile}")
 
         with open(outfile, "w") as fp:
             json.dump(fitres, fp)

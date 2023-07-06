@@ -37,6 +37,8 @@ m = Model(
     grid_search_sample_size=2000,
 )
 # m.train()
-m.evaluate(normalize=True)
-m.evaluate(normalize=False)
+m.evaluate(normalize=None)
+m.evaluate(normalize="all")
+m.evaluate(normalize="pred")
+m.evaluate(normalize="true")
 # m.classify()
