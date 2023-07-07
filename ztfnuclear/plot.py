@@ -465,14 +465,21 @@ def plot_mag_hist(cuts: list | None = None, logplot=True, plot_ext="pdf", rerun=
         colors_used = []
         classifs_used = []
         sample_title = sample_ax[ax]
+        n_per_class = []
 
         for c in classifs:
             df = combined.query(f"classif == @c and sample == @sample_title")
             if len(df) > 0:
+                n_per_class.append(len(df))
                 peak_mags.append(df["peak_mag"].values)
                 colors_used.append(config["colordict"][c])
                 classname_long = config["classlabels"][c]
                 classifs_used.append(classname_long + f" ({len(df)})")
+
+        isort = np.argsort(n_per_class)
+        colors_used[:] = [colors_used[i] for i in isort]
+        peak_mags[:] = [peak_mags[i] for i in isort]
+        classifs_used[:] = [classifs_used[i] for i in isort]
 
         ax.hist(
             peak_mags,
@@ -663,13 +670,11 @@ def plot_mag_hist_2x2(
                 classname_long = config["classlabels"][c]
                 classifs_used.append(classname_long + f" ({len(df)})")
 
-        # print(n_per_class)
         isort = np.argsort(n_per_class)
         colors_used[:] = [colors_used[i] for i in isort]
-        # classname_long[:] = [classname_long[i] for i in isort]
         peak_mags[:] = [peak_mags[i] for i in isort]
         classifs_used[:] = [classifs_used[i] for i in isort]
-        # quit()
+
         if len(colors_used) == 0:
             colors_used = None
 
