@@ -10,6 +10,7 @@ import matplotlib  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
 from tqdm import tqdm  # type: ignore
+
 from ztfnuclear.plot import (
     get_tde_selection,
     plot_confusion,
@@ -189,20 +190,20 @@ if __name__ == "__main__":
             norm=None,
             plot_misclass=True,
         )
-        plot_confusion(
-            cuts=["nocut"],
-            plot_ext=cl.ext,
-            rerun=cl.rerun,
-            norm="true",
-            plot_misclass=False,
-        )
-        plot_confusion(
-            cuts=["nocut"],
-            plot_ext=cl.ext,
-            rerun=cl.rerun,
-            norm="pred",
-            plot_misclass=False,
-        )
+        # plot_confusion(
+        #     cuts=["nocut"],
+        #     plot_ext=cl.ext,
+        #     rerun=cl.rerun,
+        #     norm="true",
+        #     plot_misclass=False,
+        # )
+        # plot_confusion(
+        #     cuts=["nocut"],
+        #     plot_ext=cl.ext,
+        #     rerun=cl.rerun,
+        #     norm="pred",
+        #     plot_misclass=False,
+        # )
 
     if cl.type in ["dist", "sgscore"]:
         iterate_classes(plottype=cl.type, plot_ext=cl.ext)

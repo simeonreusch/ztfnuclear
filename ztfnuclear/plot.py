@@ -11,19 +11,19 @@ import warnings
 from pathlib import Path
 from typing import Any, List, Optional, Tuple, Union
 
-import numpy as np
-import numpy.ma as ma
-import pandas as pd
-
 import astropy  # type: ignore
 import matplotlib
 import matplotlib.pyplot as plt  # type: ignore
-import seaborn as sns
+import numpy as np
+import numpy.ma as ma
+import pandas as pd
 from astropy import constants as const  # type: ignore
 from astropy import units as u  # type: ignore
 from astropy.coordinates import Angle  # type: ignore
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import LabelEncoder
+
+import seaborn as sns
 from ztfnuclear import io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.wise import is_in_wise_agn_box
@@ -652,14 +652,24 @@ def plot_mag_hist_2x2(
         else:
             classif_key = "classif"
 
+        n_per_class = []
+
         for c in classifs:
             df = combined.query(f"{classif_key} == @c and sample == @sample_title")
             if len(df) > 0:
+                n_per_class.append(len(df))
                 peak_mags.append(df["peak_mag"].values)
                 colors_used.append(config["colordict"][c])
                 classname_long = config["classlabels"][c]
                 classifs_used.append(classname_long + f" ({len(df)})")
 
+        # print(n_per_class)
+        isort = np.argsort(n_per_class)
+        colors_used[:] = [colors_used[i] for i in isort]
+        # classname_long[:] = [classname_long[i] for i in isort]
+        peak_mags[:] = [peak_mags[i] for i in isort]
+        classifs_used[:] = [classifs_used[i] for i in isort]
+        # quit()
         if len(colors_used) == 0:
             colors_used = None
 
@@ -740,9 +750,30 @@ def plot_confusion(
 
         outdir.mkdir(parents=True, exist_ok=True)
 
-        sample_nuc = get_tde_selection(
-            cuts=cuts, sampletype="nuclear", rerun=rerun, xgclass=True
-        )
+        if cuts != ["milliquas_noagn", "wise_noagn"]:
+            sample_nuc = get_tde_selection(
+                cuts=cuts, sampletype="nuclear", rerun=rerun, xgclass=True
+            )
+
+        else:
+            sample_nuc_full = get_tde_selection(
+                cuts=["nocut"], sampletype="nuclear", rerun=rerun, xgclass=True
+            )
+            nuc_wise_agn_ids = get_tde_selection(
+                cuts=["wise_keepagn"], sampletype="nuclear", rerun=rerun, xgclass=True
+            ).ztfid.values
+
+            nuc_milliquas_agn_ids = get_tde_selection(
+                cuts=["milliquas_keepagn"],
+                sampletype="nuclear",
+                rerun=rerun,
+                xgclass=False,
+            ).ztfid.values
+
+            nuc_agn_ids = list(set(nuc_milliquas_agn_ids).union(set(nuc_wise_agn_ids)))
+
+            sample_nuc = sample_nuc_full.query("ztfid not in @nuc_agn_ids")
+
         sample_nuc["peak_mag"] = [
             k if not np.isnan(k) else sample_nuc.peak_mags_r.values[i]
             for i, k in enumerate(sample_nuc.peak_mags_g.values)
