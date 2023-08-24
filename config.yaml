@@ -317,7 +317,7 @@ pl_props:
       order: 2
     sn_other:
       m: s
-      s: 8
+      s: 4
       c: orange
       a: 1
       l: SN (no Ia)
@@ -338,7 +338,7 @@ pl_props:
       order: 101
     other:
       m: .
-      s: 8
+      s: 10
       c: brown
       a: 1
       l: Other
@@ -447,3 +447,24 @@ classify_params:
   - peak_mags_g
   - peak_mags_r
   - peak_mags_i
+
+scatterplot_label_order:
+  - tde
+  - snia
+  - sn_other
+  - agn
+  - star
+  - unclass
+
+scatterplot_numbers:
+  nocut: 1a
+  milliquas_noagn: 1b
+  wise_noagn: 2a
+  coredist: 2b
+  sgscore: 3a
+  snia: 3b
+  temp: 4a
+  risedecay: 4b
+  chisq: 5a
+  bayes: 5b
+

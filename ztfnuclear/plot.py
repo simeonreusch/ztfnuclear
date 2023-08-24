@@ -258,8 +258,10 @@ def plot_tde_scatter(
     sampletype: str = "nuclear",
     xlim: tuple | None = None,
     ylim: tuple | None = None,
-    purity_sel: str | None = None,
+    total_number: int | None = None,
+    tde_number: int | None = None,
     plot_ext: str = "pdf",
+    outfolder: str | Path | None = None,
     rerun: bool = False,
 ):
     """
@@ -268,53 +270,74 @@ def plot_tde_scatter(
     info_db = SampleInfo(sampletype=sampletype)
 
     sample = get_tde_selection(
-        cuts=cuts, sampletype=sampletype, purity_sel=purity_sel, rerun=rerun
+        cuts=cuts, sampletype=sampletype, purity_sel=None, rerun=rerun
     )
 
-    fig, ax = plt.subplots(figsize=(7, 7 / GOLDEN_RATIO), dpi=300)
+    fig, ax = plt.subplots(figsize=(5, 4.5), dpi=300)
 
-    title = f"Nuclear sample: {len(sample)}\n"
-    title += f"cut stage: {config['cutlabels'][cuts[-1]]} "
+    sampletitle = {"nuclear": "Nuclear sample", "bts": "BTS sample"}
+
+    title = f"{sampletitle[sampletype]}: {len(sample)} surviving cut\n"
+    title += f"Cut added: {config['cutlabels'][cuts[-1]]} "
     fig.suptitle(title, fontsize=14)
 
-    if purity_sel is not None and stats is not None:
-        title += f"\nPurity: {stats['frac_pur']:.1f}% / Efficiency: {stats['frac_eff']:.1f} %"
+    # if purity_sel is not None and stats is not None:
+    # title += f"\nPurity: {stats['frac_pur']:.1f}% / Efficiency: {stats['frac_eff']:.1f} %"
+
+    if tde_number is not None:
+        tde_number_cut = len(sample.query("classif == 'tde'"))
+        efficiency = tde_number_cut / tde_number * 100
+        purity = tde_number_cut / len(sample) * 100
+        title += f"\nPurity: {purity:.1f} \% / Efficiency: {efficiency:.1f} \%"
 
     fig.suptitle(
         title,
-        fontsize=14,
+        fontsize=12,
     )
 
-    for key in sample.classif.unique():
-        _df = sample.query("classif == @key")
-        ax.scatter(
-            _df[x_values],
-            _df[y_values],
-            marker=config["pl_props"][key]["m"],
-            s=config["pl_props"][key]["s"],
-            c=config["colordict_highlight"][key],
-            # alpha=config["pl_props"][key]["a"],
-            label=config["pl_props"][key]["l"] + f" ({len(_df[x_values])})",
-            zorder=config["pl_props"][key]["order"],
-        )
+    for key in config["scatterplot_label_order"]:
+        if key in sample.classif.unique():
+            _df = sample.query("classif == @key")
+            ax.scatter(
+                _df[x_values],
+                _df[y_values],
+                marker=config["pl_props"][key]["m"],
+                s=config["pl_props"][key]["s"],
+                c=config["colordict_highlight"][key],
+                # alpha=config["pl_props"][key]["a"],
+                label=config["pl_props"][key]["l"] + f" ({len(_df[x_values])})",
+                zorder=config["pl_props"][key]["order"],
+            )
 
     plt.legend(title="Fritz classification", loc="lower right")
 
-    ax.set_xlabel(config["axislabels"][x_values])
-    ax.set_ylabel(config["axislabels"][y_values])
+    ax.set_xlabel(config["axislabels"][x_values], fontsize=12)
+    ax.set_ylabel(config["axislabels"][y_values], fontsize=12)
+
+    ax.annotate(
+        config["scatterplot_numbers"][cuts[-1]],
+        (2.72, 3.55),
+        fontsize=14,
+        bbox=dict(boxstyle="circle", fc="w", ec="k"),
+        zorder=1e10,
+    )
 
     if sampletype == "nuclear":
-        local = io.LOCALSOURCE_plots
+        if outfolder is None:
+            local = Path(io.LOCALSOURCE_plots)
+        else:
+            local = Path(outfolder)
     elif sampletype == "bts":
-        local = io.LOCALSOURCE_bts_plots
+        if outfolder is None:
+            local = Path(io.LOCALSOURCE_bts_plots)
+        else:
+            local = Path(outfolder)
 
     if flaring_only:
-        outfile = os.path.join(
-            local, f"tde_{x_values}_{y_values}_flaring_{cuts}.{plot_ext}"
-        )
+        outfile = local / f"tde_{x_values}_{y_values}_flaring_{cuts}.{plot_ext}"
 
     else:
-        outfile = os.path.join(local, f"tde_{x_values}_{y_values}_{cuts}.{plot_ext}")
+        outfile = local / f"tde_{x_values}_{y_values}_{cuts}.{plot_ext}"
 
     if xlim is not None:
         ax.set_xlim(xlim)

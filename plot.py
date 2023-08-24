@@ -4,6 +4,7 @@
 import argparse
 import logging
 import os
+from pathlib import Path
 from typing import List, Tuple
 
 import matplotlib  # type: ignore
@@ -41,6 +42,7 @@ def aggregate_cuts(
     plotrange: List[float] | None = None,
     plot_ext: str = "pdf",
     rerun: bool = False,
+    outfolder: str | Path | None = None,
 ):
     if cuts is None:
         cuts_to_use = [
@@ -63,6 +65,11 @@ def aggregate_cuts(
     for cut in cuts_to_use:
         cuts_now.append(cut)
         if plottype == "scatter":
+            if sampletype == "bts":
+                tde_number = 18
+            else:
+                tde_number = None
+
             plot_tde_scatter(
                 sampletype=sampletype,
                 cuts=cuts_now,
@@ -71,6 +78,8 @@ def aggregate_cuts(
                 xlim=xlim,
                 ylim=ylim,
                 rerun=rerun,
+                tde_number=tde_number,
+                outfolder=outfolder,
             )
         if plottype == "mag":
             plot_mag_hist(cuts=cuts_now, logplot=True, plot_ext=plot_ext, rerun=rerun)
@@ -149,6 +158,7 @@ def plot_single(name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot the ZTF nuclear sample")
+
     parser.add_argument(
         "-type",
         "-t",
@@ -156,6 +166,7 @@ if __name__ == "__main__":
         default="mag",
         help="Choose the plot type",
     )
+
     parser.add_argument(
         "-ext",
         "-e",
@@ -163,12 +174,31 @@ if __name__ == "__main__":
         default="pdf",
         help="Choose the plot file extension",
     )
+
     parser.add_argument("-rerun", "-r", action="store_true", help="Rerun cut ingestion")
+
+    parser.add_argument(
+        "-sample",
+        "-s",
+        type=str,
+        default="nuclear",
+        help="Choose the sample type",
+    )
+
+    parser.add_argument(
+        "-out",
+        "-o",
+        type=str,
+        default=None,
+        help="Choose a plot directory",
+    )
+
     cl = parser.parse_args()
 
     if cl.type in ["mag", "mag2x2", "mag2x2xg", "scatter"]:
         aggregate_cuts(
             rerun=cl.rerun,
+            sampletype=cl.sample,
             plottype=cl.type,
             plot_ext=cl.ext,
             cuts=[
@@ -183,6 +213,7 @@ if __name__ == "__main__":
                 "chisq",
                 "bayes",
             ],
+            outfolder=cl.out,
         )
     if cl.type in ["confusion"]:
         plot_confusion(
