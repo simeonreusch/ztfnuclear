@@ -17,13 +17,12 @@ import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
 import numpy.ma as ma
 import pandas as pd
+import seaborn as sns
 from astropy import constants as const  # type: ignore
 from astropy import units as u  # type: ignore
 from astropy.coordinates import Angle  # type: ignore
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import LabelEncoder
-
-import seaborn as sns
 from ztfnuclear import io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.wise import is_in_wise_agn_box

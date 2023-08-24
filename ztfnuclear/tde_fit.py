@@ -10,11 +10,10 @@ import time
 import warnings
 from typing import Literal, Optional, Sequence, Union
 
-import numpy as np
-import pandas as pd
-
 import astropy.cosmology as cosmo
 import backoff
+import numpy as np
+import pandas as pd
 import sncosmo  # type: ignore[import]
 from astropy import constants as c
 from astropy import units as u
@@ -768,9 +767,9 @@ def fit(
             if not os.path.exists(outpath):
                 os.makedirs(outpath)
             if powerlaw:
-                fig.savefig(os.path.join(outpath, f"{ztfid}_pl.png"))
+                fig.savefig(os.path.join(outpath, f"{ztfid}_pl.pdf"))
             else:
-                fig.savefig(os.path.join(outpath, f"{ztfid}_exp.png"))
+                fig.savefig(os.path.join(outpath, f"{ztfid}_exp.pdf"))
 
         result["parameters"] = result["parameters"].tolist()
 
@@ -898,9 +897,9 @@ def fit(
                 )
                 outpath = "/Users/simeon/Desktop/flextemp_test/diagnostic"
                 if powerlaw:
-                    fig.savefig(os.path.join(outpath, f"{ztfid}_pl_flextemp.png"))
+                    fig.savefig(os.path.join(outpath, f"{ztfid}_pl_flextemp.pdf"))
                 else:
-                    fig.savefig(os.path.join(outpath, f"{ztfid}_exp_flextemp.png"))
+                    fig.savefig(os.path.join(outpath, f"{ztfid}_exp_flextemp.pdf"))
 
                 print(result)
 

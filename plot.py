@@ -10,7 +10,6 @@ import matplotlib  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
 from tqdm import tqdm  # type: ignore
-
 from ztfnuclear.plot import (
     get_tde_selection,
     plot_confusion,
@@ -71,6 +70,7 @@ def aggregate_cuts(
                 y_values=yval,
                 xlim=xlim,
                 ylim=ylim,
+                rerun=rerun,
             )
         if plottype == "mag":
             plot_mag_hist(cuts=cuts_now, logplot=True, plot_ext=plot_ext, rerun=rerun)
@@ -151,7 +151,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot the ZTF nuclear sample")
     parser.add_argument(
         "-type",
-        "-rd",
+        "-t",
         type=str,
         default="mag",
         help="Choose the plot type",
@@ -173,6 +173,8 @@ if __name__ == "__main__":
             plot_ext=cl.ext,
             cuts=[
                 "nocut",
+                "milliquas_noagn",
+                "wise_noagn",
                 "coredist",
                 "sgscore",
                 "snia",

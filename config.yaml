@@ -343,13 +343,20 @@ pl_props:
       a: 1
       l: Other
       order: 3
-    agn_star:
+    agn:
       m: h
       s: 8
       c: black
       a: 1
-      l: AGN/Star
+      l: AGN
       order: 4
+    star:
+      m: .
+      s: 8
+      c: brown
+      a: 1
+      l: Other
+      order: 5
 
 train_params:
   - RA
