@@ -302,6 +302,8 @@ def plot_tde_scatter(
     """
     info_db = SampleInfo(sampletype=sampletype)
 
+    # cuts = ["nocut", cuts[-1]]
+
     sample = get_tde_selection(
         cuts=cuts, sampletype=sampletype, purity_sel=None, rerun=rerun
     )
@@ -325,9 +327,6 @@ def plot_tde_scatter(
     title = f"{sampletitle[sampletype]}: {len(sample)} surviving cut\n"
     title += f"Cut added: {config['cutlabels'][cuts[-1]]} "
     fig.suptitle(title, fontsize=14)
-
-    # if purity_sel is not None and stats is not None:
-    # title += f"\nPurity: {stats['frac_pur']:.1f}% / Efficiency: {stats['frac_eff']:.1f} %"
 
     if tde_number is not None:
         tde_number_cut = len(sample.query("classif == 'tde'"))
