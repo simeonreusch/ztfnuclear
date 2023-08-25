@@ -23,6 +23,7 @@ from astropy import units as u  # type: ignore
 from astropy.coordinates import Angle  # type: ignore
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import LabelEncoder
+
 from ztfnuclear import io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.wise import is_in_wise_agn_box
@@ -80,6 +81,12 @@ def get_tde_selection(
     elif sampletype == "bts":
         salt_key = "salt"
         class_key = "type"
+    elif sampletype == "train":
+        salt_key = "salt"
+        class_key = "type"
+    if sampletype == "moretde":
+        salt_key = "salt_loose_bl"
+        class_key = "fritz_class"
 
     if cuts is None:
         cuts = ["nocut"]
@@ -101,7 +108,10 @@ def get_tde_selection(
                 ztfids_surviving.update({name: cutres})
 
     if len(cuts_to_do) > 0:
-        s = NuclearSample(sampletype=sampletype)
+        if sampletype != "moretde":
+            s = NuclearSample(sampletype=sampletype)
+        else:
+            s = NuclearSample(sampletype="nuclear")
         params = [
             "tde_fit_exp",
             "_id",
@@ -119,7 +129,7 @@ def get_tde_selection(
 
         # cut everything flagged as bogus
         if reject_bogus:
-            if sampletype == "nuclear":
+            if sampletype in ["nuclear", "moretde"]:
                 sample.query(config["selections"]["bogus"], inplace=True)
             elif sampletype == "bts":
                 sample.query(config["selections"]["bogusbts"], inplace=True)
@@ -130,6 +140,10 @@ def get_tde_selection(
                 class_key = "fritz_class"
             elif sampletype == "bts":
                 class_key = "type"
+            elif sampletype == "train":
+                class_key = "type"
+            elif sampletype == "moretde":
+                class_key = "fritz_class"
 
             if "crossmatch_bts_class" in row.keys():
                 bts_crossmatch = row["crossmatch_bts_class"]
@@ -190,7 +204,20 @@ def get_tde_selection(
             lambda row: simple_class(row, sampletype, purity_sel), axis=1
         )
         sample.query("classif != 'other'", inplace=True)
-        s.populate_db_from_df(sample[["classif"]])
+
+        if sampletype == "moretde":
+            sample.query("classif == 'tde'", inplace=True)
+
+        if sampletype == "train":
+            index = list(sample.query("classif == 'tde'").index)
+            parent_ids = []
+            for entry in index:
+                if len(entry.split("_")) < 2:
+                    parent_ids.append(entry)
+            sample.query("index in @parent_ids", inplace=True)
+
+        if sampletype not in ["train", "moretde"]:
+            s.populate_db_from_df(sample[["classif"]])
 
         n_tot = len(sample)
         n_nofit = len(sample.query("success.isnull()"))
@@ -209,6 +236,7 @@ def get_tde_selection(
             ),
             axis=1,
         )
+
         s.populate_db_from_df(sample[["snia_cut"]])
 
         # Now we cut!
@@ -241,7 +269,12 @@ def get_tde_selection(
 
     if xgclass:
         params.append("xgclass")
-    sample = NuclearSample(sampletype=sampletype).meta.get_dataframe(
+
+    if sampletype == "moretde":
+        st = "nuclear"
+    else:
+        st = sampletype
+    sample = NuclearSample(sampletype=st).meta.get_dataframe(
         params=params,
         ztfids=surviving,
     )
@@ -273,6 +306,18 @@ def plot_tde_scatter(
         cuts=cuts, sampletype=sampletype, purity_sel=None, rerun=rerun
     )
 
+    if sampletype == "bts":
+        more_tdes = get_tde_selection(
+            cuts=cuts, sampletype="moretde", purity_sel=None, rerun=rerun
+        )
+
+        sample_tde = list(sample.query("classif == 'tde'").index)
+
+        more_tdes.query("index not in @sample_tde", inplace=True)
+        more_tdes["classif"] = "tde"
+
+        sample = pd.concat([sample, more_tdes])
+
     fig, ax = plt.subplots(figsize=(5, 4.5), dpi=300)
 
     sampletitle = {"nuclear": "Nuclear sample", "bts": "BTS sample"}
@@ -289,6 +334,10 @@ def plot_tde_scatter(
         efficiency = tde_number_cut / tde_number * 100
         purity = tde_number_cut / len(sample) * 100
         title += f"\nPurity: {purity:.1f} \% / Efficiency: {efficiency:.1f} \%"
+        print([cuts[-1]])
+        print(purity)
+        print(efficiency)
+        print("--------")
 
     fig.suptitle(
         title,
@@ -309,7 +358,7 @@ def plot_tde_scatter(
                 zorder=config["pl_props"][key]["order"],
             )
 
-    plt.legend(title="Fritz classification", loc="lower right")
+    plt.legend(title="Classification", loc="lower right")
 
     ax.set_xlabel(config["axislabels"][x_values], fontsize=12)
     ax.set_ylabel(config["axislabels"][y_values], fontsize=12)

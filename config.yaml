@@ -145,12 +145,12 @@ cutlabels:
 
 classlabels:
   all: All classifications
-  snia: SN Ia
-  sn_ia: SN Ia
-  tde: TDE
+  snia: SNe Ia
+  sn_ia: SNe Ia
+  tde: TDEs
   agn: AGN
-  star: Star
-  sn_other: SN ($\neq$Ia)
+  star: Stars
+  sn_other: SNe ($\neq$Ia)
   unclass: Unclass.
   other: Other
 
@@ -313,21 +313,21 @@ pl_props:
       s: 8
       c: green
       a: 1
-      l: SN Ia
+      l: SNe Ia
       order: 2
     sn_other:
       m: s
       s: 4
       c: orange
       a: 1
-      l: SN (no Ia)
+      l: SNe (not Ia)
       order: 3
     tde:
       m: '*'
       s: 30
       c: red
       a: 1
-      l: TDE
+      l: TDEs
       order: 100
     gold:
       m: 'X'

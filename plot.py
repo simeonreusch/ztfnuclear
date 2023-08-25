@@ -11,6 +11,7 @@ import matplotlib  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
 from tqdm import tqdm  # type: ignore
+
 from ztfnuclear.plot import (
     get_tde_selection,
     plot_confusion,
@@ -66,7 +67,7 @@ def aggregate_cuts(
         cuts_now.append(cut)
         if plottype == "scatter":
             if sampletype == "bts":
-                tde_number = 18
+                tde_number = 64
             else:
                 tde_number = None
 
