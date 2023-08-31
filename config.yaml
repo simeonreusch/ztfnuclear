@@ -134,7 +134,7 @@ cutlabels:
   wise_noagn: remove AGN (based on WISE colors)
   wise_keepagn: retain only AGN (based on WISE colors)
   bayes: "exactly 1 flare"
-  nocut: "no cuts applied (only bogus veto and TDE fit success)"
+  nocut: "no cuts applied"
   snia: "rise/decay based Ia cut"
   chisq: "chisq. cut (TDE $<$ SALT)"
   risedecay: "TDE-fit rise and decay time"
@@ -467,4 +467,26 @@ scatterplot_numbers:
   risedecay: 4b
   chisq: 5a
   bayes: 5b
+
+feature_importance:
+  tde_fit_exp_chisq: TDE $\chi^2$
+  tde_fit_exp_ndof: TDE ndof
+  rise: Rise time
+  decay: Decay time
+  temp: Temperature
+  d_temp: Temperature change
+  tde_fit_exp_paramdict_amplitude: TDE amplitude
+  tde_fit_exp_paramdict_mwebv: Milky Way dust ext.
+  overlapping_regions: Number of flares
+  distnr: Core distance
+  crossmatch_sgscore_sgscore: sgscore
+  salt_chisq: SALT2 $\chi^2$
+  salt_ndof: SALT2 ndof
+  salt_paramdict_x0: SALT2 $x_0$
+  salt_paramdict_x1: SALT2 $x_1$
+  salt_paramdict_c: SALT2 $c$ 
+  salt_red_chisq: SALT2 $\chi^2$/ndof
+  wise_w1w2: WISE W1-W2
+  wise_w2w3: WISE W2-W3
+  peakmag: Peak magnitude
 

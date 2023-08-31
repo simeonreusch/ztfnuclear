@@ -22,7 +22,6 @@ from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import shuffle
 from tqdm import tqdm
-
 from ztfnuclear import io
 from ztfnuclear.plot import get_tde_selection
 from ztfnuclear.sample import NuclearSample
@@ -479,34 +478,50 @@ class Model(object):
             y_true_pretty, y_pred_pretty, labels=labels, normalize=normalize
         )
 
+        if normalize in ["pred", "true", "all"]:
+            cm = cm * 100
+
         if normalize == "all":
-            cmlabel = "Fraction of objects"
-            fmt = ".2f"
+            cmlabel = "Percentage of all objects"
+            fmt = ".0f"
             vmax = cm.max()
-        elif normalize in ["pred", "true"]:
-            cmlabel = "Fraction of objects"
-            fmt = ".2f"
-            vmax = 1
+            title = "Total percentage"
+        elif normalize in ["pred"]:
+            cmlabel = "Percentage of predicted objects"
+            fmt = ".0f"
+            vmax = 100
+            title = "Prediction-normalized"
+        elif normalize in ["true"]:
+            cmlabel = "Percentage of true objects"
+            fmt = ".0f"
+            vmax = 100
+            title = "Truth-normalized"
         else:
             vmax = cm.max()
-            cmlabel = "Nr. of objects"
+            cmlabel = "Number of objects"
             fmt = ".0f"
+            title = "Total numbers"
 
         im = plt.imshow(
-            cm, interpolation="nearest", cmap=plt.cm.Blues, vmin=0, vmax=vmax
+            cm, interpolation="nearest", cmap=plt.cm.Purples, vmin=0, vmax=vmax
         )
 
         tick_marks = np.arange(len(labels))
         plt.xticks(tick_marks, labels_pretty, ha="center")
         plt.yticks(tick_marks, labels_pretty)
+        plt.title(title, fontsize=14)
 
         thresh = cm.max() / 2.0
 
         for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+            if normalize in ["all", "pred", "true"]:
+                textstr = format(cm[i, j], fmt) + "\%"
+            else:
+                textstr = format(cm[i, j], fmt)
             plt.text(
                 j,
                 i,
-                format(cm[i, j], fmt),
+                textstr,
                 ha="center",
                 va="center",
                 color="white" if cm[i, j] > thresh else "black",
@@ -536,12 +551,16 @@ class Model(object):
         """
         Plot the features in their importance for the classification decision
         """
-        fig, ax = plt.subplots(figsize=(10, 21))
+        fig, ax = plt.subplots(figsize=(5, 4))
 
         cols = list(self.X_train.keys())
 
-        ax.barh(cols, self.best_estimator.feature_importances_)
-        plt.title("Feature importance", fontsize=25)
+        cols_pretty = [rf"{self.config['feature_importance'][col]}" for col in cols]
+
+        print(cols_pretty)
+
+        ax.barh(cols_pretty, self.best_estimator.feature_importances_, color="#ec008c")
+
         plt.tight_layout()
 
         outfile = (

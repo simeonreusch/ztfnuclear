@@ -17,7 +17,6 @@ from healpy import ang2pix  # type: ignore
 from pymongo import GEOSPHERE, MongoClient, UpdateOne
 from pymongo.database import Database
 from tqdm import tqdm  # type: ignore
-
 from ztfnuclear import io
 
 logging.getLogger("extcats.CatalogQuery").setLevel(logging.WARN)
