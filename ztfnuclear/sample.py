@@ -150,33 +150,33 @@ class NuclearSample(object):
             db_check = self.meta.get_statistics()
 
         elif self.sampletype == "train":
-            if not db_check["has_salt"]:
-                saltfit_res = io.parse_ampel_json(
-                    filepath=os.path.join(io.LOCALSOURCE_train_fitres, "saltfit.json"),
-                    parameter_name="salt",
-                    sampletype=self.sampletype,
-                )
-                self.populate_db_from_dict(data=saltfit_res)
+            # if not db_check["has_salt"]:
+            #     saltfit_res = io.parse_ampel_json(
+            #         filepath=os.path.join(io.LOCALSOURCE_train_fitres, "saltfit.json"),
+            #         parameter_name="salt",
+            #         sampletype=self.sampletype,
+            #     )
+            #     self.populate_db_from_dict(data=saltfit_res)
 
-            if not db_check["has_tdefit_exp"]:
-                tdefit_path = os.path.join(
-                    io.LOCALSOURCE_train_fitres, "tde_fit_exp.json"
-                )
-                self.logger.info(f"Importing TDE fit results from {tdefit_path}")
-                self.meta.key_update_from_json(
-                    json_path=tdefit_path, mongo_key="tde_fit_exp"
-                )
+            # if not db_check["has_tdefit_exp"]:
+            #     tdefit_path = os.path.join(
+            #         io.LOCALSOURCE_train_fitres, "tde_fit_exp.json"
+            #     )
+            #     self.logger.info(f"Importing TDE fit results from {tdefit_path}")
+            #     self.meta.key_update_from_json(
+            #         json_path=tdefit_path, mongo_key="tde_fit_exp"
+            #     )
 
-            if not db_check["has_crossmatch"]:
-                self.get_parent_crossmatch(sampletype=self.sampletype)
+            # if not db_check["has_crossmatch"]:
+            #     self.get_parent_crossmatch(sampletype=self.sampletype)
 
-            if not db_check["has_ztf_bayesian"]:
-                bayesian_res = io.parse_ampel_json(
-                    filepath=os.path.join(io.SRC_train, "ztf_bayesian.json"),
-                    parameter_name="ztf_bayesian",
-                    sampletype=self.sampletype,
-                )
-                self.populate_db_from_dict(data=bayesian_res)
+            # if not db_check["has_ztf_bayesian"]:
+            #     bayesian_res = io.parse_ampel_json(
+            #         filepath=os.path.join(io.SRC_train, "ztf_bayesian.json"),
+            #         parameter_name="ztf_bayesian",
+            #         sampletype=self.sampletype,
+            #     )
+            #     self.populate_db_from_dict(data=bayesian_res)
 
             if not db_check["has_distnr_scaled"]:
                 self.get_scaled_distnr(sampletype=self.sampletype)
@@ -204,7 +204,11 @@ class NuclearSample(object):
         assert self.sampletype == "train"
 
         for t in self.get_transients():
-            distnr = float(t.meta["median_distnr"])
+            median_distnr = t.meta.get("median_distnr")
+            if median_distnr is not None:
+                distnr = float(median_distnr)
+            else:
+                distnr = float(t.meta["distnr"])
             if len(t.ztfid.split("_")) > 1:
                 distnr_deg = distnr / 3600 * u.deg
                 z = float(t.meta["z"])
@@ -237,7 +241,27 @@ class NuclearSample(object):
         assert self.sampletype == "train"
 
         for t in self.get_transients():
-            peakmag_parent = float(t.meta["bts_peak_mag"])
+            peakmag_try = t.meta.get("bts_peak_mag")
+            if peakmag_try is not None:
+                peakmag_parent = float(peakmag_try)
+            else:
+                peakjd = float(t.meta.get("bts_peak_jd"))
+                peak_mjd = peakjd - 2400000.5
+                parent_ztfid = t.meta["parent_ztfid"]
+
+                parent = Transient(ztfid=parent_ztfid, sampletype="train")
+                parentdf = parent.df.query("band == 'ztfg'")
+                if len(parentdf) == 0:
+                    parentdf = parent.df.query("band == 'ztfr'")
+                if len(parentdf) == 0:
+                    parentdf = parent.df.query("band == 'ztfi'")
+                dist_to_peak = np.abs(peak_mjd - parentdf["obsmjd"])
+
+                parentdf["peakdist"] = dist_to_peak
+                peakmag_parent = parentdf["magpsf"].values[np.argmin(dist_to_peak)]
+                newdata = {"_id": t.ztfid, "bts_peak_mag": peakmag_parent}
+                t.update(data=newdata)
+
             if len(t.ztfid.split("_")) > 1:
                 z = float(t.meta["z"])
                 parent_z = float(t.meta["bts_z"])
@@ -926,7 +950,12 @@ class Transient(object):
         """
         Update the database with new metadata
         """
-        meta.update_transient(self.ztfid, data=data)
+        if self.sampletype == "nuclear":
+            transient_info = meta.update_transient(self.ztfid, data=data)
+        elif self.sampletype == "bts":
+            transient_info = meta_bts.update_transient(self.ztfid, data=data)
+        elif self.sampletype == "train":
+            transient_info = meta_train.update_transient(self.ztfid, data=data)
 
     @cached_property
     def raw_lc(self) -> pd.DataFrame:
