@@ -255,6 +255,7 @@ class NuclearSample(object):
                     parentdf = parent.df.query("band == 'ztfr'")
                 if len(parentdf) == 0:
                     parentdf = parent.df.query("band == 'ztfi'")
+
                 dist_to_peak = np.abs(peak_mjd - parentdf["obsmjd"])
 
                 parentdf["peakdist"] = dist_to_peak
