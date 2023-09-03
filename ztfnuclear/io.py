@@ -13,17 +13,21 @@ from typing import Dict, List, Optional
 import numpy as np
 import pandas as pd  # type: ignore
 import yaml
-
-from ztfnuclear import utils
 from ztfquery.io import LOCALSOURCE  # type: ignore
 from ztfquery.lightcurve import LCQuery  # type: ignore
+
+from ztfnuclear import utils
 
 if os.getenv("ZTFDATA"):
     _SOURCEDIR = os.path.dirname(os.path.realpath(__file__))
     BASE = os.path.join(str(os.getenv("ZTFDATA")), "nuclear_sample")
     SRC_nuclear = os.path.join(BASE, "NUCLEAR")
     SRC_bts = os.path.join(BASE, "BTS")
-    SRC_train = os.path.join(BASE, "TRAIN")
+
+    if os.getenv("ZTFNUCLEAR_TRAIN") == "WITHAGN":
+        SRC_train = os.path.join(BASE, "TRAIN_WITHAGN")
+    else:
+        SRC_train = os.path.join(BASE, "TRAIN")
 
     MODEL_dir = Path(BASE) / "models"
 

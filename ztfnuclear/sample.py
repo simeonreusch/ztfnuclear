@@ -15,6 +15,7 @@ from typing import List, Optional, Tuple
 import numpy as np
 import pandas as pd  # type: ignore
 from tqdm import tqdm  # type: ignore
+
 from ztfnuclear import baseline, io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.fritz import FritzAPI
@@ -150,33 +151,33 @@ class NuclearSample(object):
             db_check = self.meta.get_statistics()
 
         elif self.sampletype == "train":
-            # if not db_check["has_salt"]:
-            #     saltfit_res = io.parse_ampel_json(
-            #         filepath=os.path.join(io.LOCALSOURCE_train_fitres, "saltfit.json"),
-            #         parameter_name="salt",
-            #         sampletype=self.sampletype,
-            #     )
-            #     self.populate_db_from_dict(data=saltfit_res)
+            if not db_check["has_salt"]:
+                saltfit_res = io.parse_ampel_json(
+                    filepath=os.path.join(io.LOCALSOURCE_train_fitres, "saltfit.json"),
+                    parameter_name="salt",
+                    sampletype=self.sampletype,
+                )
+                self.populate_db_from_dict(data=saltfit_res)
 
-            # if not db_check["has_tdefit_exp"]:
-            #     tdefit_path = os.path.join(
-            #         io.LOCALSOURCE_train_fitres, "tde_fit_exp.json"
-            #     )
-            #     self.logger.info(f"Importing TDE fit results from {tdefit_path}")
-            #     self.meta.key_update_from_json(
-            #         json_path=tdefit_path, mongo_key="tde_fit_exp"
-            #     )
+            if not db_check["has_tdefit_exp"]:
+                tdefit_path = os.path.join(
+                    io.LOCALSOURCE_train_fitres, "tde_fit_exp.json"
+                )
+                self.logger.info(f"Importing TDE fit results from {tdefit_path}")
+                self.meta.key_update_from_json(
+                    json_path=tdefit_path, mongo_key="tde_fit_exp"
+                )
 
-            # if not db_check["has_crossmatch"]:
-            #     self.get_parent_crossmatch(sampletype=self.sampletype)
+            if not db_check["has_crossmatch"]:
+                self.get_parent_crossmatch(sampletype=self.sampletype)
 
-            # if not db_check["has_ztf_bayesian"]:
-            #     bayesian_res = io.parse_ampel_json(
-            #         filepath=os.path.join(io.SRC_train, "ztf_bayesian.json"),
-            #         parameter_name="ztf_bayesian",
-            #         sampletype=self.sampletype,
-            #     )
-            #     self.populate_db_from_dict(data=bayesian_res)
+            if not db_check["has_ztf_bayesian"]:
+                bayesian_res = io.parse_ampel_json(
+                    filepath=os.path.join(io.SRC_train, "ztf_bayesian.json"),
+                    parameter_name="ztf_bayesian",
+                    sampletype=self.sampletype,
+                )
+                self.populate_db_from_dict(data=bayesian_res)
 
             if not db_check["has_distnr_scaled"]:
                 self.get_scaled_distnr(sampletype=self.sampletype)
@@ -284,13 +285,24 @@ class NuclearSample(object):
 
         self.logger.info("Updating train metadata DB with parent crossmatch info")
 
+        from_agn = False
         for t in self.get_transients():
             parent_ztfid = t.meta["parent_ztfid"]
             try:
                 test = Transient(ztfid=parent_ztfid, sampletype="bts")
             except:
-                test = Transient(ztfid=parent_ztfid, sampletype="nuclear")
+                try:
+                    test = Transient(ztfid=parent_ztfid, sampletype="nuclear")
+                except:
+                    test_noxmatch = Transient(ztfid=parent_ztfid, sampletype="train")
+                    test_noxmatch.crossmatch()
+                    crossmatch = t.meta["parent_ztfid"]
+                    test = Transient(ztfid=parent_ztfid, sampletype="train")
+                    from_agn = True
+
             crossmatch = test.meta["crossmatch"]
+            if from_agn:
+                print(crossmatch)
             data = {"crossmatch": crossmatch}
 
             self.meta.update_transient(ztfid=t.ztfid, data=data)
@@ -1413,6 +1425,8 @@ class Transient(object):
             m_db = meta
         elif self.sampletype == "bts":
             m_db = meta_bts
+        elif self.sampletype == "train":
+            m_db = meta_train
 
         if "name" in self.crossmatch["crossmatch"].get("TNS", {}).keys():
             tns_name = self.crossmatch["crossmatch"]["TNS"]["name"]

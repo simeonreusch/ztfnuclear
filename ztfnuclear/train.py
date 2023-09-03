@@ -22,6 +22,7 @@ from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import shuffle
 from tqdm import tqdm
+
 from ztfnuclear import io
 from ztfnuclear.plot import get_tde_selection
 from ztfnuclear.sample import NuclearSample
@@ -261,14 +262,15 @@ class Model(object):
         )
 
         self.logger.info(
-            f"From {len(self.train_validation_parent_ztfids)} available parent ZTFIDs selected {len(self.train_parent_ztfids)} for training, {len(self.validation_parent_ztfids)} for validationing."
+            f"From {len(self.train_validation_parent_ztfids)} available parent ZTFIDs selected {len(self.train_parent_ztfids)} for training, {len(self.validation_parent_ztfids)} for validation."
         )
         self.logger.info(
             f"Train sample: {len(self.train_ztfids)} lightcurves in total."
         )
         self.logger.info(
-            f"Test sample: {len(self.validation_ztfids)} lightcurves in total."
+            f"Validation sample: {len(self.validation_ztfids)} lightcurves in total."
         )
+        self.logger.info(f"Test sample: FIXME!")
 
         export_dict = {
             "test": list(self.test_ztfids),
