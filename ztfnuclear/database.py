@@ -17,6 +17,7 @@ from healpy import ang2pix  # type: ignore
 from pymongo import GEOSPHERE, MongoClient, UpdateOne
 from pymongo.database import Database
 from tqdm import tqdm  # type: ignore
+
 from ztfnuclear import io
 
 logging.getLogger("extcats.CatalogQuery").setLevel(logging.WARN)
@@ -48,7 +49,10 @@ class SampleInfo(object):
         elif self.sampletype == "bts":
             self.coll = self.db.info_bts
         elif self.sampletype == "train":
-            self.coll = self.db.info_train
+            if os.getenv("ZTFNUCLEAR_TRAIN") == "WITHAGN":
+                self.coll = self.db.info_train_agn
+            else:
+                self.coll = self.db.info_train
         elif self.sampletype == "moretde":
             self.coll = self.db.info_moretde
 
@@ -108,7 +112,10 @@ class MetadataDB(object):
         elif self.sampletype == "bts":
             self.coll = self.db.metadata_bts
         elif self.sampletype == "train":
-            self.coll = self.db.metadata_train
+            if os.getenv("ZTFNUCLEAR_TRAIN") == "WITHAGN":
+                self.coll = self.db.metadata_train_agn
+            else:
+                self.coll = self.db.metadata_train
 
     def update_transient(self, ztfid: str, data: dict):
         """
@@ -116,6 +123,13 @@ class MetadataDB(object):
         """
         self.coll.update_one({"_id": ztfid}, {"$set": data}, upsert=True)
         self.logger.debug(f"Updated database for {ztfid}")
+
+    def delete_transient(self, ztfid: str):
+        """
+        Delete a transient from the DB
+        """
+        self.coll.delete_one({"_id": ztfid})
+        self.logger.debug(f"Deleted {ztfid} from {self.sampletype}")
 
     def update_many(self, ztfids: list, data: List[dict]):
         """
@@ -411,7 +425,12 @@ class MetadataDB(object):
         elif self.sampletype == "bts":
             items_in_coll = self.db.command("collstats", "metadata_bts")["count"]
         elif self.sampletype == "train":
-            items_in_coll = self.db.command("collstats", "metadata_train")["count"]
+            if os.getenv("ZTFNUCLEAR_TRAIN") == "WITHAGN":
+                items_in_coll = self.db.command("collstats", "metadata_train_agn")[
+                    "count"
+                ]
+            else:
+                items_in_coll = self.db.command("collstats", "metadata_train")["count"]
 
         if self.sampletype in ["nuclear", "bts"]:
             testobj = self.read_transient(ztfid="ZTF19aatubsj")

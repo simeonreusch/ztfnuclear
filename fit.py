@@ -11,7 +11,6 @@ import re
 import matplotlib  # type: ignore
 import pandas as pd  # type: ignore
 from tqdm import tqdm  # type: ignore
-
 from ztfnuclear.database import MetadataDB
 from ztfnuclear.sample import NuclearSample, Transient
 
@@ -102,7 +101,7 @@ if __name__ == "__main__":
                 a = 1
 
         fitres = meta.read_parameters(["_id", "tde_fit_exp"])
-        outfile = "tde_fit_exp.json"
+        outfile = "tde_fit_agn.json"
 
         logger.info(f"Fitting for TDE fit done, exporting result to {outfile}")
 

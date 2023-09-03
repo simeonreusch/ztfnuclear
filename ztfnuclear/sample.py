@@ -15,6 +15,7 @@ from typing import List, Optional, Tuple
 import numpy as np
 import pandas as pd  # type: ignore
 from tqdm import tqdm  # type: ignore
+
 from ztfnuclear import baseline, io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.fritz import FritzAPI
@@ -204,7 +205,11 @@ class NuclearSample(object):
         assert self.sampletype == "train"
 
         for t in self.get_transients():
-            distnr = float(t.meta["median_distnr"])
+            median_distnr = t.meta.get("median_distnr")
+            if median_distnr is not None:
+                distnr = float(median_distnr)
+            else:
+                distnr = float(t.meta["distnr"])
             if len(t.ztfid.split("_")) > 1:
                 distnr_deg = distnr / 3600 * u.deg
                 z = float(t.meta["z"])
@@ -237,7 +242,28 @@ class NuclearSample(object):
         assert self.sampletype == "train"
 
         for t in self.get_transients():
-            peakmag_parent = float(t.meta["bts_peak_mag"])
+            peakmag_try = t.meta.get("bts_peak_mag")
+            if peakmag_try is not None:
+                peakmag_parent = float(peakmag_try)
+            else:
+                peakjd = float(t.meta.get("bts_peak_jd"))
+                peak_mjd = peakjd - 2400000.5
+                parent_ztfid = t.meta["parent_ztfid"]
+
+                parent = Transient(ztfid=parent_ztfid, sampletype="train")
+                parentdf = parent.df.query("band == 'ztfg'")
+                if len(parentdf) == 0:
+                    parentdf = parent.df.query("band == 'ztfr'")
+                if len(parentdf) == 0:
+                    parentdf = parent.df.query("band == 'ztfi'")
+
+                dist_to_peak = np.abs(peak_mjd - parentdf["obsmjd"])
+
+                parentdf["peakdist"] = dist_to_peak
+                peakmag_parent = parentdf["magpsf"].values[np.argmin(dist_to_peak)]
+                newdata = {"_id": t.ztfid, "bts_peak_mag": peakmag_parent}
+                t.update(data=newdata)
+
             if len(t.ztfid.split("_")) > 1:
                 z = float(t.meta["z"])
                 parent_z = float(t.meta["bts_z"])
@@ -259,13 +285,24 @@ class NuclearSample(object):
 
         self.logger.info("Updating train metadata DB with parent crossmatch info")
 
+        from_agn = False
         for t in self.get_transients():
             parent_ztfid = t.meta["parent_ztfid"]
             try:
                 test = Transient(ztfid=parent_ztfid, sampletype="bts")
             except:
-                test = Transient(ztfid=parent_ztfid, sampletype="nuclear")
+                try:
+                    test = Transient(ztfid=parent_ztfid, sampletype="nuclear")
+                except:
+                    test_noxmatch = Transient(ztfid=parent_ztfid, sampletype="train")
+                    test_noxmatch.crossmatch()
+                    crossmatch = t.meta["parent_ztfid"]
+                    test = Transient(ztfid=parent_ztfid, sampletype="train")
+                    from_agn = True
+
             crossmatch = test.meta["crossmatch"]
+            if from_agn:
+                print(crossmatch)
             data = {"crossmatch": crossmatch}
 
             self.meta.update_transient(ztfid=t.ztfid, data=data)
@@ -926,7 +963,12 @@ class Transient(object):
         """
         Update the database with new metadata
         """
-        meta.update_transient(self.ztfid, data=data)
+        if self.sampletype == "nuclear":
+            transient_info = meta.update_transient(self.ztfid, data=data)
+        elif self.sampletype == "bts":
+            transient_info = meta_bts.update_transient(self.ztfid, data=data)
+        elif self.sampletype == "train":
+            transient_info = meta_train.update_transient(self.ztfid, data=data)
 
     @cached_property
     def raw_lc(self) -> pd.DataFrame:
@@ -1383,6 +1425,8 @@ class Transient(object):
             m_db = meta
         elif self.sampletype == "bts":
             m_db = meta_bts
+        elif self.sampletype == "train":
+            m_db = meta_train
 
         if "name" in self.crossmatch["crossmatch"].get("TNS", {}).keys():
             tns_name = self.crossmatch["crossmatch"]["TNS"]["name"]
