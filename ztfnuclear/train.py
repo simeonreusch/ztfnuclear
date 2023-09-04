@@ -445,7 +445,9 @@ class Model(object):
         self.grid_result = grid_result
         self.best_estimator = best_estimator
 
-        self.logger.info(f"Loading best estimator. Parameters:\n{self.best_estimator}")
+        self.logger.info(
+            f"Loading best estimator. Parameters:\n{self.best_estimator.get_params()}"
+        )
 
         # Plot feature importance for full set
         self.logger.info("Plotting feature importance")
@@ -591,7 +593,6 @@ class Model(object):
         # Load the nuclear sample
         s = NuclearSample(sampletype="nuclear")
         nuc_df = s.meta.get_dataframe(for_classification=True)
-        # nuc_df.query("crossmatch_Milliquas_type.isnull()", inplace=True)
 
         nuc_df_noclass = nuc_df.copy(deep=True)
         nuc_df_noclass.drop(columns=["classif"], inplace=True)

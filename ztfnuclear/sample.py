@@ -186,7 +186,7 @@ class NuclearSample(object):
                 self.get_scaled_peakmag(sampletype=self.sampletype)
 
         if self.sampletype == "nuclear":
-            assert db_check["count"] == 11687
+            assert db_check["count"] == 11688
         elif self.sampletype == "bts":
             assert db_check["count"] == 7131 or db_check["count"] == 7130
 

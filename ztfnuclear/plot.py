@@ -602,6 +602,7 @@ def plot_mag_hist_2x2(
     plot_ext: str = "pdf",
     compare: str = "nuc_bts",
     rerun: bool = False,
+    require_fitsuccess: bool = True,
 ):
     """
     Plot the mag histogram
@@ -635,26 +636,55 @@ def plot_mag_hist_2x2(
     }
 
     sample_nuc_full = get_tde_selection(
-        cuts=cuts, sampletype="nuclear", rerun=rerun, xgclass=False
+        cuts=cuts,
+        sampletype="nuclear",
+        rerun=rerun,
+        xgclass=False,
+        require_fitsuccess=require_fitsuccess,
     )
+
     sample_bts_full = get_tde_selection(
-        cuts=cuts, sampletype="bts", rerun=rerun, xgclass=False
+        cuts=cuts,
+        sampletype="bts",
+        rerun=rerun,
+        xgclass=False,
+        require_fitsuccess=require_fitsuccess,
     )
     sample_nuc_xg_full = get_tde_selection(
-        cuts=cuts, sampletype="nuclear", rerun=rerun, xgclass=True
+        cuts=cuts,
+        sampletype="nuclear",
+        rerun=rerun,
+        xgclass=True,
+        require_fitsuccess=require_fitsuccess,
     )
 
     nuc_wise_agn_ids = get_tde_selection(
-        cuts=["wise_keepagn"], sampletype="nuclear", rerun=rerun, xgclass=False
+        cuts=["wise_keepagn"],
+        sampletype="nuclear",
+        rerun=rerun,
+        xgclass=False,
+        require_fitsuccess=require_fitsuccess,
     ).ztfid.values
     nuc_milliquas_agn_ids = get_tde_selection(
-        cuts=["milliquas_keepagn"], sampletype="nuclear", rerun=rerun, xgclass=False
+        cuts=["milliquas_keepagn"],
+        sampletype="nuclear",
+        rerun=rerun,
+        xgclass=False,
+        require_fitsuccess=require_fitsuccess,
     ).ztfid.values
     bts_wise_agn_ids = get_tde_selection(
-        cuts=["wise_keepagn"], sampletype="bts", rerun=rerun, xgclass=False
+        cuts=["wise_keepagn"],
+        sampletype="bts",
+        rerun=rerun,
+        xgclass=False,
+        require_fitsuccess=require_fitsuccess,
     ).ztfid.values
     bts_milliquas_agn_ids = get_tde_selection(
-        cuts=["milliquas_keepagn"], sampletype="bts", rerun=rerun, xgclass=False
+        cuts=["milliquas_keepagn"],
+        sampletype="bts",
+        rerun=rerun,
+        xgclass=False,
+        require_fitsuccess=require_fitsuccess,
     ).ztfid.values
 
     nuc_agn_ids = list(set(nuc_milliquas_agn_ids).union(set(nuc_wise_agn_ids)))
@@ -764,7 +794,7 @@ def plot_mag_hist_2x2(
         if sample_title in ["nuclear_noagn", "nuclear_keepagn"]:
             ax.set_ylabel("Count", fontsize=11)
         ax.set_xlabel("Peak mag (AB)", fontsize=11)
-        ax.set_ylim((0.9, 1500))
+        ax.set_ylim((0.9, 3000))
 
         handles, labels = ax.get_legend_handles_labels()
 

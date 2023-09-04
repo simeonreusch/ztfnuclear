@@ -90,6 +90,7 @@ def aggregate_cuts(
                 logplot=True,
                 plot_ext=plot_ext,
                 rerun=rerun,
+                require_fitsuccess=False,
             )
         if plottype == "mag2x2xg":
             plot_mag_hist_2x2(
@@ -98,6 +99,7 @@ def aggregate_cuts(
                 plot_ext=plot_ext,
                 rerun=rerun,
                 compare="nuc_xg",
+                require_fitsuccess=False,
             )
 
 
@@ -204,8 +206,8 @@ if __name__ == "__main__":
             plot_ext=cl.ext,
             cuts=[
                 "nocut",
-                "milliquas_noagn",
-                "wise_noagn",
+                # "milliquas_noagn",
+                # "wise_noagn",
                 "coredist",
                 "sgscore",
                 "snia",

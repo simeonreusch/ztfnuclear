@@ -12,6 +12,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 SEED = 10
+# n_iter = 50
 n_iter = 5000
 
 start = time.time()
@@ -32,7 +33,7 @@ m = Model(
 # m.evaluate(normalize="all")
 # m.evaluate(normalize="pred")
 # m.evaluate(normalize="true")
-# # # m.classify()
+m.classify()
 
 # m = Model(
 #     noisified=True,
@@ -51,6 +52,6 @@ m = Model(
 # m.evaluate(normalize="true")
 # # m.classify()
 
-# end = time.time()
+end = time.time()
 
-# print(f"Done with {n_iter} iterations. This took {end-start:.0f} s")
+print(f"Done with {n_iter} iterations. This took {end-start:.0f} s")

@@ -341,7 +341,7 @@ class MetadataDB(object):
 
         if for_classification:
             config = io.load_config()
-            df.query("success == True", inplace=True)
+            # df.query("success == True", inplace=True)
             df = df[config["classify_params"]]
             df.rename(columns={"distnr_distnr": "distnr"}, inplace=True)
 
