@@ -17,7 +17,6 @@ from healpy import ang2pix  # type: ignore
 from pymongo import GEOSPHERE, MongoClient, UpdateOne
 from pymongo.database import Database
 from tqdm import tqdm  # type: ignore
-
 from ztfnuclear import io
 
 logging.getLogger("extcats.CatalogQuery").setLevel(logging.WARN)
@@ -433,8 +432,10 @@ class MetadataDB(object):
                 items_in_coll = self.db.command("collstats", "metadata_train")["count"]
 
         if self.sampletype in ["nuclear", "bts"]:
+            self.logger.info("Reading testobject ZTF19aatubsj")
             testobj = self.read_transient(ztfid="ZTF19aatubsj")
         elif self.sampletype == "train":
+            self.logger.info(f"Reading testobject ZTF18abamrjl")
             testobj = self.read_transient(ztfid="ZTF18abamrjl")
 
         if testobj:

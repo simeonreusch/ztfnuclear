@@ -1558,7 +1558,8 @@ def plot_lightcurve(
                 label=filtername_dict[filterid],
             )
 
-            ax.set_ylabel(r"$\nu$ F$_\nu$ (erg s$^{-1}$ cm$^{-2}$)", fontsize=12)
+            if not thumbnail:
+                ax.set_ylabel(r"$\nu$ F$_\nu$ (erg s$^{-1}$ cm$^{-2}$)", fontsize=12)
 
             if z is not None and thumbnail is False:
                 from astropy.cosmology import FlatLambdaCDM

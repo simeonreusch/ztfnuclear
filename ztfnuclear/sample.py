@@ -650,7 +650,7 @@ class NuclearSample(object):
         """
         Loop over all infrared flaring transients in sample and return a Transient object
         """
-        flaring_ztfids = self.info_db.read()["flaring"]["ztfids"]
+        flaring_ztfids = self.info_db.read()["flaring"]
 
         if not n:
             n = len(flaring_ztfids)
@@ -728,12 +728,7 @@ class NuclearSample(object):
         Create a list of transients that match the WISE IR flare selection and write them to the info db
         """
         meta = MetadataDB(sampletype=self.sampletype)
-        db_res = meta.read_parameters(
-            params=[
-                "_id",
-                "WISE_bayesian",
-            ]
-        )
+        db_res = meta.read_parameters(params=["_id", "WISE_bayesian", "WISE_dust"])
 
         final_ztfids = []
 
@@ -750,10 +745,10 @@ class NuclearSample(object):
                 else:
                     start_excess = None
 
-                if "dustecho" in entry.keys():
-                    if entry["dustecho"] is not None:
-                        if "status" in entry["dustecho"]:
-                            status = entry["dustecho"]["status"]
+                if "dust" in db_res["WISE_dust"][i].keys():
+                    if db_res["WISE_dust"][i]["dust"] is not None:
+                        if "status" in db_res["WISE_dust"][i]["dust"]:
+                            status = db_res["WISE_dust"][i]["dust"]["status"]
                         else:
                             status = None
                     else:
@@ -765,7 +760,9 @@ class NuclearSample(object):
                     if start_excess >= 2458239.50000:
                         final_ztfids.append(ztfid)
 
-        self.info_db.update(data={"flaring": {"ztfids": final_ztfids}})
+        self.info_db.ingest_ztfid_collection(
+            ztfids=final_ztfids, collection_name="flaring"
+        )
 
     def generate_overview_pickled(self, flaring_only: bool = False):
         """
@@ -784,7 +781,7 @@ class NuclearSample(object):
         transients_pickled = []
 
         if flaring_only:
-            flaring_ztfids = self.info_db.read()["flaring"]["ztfids"]
+            flaring_ztfids = self.info_db.read()["flaring"]
             length = len(flaring_ztfids)
         else:
             length = len(self.ztfids)
@@ -802,10 +799,10 @@ class NuclearSample(object):
             transients_pickled.append(t)
 
         if flaring_only:
-            with open(io.LOCALSOURCE_pickle_flaring, "wb") as f:
+            with open(io.SRC_nuclear_pickle_flaring, "wb") as f:
                 pickle.dump(transients_pickled, f)
         else:
-            with open(io.LOCALSOURCE_pickle, "wb") as f:
+            with open(io.SRC_nuclear_pickle, "wb") as f:
                 pickle.dump(transients_pickled, f)
 
     def get_gold_transients(self):
@@ -1132,13 +1129,13 @@ class Transient(object):
             )
         thumb_file = os.path.join(plot_dir, self.ztfid + "_thumbnail.png")
 
-        if os.path.isfile(thumb_file):
-            thumb_data = open(thumb_file, "rb")
-            thumb_b64 = base64.b64encode(thumb_data.read()).decode("ascii")
-            return thumb_b64
+        if not os.path.isfile(thumb_file):
+            self.plot(plot_png=True, thumbnail=True)
 
-        else:
-            return None
+        thumb_data = open(thumb_file, "rb")
+        thumb_b64 = base64.b64encode(thumb_data.read()).decode("ascii")
+
+        return thumb_b64
 
     def irsa(self):
         """
