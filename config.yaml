@@ -150,7 +150,7 @@ classlabels:
   tde: TDEs
   agn: AGN
   star: Stars
-  sn_other: SNe ($\neq$Ia)
+  sn_other: CCSNe
   unclass: Unclass.
   other: Other
 
@@ -320,7 +320,7 @@ pl_props:
       s: 4
       c: orange
       a: 1
-      l: SNe (not Ia)
+      l: CCSNe
       order: 3
     tde:
       m: '*'

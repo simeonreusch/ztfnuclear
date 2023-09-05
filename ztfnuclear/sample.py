@@ -15,7 +15,6 @@ from typing import List, Optional, Tuple
 import numpy as np
 import pandas as pd  # type: ignore
 from tqdm import tqdm  # type: ignore
-
 from ztfnuclear import baseline, io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.fritz import FritzAPI
@@ -627,21 +626,21 @@ class NuclearSample(object):
         Read the pickled transient overview and return from that (for webpage performance reasons)
         """
         if flaring_only:
-            if not os.path.isfile(io.LOCALSOURCE_pickle_flaring):
+            if not os.path.isfile(io.SRC_nuclear_pickle_flaring):
                 raise FileExistsError(
                     "You have to run self.generate_overview_pickled first"
                 )
         else:
-            if not os.path.isfile(io.LOCALSOURCE_pickle):
+            if not os.path.isfile(io.SRC_nuclear_pickle):
                 raise FileExistsError(
                     "You have to run self.generate_overview_pickled first"
                 )
 
         if flaring_only:
-            with open(io.LOCALSOURCE_pickle_flaring, "rb") as f:
+            with open(io.SRC_nuclear_pickle_flaring, "rb") as f:
                 transients = pickle.load(f)
         else:
-            with open(io.LOCALSOURCE_pickle, "rb") as f:
+            with open(io.SRC_nuclear_pickle, "rb") as f:
                 transients = pickle.load(f)
 
         for t in transients:
@@ -1201,9 +1200,14 @@ class Transient(object):
         Update the transient rating
         """
         if "rating" in self.meta.keys():
-            rating_dict = self.meta["rating"]
+            rating_dict = self.meta.get("rating", {})
+            if rating_dict is None:
+                rating_dict = {}
         else:
             rating_dict = {}
+
+        print("lalala")
+        print(rating_dict)
 
         rating_dict.update({username: rating})
 

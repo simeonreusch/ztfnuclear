@@ -23,7 +23,6 @@ from astropy import units as u  # type: ignore
 from astropy.coordinates import Angle  # type: ignore
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import LabelEncoder
-
 from ztfnuclear import io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.wise import is_in_wise_agn_box
@@ -764,6 +763,16 @@ def plot_mag_hist_2x2(
         for c in classifs:
             df = combined.query(f"{classif_key} == @c and sample == @sample_title")
             if len(df) > 0:
+                if (
+                    c == "tde"
+                    and sample_title == "nuclear_noagn_xg"
+                    and cuts[-1] == "bayes"
+                ):
+                    outfile = (
+                        Path(io.LOCALSOURCE_plots) / "maghist" / "surviving_tde.csv"
+                    )
+                    df.to_csv(outfile)
+
                 n_per_class.append(len(df))
                 peak_mags.append(df["peak_mag"].values)
                 colors_used.append(config["colordict"][c])
