@@ -756,7 +756,10 @@ class NuclearSample(object):
                 else:
                     status = None
 
-                if start_excess != None and status != "No further investigation":
+                if start_excess != None and status in [
+                    "1",
+                    "2_maybe_interesting",
+                ]:  # status != "No further investigation":
                     if start_excess >= 2458239.50000:
                         final_ztfids.append(ztfid)
 

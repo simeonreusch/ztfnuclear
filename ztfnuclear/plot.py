@@ -1485,10 +1485,14 @@ def plot_lightcurve(
             if not thumbnail:
                 if tns_name:
                     fig.suptitle(
-                        f"{ztfid} ({tns_name}) - no baseline correction", fontsize=14
+                        f"{ztfid} ({tns_name}) - no baseline correction\nclassif = {classif}",
+                        fontsize=14,
                     )
                 else:
-                    fig.suptitle(f"{ztfid} - no baseline correction", fontsize=14)
+                    fig.suptitle(
+                        f"{ztfid} - no baseline correction\nclassif = {classif}",
+                        fontsize=14,
+                    )
 
         obsmjd = _df.obsmjd.values
 
