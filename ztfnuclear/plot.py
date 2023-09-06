@@ -765,12 +765,19 @@ def plot_mag_hist_2x2(
             if len(df) > 0:
                 if (
                     c == "tde"
-                    and sample_title == "nuclear_noagn_xg"
+                    and sample_title in ["nuclear_noagn_xg", "nuclear_keepagn_xg"]
                     and cuts[-1] == "bayes"
                 ):
-                    outfile = (
-                        Path(io.LOCALSOURCE_plots) / "maghist" / "surviving_tde.csv"
-                    )
+                    if sample_title == "nuclear_noagn_xg":
+                        outfile = (
+                            Path(io.LOCALSOURCE_plots) / "maghist" / "surviving_tde.csv"
+                        )
+                    if sample_title == "nuclear_keepagn_xg":
+                        outfile = (
+                            Path(io.LOCALSOURCE_plots)
+                            / "maghist"
+                            / "surviving_tde_agnhost.csv"
+                        )
                     df.to_csv(outfile)
 
                 n_per_class.append(len(df))
@@ -802,7 +809,7 @@ def plot_mag_hist_2x2(
 
         if sample_title in ["nuclear_noagn", "nuclear_keepagn"]:
             ax.set_ylabel("Count", fontsize=11)
-        ax.set_xlabel("Peak mag (AB)", fontsize=11)
+        ax.set_xlabel("Peak magnitude (AB)", fontsize=11)
         ax.set_ylim((0.9, 3000))
 
         handles, labels = ax.get_legend_handles_labels()

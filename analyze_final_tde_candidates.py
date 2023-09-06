@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from ztfnuclear import io
 
-infile = Path(io.LOCALSOURCE_plots) / "maghist" / "surviving_tde.csv"
+infile = Path(io.LOCALSOURCE_plots) / "maghist" / "surviving_tde_agnhost.csv"
 
 df_raw = pd.read_csv(infile)
 df = df_raw[
@@ -42,4 +42,4 @@ df["fritz"] = fritz_class
 df["z_type"] = z_type
 df.sort_values(by="ztfid", inplace=True)
 
-df.to_csv(Path(io.LOCALSOURCE_plots) / "maghist" / "surviving_tde_cleaned.csv")
+df.to_csv(Path(io.LOCALSOURCE_plots) / "maghist" / "surviving_tde_cleaned_agnhost.csv")

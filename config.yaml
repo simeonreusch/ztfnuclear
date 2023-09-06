@@ -154,6 +154,16 @@ classlabels:
   unclass: Unclass.
   other: Other
 
+classlabels_singular:
+  all: All classifications
+  snia: SN Ia
+  sn_ia: SN Ia
+  tde: TDE
+  agn: AGN
+  star: Star
+  sn_other: CCSN
+  unclass: Unclassified
+  other: Other
 
 fritz_queries:
     snia: fritz_class in @config['fritz_sn_ia']

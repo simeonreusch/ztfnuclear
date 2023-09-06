@@ -206,6 +206,7 @@ class MetadataDB(object):
         for_training: bool = False,
         include_z_in_training: bool = False,
         for_classification: bool = False,
+        for_thesis: bool = False,
     ) -> pd.DataFrame:
         """
         Get a dataframe containing all the parameters specified
@@ -254,6 +255,9 @@ class MetadataDB(object):
             )
             if include_z_in_training:
                 params.extend(["z"])
+
+        elif for_thesis:
+            params = ["_id", "ampel_z", "classif", "xgclass", "crossmatch", "peak_mags"]
 
         for param in params:
             search_dict.update({param: 1})

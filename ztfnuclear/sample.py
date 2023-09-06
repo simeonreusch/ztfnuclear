@@ -837,6 +837,76 @@ class NuclearSample(object):
             t = Transient(ztfid, sampletype=self.sampletype)
             yield t
 
+    def get_thesis_dataframe(self, ztfids: list[int]) -> pd.DataFrame:
+        """
+        Get a nicely formatted dataframe with all relevant info for thesis appendix
+        """
+        df_raw = self.meta.get_dataframe(ztfids=ztfids, for_thesis=True)
+        print(df_raw.keys())
+        df = df_raw[
+            [
+                "classif",
+                "crossmatch_TNS_name",
+                "xgclass",
+                "ampel_z_z",
+                "peak_mags_g",
+            ]
+        ]
+        z_type = []
+        for entry in df_raw.ampel_z_z_group.values:
+            if np.isnan(entry):
+                z_type.append(entry)
+            elif entry < 4:
+                z_type.append("spec.")
+            else:
+                z_type.append("phot.")
+
+        df["z_type"] = z_type
+
+        # for entry in df_raw.fritz_class:
+        #     if entry == "Tidal Disruption Event":
+        #         fritz_class.append("TDE")
+        #     else:
+        #         fritz_class.append(entry)
+
+        df = df[
+            [
+                "ampel_z_z",
+                "z_type",
+                "classif",
+                "xgclass",
+                "crossmatch_TNS_name",
+                "peak_mags_g",
+            ]
+        ]
+        df = df.round({"ampel_z_z": 3, "peak_mags_g": 2})
+
+        df.rename(
+            columns={
+                "ampel_z_z": "z",
+                "z_type": "z type",
+                "classif": "Community classification",
+                "xgclass": "XGBoost classification",
+                "crossmatch_TNS_name": "IAU name",
+                "peak_mags_g": "peak mag. (g-band)",
+            },
+            inplace=True,
+        )
+        df.sort_index(inplace=True)
+
+        config = io.load_config()
+        classif_pretty = []
+        for entry in df["Community classification"]:
+            classif_pretty.append(config["classlabels_singular"][entry])
+        df["Community classification"] = classif_pretty
+
+        classif_pretty = []
+        for entry in df["XGBoost classification"]:
+            classif_pretty.append(config["classlabels_singular"][entry])
+        df["XGBoost classification"] = classif_pretty
+
+        return df
+
 
 class Transient(object):
     """
