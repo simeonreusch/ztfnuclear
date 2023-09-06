@@ -842,7 +842,6 @@ class NuclearSample(object):
         Get a nicely formatted dataframe with all relevant info for thesis appendix
         """
         df_raw = self.meta.get_dataframe(ztfids=ztfids, for_thesis=True)
-        print(df_raw.keys())
         df = df_raw[
             [
                 "classif",
@@ -1275,9 +1274,6 @@ class Transient(object):
                 rating_dict = {}
         else:
             rating_dict = {}
-
-        print("lalala")
-        print(rating_dict)
 
         rating_dict.update({username: rating})
 
