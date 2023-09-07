@@ -728,12 +728,20 @@ class NuclearSample(object):
         Create a list of transients that match the WISE IR flare selection and write them to the info db
         """
         meta = MetadataDB(sampletype=self.sampletype)
-        db_res = meta.read_parameters(params=["_id", "WISE_bayesian", "WISE_dust"])
+        db_res = meta.read_parameters(
+            params=["_id", "WISE_bayesian", "WISE_dust", "peak_dates"]
+        )
 
         final_ztfids = []
 
         for i, entry in enumerate(db_res["WISE_bayesian"]):
             ztfid = db_res["_id"][i]
+            peak_date_dict = db_res["peak_dates"][i]
+            if peak_date_dict is not None:
+                peak_date_list = [i for i in peak_date_dict.values() if not np.isnan(i)]
+                min_peak_date = min(peak_date_list)
+            else:
+                min_peak_date = 2458239.50000
 
             if entry is not None:
                 if "bayesian" in entry.keys():
@@ -758,9 +766,11 @@ class NuclearSample(object):
 
                 if start_excess != None and status in [
                     "1",
-                    "2_maybe_interesting",
-                ]:  # status != "No further investigation":
-                    if start_excess >= 2458239.50000:
+                    "1_maybe_interesting",
+                    # "2_maybe_interesting",
+                    # "2",
+                ]:
+                    if start_excess >= 2458239.50000 and start_excess >= min_peak_date:
                         final_ztfids.append(ztfid)
 
         self.info_db.ingest_ztfid_collection(
@@ -1203,6 +1213,7 @@ class Transient(object):
 
         if not os.path.isfile(thumb_file):
             self.plot(plot_png=True, thumbnail=True)
+            self.plot(thumbnail=True)
 
         thumb_data = open(thumb_file, "rb")
         thumb_b64 = base64.b64encode(thumb_data.read()).decode("ascii")
@@ -1558,38 +1569,39 @@ class Transient(object):
                                 "baseline"
                             ]
 
-                            bl_W1_err = self.meta["WISE_bayesian"]["bayesian"][
-                                "Wise_W1"
-                            ]["baseline_rms"]
-                            bl_W2_err = self.meta["WISE_bayesian"]["bayesian"][
-                                "Wise_W2"
-                            ]["baseline_rms"]
-                            wise_df["W1_mean_flux_density_bl_corr"] = (
-                                wise_df["W1_mean_flux_density"] - bl_W1
-                            )
-                            wise_df["W2_mean_flux_density_bl_corr"] = (
-                                wise_df["W2_mean_flux_density"] - bl_W2
-                            )
-                            wise_df["W1_mean_flux_density_bl_corr_err"] = np.sqrt(
-                                wise_df["W1_flux_density_rms"].values ** 2
-                                + bl_W1_err**2
-                            )
-                            wise_df["W2_mean_flux_density_bl_corr_err"] = np.sqrt(
-                                wise_df["W2_flux_density_rms"].values ** 2
-                                + bl_W2_err**2
-                            )
+                            if bl_W1 is not None and bl_W2 is not None:
+                                bl_W1_err = self.meta["WISE_bayesian"]["bayesian"][
+                                    "Wise_W1"
+                                ]["baseline_rms"]
+                                bl_W2_err = self.meta["WISE_bayesian"]["bayesian"][
+                                    "Wise_W2"
+                                ]["baseline_rms"]
+                                wise_df["W1_mean_flux_density_bl_corr"] = (
+                                    wise_df["W1_mean_flux_density"] - bl_W1
+                                )
+                                wise_df["W2_mean_flux_density_bl_corr"] = (
+                                    wise_df["W2_mean_flux_density"] - bl_W2
+                                )
+                                wise_df["W1_mean_flux_density_bl_corr_err"] = np.sqrt(
+                                    wise_df["W1_flux_density_rms"].values ** 2
+                                    + bl_W1_err**2
+                                )
+                                wise_df["W2_mean_flux_density_bl_corr_err"] = np.sqrt(
+                                    wise_df["W2_flux_density_rms"].values ** 2
+                                    + bl_W2_err**2
+                                )
 
-                            wise_df["W1_mean_mag_ab"] = utils.flux_density_to_abmag(
-                                flux_density=wise_df["W1_mean_flux_density_bl_corr"]
-                                / 1000,  # convert from mJy to Jy
-                                band="W1",
-                            )
-                            wise_df["W2_mean_mag_ab"] = utils.flux_density_to_abmag(
-                                flux_density=wise_df["W2_mean_flux_density_bl_corr"]
-                                / 1000,  # convert from mJy to Jy
-                                band="W2",
-                            )
-                            wise_df_to_plot = wise_df
+                                wise_df["W1_mean_mag_ab"] = utils.flux_density_to_abmag(
+                                    flux_density=wise_df["W1_mean_flux_density_bl_corr"]
+                                    / 1000,  # convert from mJy to Jy
+                                    band="W1",
+                                )
+                                wise_df["W2_mean_mag_ab"] = utils.flux_density_to_abmag(
+                                    flux_density=wise_df["W2_mean_flux_density_bl_corr"]
+                                    / 1000,  # convert from mJy to Jy
+                                    band="W2",
+                                )
+                                wise_df_to_plot = wise_df
 
         if force_baseline_correction:
             df_to_plot = self.baseline

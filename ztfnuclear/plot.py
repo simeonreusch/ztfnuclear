@@ -763,20 +763,21 @@ def plot_mag_hist_2x2(
         for c in classifs:
             df = combined.query(f"{classif_key} == @c and sample == @sample_title")
             if len(df) > 0:
-                if (
-                    c == "tde"
-                    and sample_title in ["nuclear_noagn_xg", "nuclear_keepagn_xg"]
-                    and cuts[-1] == "bayes"
-                ):
+                if c == "tde" and sample_title in [
+                    "nuclear_noagn_xg",
+                    "nuclear_keepagn_xg",
+                ]:
                     if sample_title == "nuclear_noagn_xg":
                         outfile = (
-                            Path(io.LOCALSOURCE_plots) / "maghist" / "surviving_tde.csv"
+                            Path(io.LOCALSOURCE_plots)
+                            / "maghist"
+                            / f"surviving_tde_{cuts[-1]}.csv"
                         )
                     if sample_title == "nuclear_keepagn_xg":
                         outfile = (
                             Path(io.LOCALSOURCE_plots)
                             / "maghist"
-                            / "surviving_tde_agnhost.csv"
+                            / f"surviving_tde_agnhost_{cuts[-1]}.csv"
                         )
                     df.to_csv(outfile)
 
@@ -1674,7 +1675,7 @@ def plot_lightcurve(
     if not thumbnail:
         ax.set_xlabel("Date (MJD)", fontsize=12)
         ax.grid(which="both", visible=True, axis="both", alpha=0.3)
-        plt.legend()
+        plt.legend(loc=1)
     else:
         ax.xaxis.set_ticklabels([])
         ax.yaxis.set_ticklabels([])
@@ -1695,6 +1696,8 @@ def plot_lightcurve(
     else:
         ax.set_xlim(xlim)
         axlims = {"xlim": xlim}
+
+    ax.set_ylim([2e-14, 7e-13])
 
     plt.tight_layout()
 
