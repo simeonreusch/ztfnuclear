@@ -22,7 +22,6 @@ from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import shuffle
 from tqdm import tqdm
-
 from ztfnuclear import io
 from ztfnuclear.plot import get_tde_selection
 from ztfnuclear.sample import NuclearSample
@@ -153,6 +152,7 @@ class Model(object):
         ]
         df_test = self.meta.query("index in @self.test_ztfids")
         df_test = shuffle(df_test, random_state=self.seed).reset_index(drop=True)
+
         self.X_test = df_test.drop(columns="classif").reset_index(drop=True)
         self.y_test = df_test.filter(["classif"]).reset_index(drop=True)
 

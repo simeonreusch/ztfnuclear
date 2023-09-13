@@ -74,10 +74,8 @@ def create_table(df, classifstr="Community classification"):
 s = NuclearSample()
 
 flaring = [t for t in s.get_flaring_transients()]
-gold = [t for t in s.get_gold_transients()]
 
 flaring_ztfids = [t.ztfid for t in flaring]
-gold_ztfids = [t.ztfid for t in gold]
 
 interesting = []
 ratings = []
@@ -86,6 +84,7 @@ gold = []
 for t in flaring:
     rating = t.get_rating(username="simeon2")
     rating_overview = t.get_rating_overview()
+
     if rating == 3:
         interesting.append(t.ztfid)
         ratings.append(rating_overview)
@@ -98,5 +97,4 @@ df = s.get_thesis_dataframe(ztfids=gold)
 
 table = create_table(df)
 
-for entry in gold:
-    print(entry)
+print(table)

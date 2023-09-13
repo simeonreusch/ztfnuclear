@@ -767,10 +767,10 @@ class NuclearSample(object):
                 if start_excess != None and status in [
                     "1",
                     "1_maybe_interesting",
-                    # "2_maybe_interesting",
-                    # "2",
                 ]:
-                    if start_excess >= 2458239.50000 and start_excess >= min_peak_date:
+                    if (
+                        start_excess >= 2458239.50000 and start_excess >= min_peak_date
+                    ) or ztfid in ["ZTF20aaetsrw"]:
                         final_ztfids.append(ztfid)
 
         self.info_db.ingest_ztfid_collection(

@@ -28,8 +28,9 @@ m = Model(
     grid_search_sample_size=2000,
 )
 # m.train()
-
-# m.evaluate(normalize=None)
+# print(m.X_test)
+quit()
+m.evaluate(normalize=None)
 # m.evaluate(normalize="all")
 # m.evaluate(normalize="pred")
 # m.evaluate(normalize="true")

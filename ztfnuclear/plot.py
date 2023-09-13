@@ -23,6 +23,7 @@ from astropy import units as u  # type: ignore
 from astropy.coordinates import Angle  # type: ignore
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import LabelEncoder
+
 from ztfnuclear import io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.wise import is_in_wise_agn_box
@@ -1677,10 +1678,10 @@ def plot_lightcurve(
         ax.grid(which="both", visible=True, axis="both", alpha=0.3)
         plt.legend(loc=1)
     else:
-        ax.xaxis.set_ticklabels([])
-        ax.yaxis.set_ticklabels([])
-        plt.tick_params(bottom=False)
-        plt.tick_params(left=False)
+        ax.set_yticks([])
+        ax.set_yticks([], minor=True)
+        ax.set_xticks([])
+        ax.set_xticks([], minor=True)
 
     if plot_png:
         if thumbnail:
@@ -1697,7 +1698,19 @@ def plot_lightcurve(
         ax.set_xlim(xlim)
         axlims = {"xlim": xlim}
 
-    ax.set_ylim([2e-14, 7e-13])
+    if thumbnail:
+        from ztfnuclear.sample import Transient
+
+        t = Transient(ztfid)
+        peak_dates = t.meta.get("peak_dates").values()
+        peak_dates_cleaned = [d for d in peak_dates if not np.isnan(d)]
+        peak = np.mean(peak_dates_cleaned)
+        # xmax = max(wise_df.mean_mjd.values + 365)
+        xmax = peak + (2 * 365)
+        xmin = peak - 365
+        ax.set_xlim([xmin, xmax])
+
+        ax.set_ylim([2e-14, 8e-12])
 
     plt.tight_layout()
 

@@ -18,4 +18,3 @@ s = NuclearSample()
 
 s.generate_ir_flare_sample()
 s.generate_overview_pickled(flaring_only=True)
-# s.generate_overview_pickled()
