@@ -1676,7 +1676,7 @@ def plot_lightcurve(
     if not thumbnail:
         ax.set_xlabel("Date (MJD)", fontsize=12)
         ax.grid(which="both", visible=True, axis="both", alpha=0.3)
-        plt.legend(loc=1)
+        plt.legend(loc=2)
     else:
         ax.set_yticks([])
         ax.set_yticks([], minor=True)
@@ -1705,7 +1705,6 @@ def plot_lightcurve(
         peak_dates = t.meta.get("peak_dates").values()
         peak_dates_cleaned = [d for d in peak_dates if not np.isnan(d)]
         peak = np.mean(peak_dates_cleaned)
-        # xmax = max(wise_df.mean_mjd.values + 365)
         xmax = peak + (2 * 365)
         xmin = peak - 365
         ax.set_xlim([xmin, xmax])
