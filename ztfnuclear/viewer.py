@@ -249,6 +249,7 @@ def transient_page(ztfid):
         flaring=False,
         comments=comments,
         comment_count=comment_count,
+        filename=f"data/{t.ztfid}.csv",
     )
 
 
