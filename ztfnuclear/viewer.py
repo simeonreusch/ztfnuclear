@@ -335,6 +335,7 @@ def flaring_page(ztfid):
         flaring=True,
         comments=comments,
         comment_count=comment_count,
+        filename=f"data/{t.ztfid}.csv",
     )
 
 
