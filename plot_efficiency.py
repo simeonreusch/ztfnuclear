@@ -57,8 +57,8 @@ purity = [
 ]
 
 colordict = {
-    "purity": "#ec008c",
-    "efficiency": "#39b54a",
+    "purity": "#39b54a",
+    "efficiency": "#ec008c",
 }
 
 fig, ax = plt.subplots(figsize=(5, 5 / GOLDEN_RATIO), dpi=300)

@@ -26,6 +26,14 @@ for score in [1, 2, 3]:
 total = len(ratings[1]) + len(ratings[2]) + len(ratings[3])
 print(f"Total: {total}")
 
+# for ztfid in ratings[2]:
+#     print(ztfid)
+# quit()
+
+infile = Path("/Users/simeon/Desktop/evaluate_classifier_wrong.csv")
+df = pd.read_csv(infile)
+print(df.value_counts(subset=["rejection"]))
+print(f"total: {len(df)}")
 # infile = Path(io.LOCALSOURCE_plots) / "maghist" / "surviving_tde_nocut.csv"
 # infile_test = Path("/Users/simeon/Desktop/df_test.csv")
 

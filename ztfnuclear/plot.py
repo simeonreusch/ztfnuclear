@@ -1709,7 +1709,7 @@ def plot_lightcurve(
         xmin = peak - 365
         ax.set_xlim([xmin, xmax])
 
-        ax.set_ylim([2e-14, 8e-12])
+        ax.set_ylim([2e-14, 3e-11])
 
     plt.tight_layout()
 

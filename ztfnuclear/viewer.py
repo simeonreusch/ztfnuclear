@@ -7,16 +7,26 @@ from datetime import datetime
 
 import matplotlib
 from flask import Flask, flash, redirect, render_template, request, url_for
-from flask_login import (LoginManager, UserMixin, current_user, login_required,
-                         login_user, logout_user)
+from flask_login import (
+    LoginManager,
+    UserMixin,
+    current_user,
+    login_required,
+    login_user,
+    logout_user,
+)
 from flask_mongoengine import Document, MongoEngine
 from flask_wtf import FlaskForm
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.urls import url_parse
-from wtforms import (BooleanField, PasswordField, StringField, SubmitField,
-                     ValidationError)
+from wtforms import (
+    BooleanField,
+    PasswordField,
+    StringField,
+    SubmitField,
+    ValidationError,
+)
 from wtforms.validators import DataRequired, EqualTo, Length
-
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.sample import NuclearSample, Transient
 from ztfnuclear.utils import is_tns_name, is_ztf_name
@@ -100,7 +110,6 @@ def home():
     """
     s = NuclearSample()
     if current_user.is_authenticated:
-
         ratings = s.get_ratings(username=current_user.username)
         ratings_ztfids = list(ratings.keys())
         flaring_rated = []
@@ -157,7 +166,7 @@ def register():
 
 
 @app.route("/transient/<string:ztfid>")
-@login_required
+# @login_required
 def transient_page(ztfid):
     """
     Show the transient page
@@ -192,13 +201,11 @@ def transient_page(ztfid):
         t.plot_irsa(plot_png=True, wide=True, axlims=axlims)
 
     if os.path.isfile(plot_file_irsa):
-
         plot_data_irsa = open(plot_file_irsa, "rb")
         base64_string_irsa = base64.b64encode(plot_data_irsa.read()).decode("ascii")
         plot_irsa = True
 
     else:
-
         plot_irsa = False
         base64_string_irsa = None
 
@@ -246,7 +253,7 @@ def transient_page(ztfid):
 
 
 @app.route("/flaring/<string:ztfid>")
-@login_required
+# @login_required
 def flaring_page(ztfid):
     """
     Show the page of a flaring transient
@@ -278,13 +285,11 @@ def flaring_page(ztfid):
         t.plot_irsa(plot_png=True, wide=True, axlims=axlims)
 
     if os.path.isfile(plot_file_irsa):
-
         plot_data_irsa = open(plot_file_irsa, "rb")
         base64_string_irsa = base64.b64encode(plot_data_irsa.read()).decode("ascii")
         plot_irsa = True
 
     else:
-
         plot_irsa = False
         base64_string_irsa = None
 
@@ -343,7 +348,6 @@ def rate_transient(ztfid):
     input_key = list(request.form.keys())[0]
 
     if request.method == "POST":
-
         if input_key == "rating":
             raw_value = request.form["rating"]
 
@@ -371,9 +375,7 @@ def comment_on_transient(ztfid):
     t = Transient(ztfid)
 
     if request.method == "POST":
-
         for input_key in list(request.form.keys()):
-
             if input_key == "delete":
                 raw = request.form["delete"]
                 origin = raw.split("&")[0].split("=")[1]
@@ -526,7 +528,7 @@ def flaring_transient_random():
 
 
 @app.route("/search", methods=["GET", "POST"])
-@login_required
+# @login_required
 def search():
     """
     Search for a transient
@@ -563,7 +565,6 @@ def add_user():
     """
     form = UserForm()
     if form.validate_on_submit():
-
         user = mongo.db.ztfnuclear_viewer.find_one({"Name": form.name.data})
 
         if user is None:
