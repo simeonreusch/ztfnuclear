@@ -23,7 +23,6 @@ from astropy import units as u  # type: ignore
 from astropy.coordinates import Angle  # type: ignore
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import LabelEncoder
-
 from ztfnuclear import io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.wise import is_in_wise_agn_box
@@ -1452,15 +1451,16 @@ def plot_lightcurve(
     else:
         plot_dir = outdir
 
+    height = 5.5
     if wide:
-        figwidth = 8 / (GOLDEN_RATIO + 0.52)
+        figwidth = height / (GOLDEN_RATIO + 0.52)
     else:
-        figwidth = 8 / GOLDEN_RATIO
+        figwidth = height / GOLDEN_RATIO
 
     if thumbnail:
-        fig, ax = plt.subplots(figsize=(8 / 4, figwidth / 4), dpi=100)
+        fig, ax = plt.subplots(figsize=(height / 4, figwidth / 4), dpi=100)
     else:
-        fig, ax = plt.subplots(figsize=(8, figwidth), dpi=300)
+        fig, ax = plt.subplots(figsize=(height, figwidth), dpi=300)
 
     bl_correction = True if "ampl_corr" in df.keys() else False
 
@@ -1673,10 +1673,12 @@ def plot_lightcurve(
                     label="WISE W2",
                 )
 
+    # ax.set_ylim([2e-14, 5e-13])
+
     if not thumbnail:
         ax.set_xlabel("Date (MJD)", fontsize=12)
         ax.grid(which="both", visible=True, axis="both", alpha=0.3)
-        plt.legend(loc=2)
+        plt.legend(loc=3, ncol=3)
     else:
         ax.set_yticks([])
         ax.set_yticks([], minor=True)
@@ -1710,6 +1712,9 @@ def plot_lightcurve(
         ax.set_xlim([xmin, xmax])
 
         ax.set_ylim([2e-14, 3e-11])
+
+    # ax.set_ylim([2e-14, 5e-13])
+    # ax.set_ylim([3e-14, 6e-13])
 
     plt.tight_layout()
 

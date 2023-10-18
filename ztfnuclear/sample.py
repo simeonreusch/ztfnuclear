@@ -15,6 +15,7 @@ from typing import List, Optional, Tuple
 import numpy as np
 import pandas as pd  # type: ignore
 from tqdm import tqdm  # type: ignore
+
 from ztfnuclear import baseline, io, utils
 from ztfnuclear.database import MetadataDB, SampleInfo
 from ztfnuclear.fritz import FritzAPI
